@@ -19,6 +19,7 @@
 		<Nullable>enable</Nullable>
 
 		<MauiXamlInflator>SourceGen</MauiXamlInflator>
+		<DefaultItemExcludes>$(DefaultItemExcludes);tests\**;TestResults\**;scripts\**</DefaultItemExcludes>
 
 		<!-- Display name -->
 		<ApplicationTitle>Corevent</ApplicationTitle>
