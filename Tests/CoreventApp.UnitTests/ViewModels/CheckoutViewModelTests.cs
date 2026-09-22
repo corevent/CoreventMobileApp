@@ -20,12 +20,12 @@ public class CheckoutViewModelTests
         client.BaseAddress = new Uri("https://api.corevent.com");
 
         var eventsApiMock = new Mock<IEventsApi>();
-        var ticketTypesApi = new TicketTypesApiClient(client);
-        var ordersApi = new OrdersApiClient(client);
+        var ticketTypesApiMock = new Mock<ITicketTypesApi>();
+        var ordersApiMock = new Mock<IOrdersApi>();
         var agePoliciesApi = new AgePoliciesApiClient(client);
         var agePolicyService = new AgePolicyService(agePoliciesApi);
 
-        _vm = new CheckoutViewModel(eventsApiMock.Object, ticketTypesApi, ordersApi, agePolicyService);
+        _vm = new CheckoutViewModel(eventsApiMock.Object, ticketTypesApiMock.Object, ordersApiMock.Object, agePolicyService);
     }
 
     [Fact]

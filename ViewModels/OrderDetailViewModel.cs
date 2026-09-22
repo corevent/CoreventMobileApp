@@ -3,17 +3,18 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CoreventApp.Models.Dtos;
 using CoreventApp.Services;
+using CoreventApp.Services.Api;
 
 namespace CoreventApp.ViewModels;
 
 [QueryProperty(nameof(OrderId), "OrderId")]
 public partial class OrderDetailViewModel : ObservableObject
 {
-    private readonly OrdersService _ordersService;
+    private readonly IOrdersApi _ordersApi;
 
-    public OrderDetailViewModel(OrdersService ordersService)
+    public OrderDetailViewModel(IOrdersApi ordersApi)
     {
-        _ordersService = ordersService;
+        _ordersApi = ordersApi;
     }
 
     [ObservableProperty]
@@ -37,7 +38,7 @@ public partial class OrderDetailViewModel : ObservableObject
     {
         IsLoading = true;
 
-        var result = await _ordersService.GetByIdAsync(orderId);
+        var result = await ApiResult.TryExecuteAsync(() => _ordersApi.GetByIdAsync(orderId), "Load order");
         if (result is not null)
         {
             Order = result.Data;

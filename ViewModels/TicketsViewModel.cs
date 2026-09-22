@@ -3,16 +3,17 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CoreventApp.Models.Dtos;
 using CoreventApp.Services;
+using CoreventApp.Services.Api;
 
 namespace CoreventApp.ViewModels;
 
 public partial class TicketsViewModel : ObservableObject
 {
-    private readonly TicketsService _ticketsService;
+    private readonly ITicketsApi _ticketsApi;
 
-    public TicketsViewModel(TicketsService ticketsService)
+    public TicketsViewModel(ITicketsApi ticketsApi)
     {
-        _ticketsService = ticketsService;
+        _ticketsApi = ticketsApi;
     }
 
     [ObservableProperty]
@@ -38,7 +39,8 @@ public partial class TicketsViewModel : ObservableObject
     {
         IsLoading = true;
 
-        var result = await _ticketsService.GetMyTicketsAsync(page: 1, limit: 100);
+        var result = await ApiResult.TryExecuteAsync(() => _ticketsApi.GetMyTicketsAsync(page: 1, limit: 100), "Load tickets")
+            ?? new PaginateMyTicketsDto(new List<UserTicketDataDto>(), new PaginationMetaDto(0, 0, 1, 100));
 
         ProximosTickets.Clear();
         PassadosTickets.Clear();

@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Reflection;
 using Refit;
 
@@ -6,13 +7,25 @@ namespace CoreventApp.Services.Api;
 /// <summary>
 /// Formats query parameter values the way the Corevent API expects:
 /// bools as lowercase "true"/"false" and dates as "yyyy-MM-dd".
-/// TicketTypes endpoints need full timestamps — use [Query(Format = ...)]
-/// on those methods instead of relying on this formatter.
+/// An explicit [Query(Format = ...)] on a parameter always wins
+/// (used by TicketTypes endpoints, which need full timestamps).
 /// </summary>
 public sealed class CoreventUrlFormatter : DefaultUrlParameterFormatter
 {
     public override string? Format(object? value, ICustomAttributeProvider attributeProvider, Type type)
     {
+        // An explicit [Query(Format = ...)] always wins. Note: with Refit's
+        // source generator the provider is not a ParameterInfo, so read the
+        // attribute off ICustomAttributeProvider directly.
+        if (value is not null)
+        {
+            var query = attributeProvider.GetCustomAttributes(false)
+                .OfType<QueryAttribute>()
+                .FirstOrDefault();
+            if (query?.Format is not null && value is IFormattable formattable)
+                return formattable.ToString(query.Format, CultureInfo.InvariantCulture);
+        }
+
         if (value is bool b)
             return b ? "true" : "false";
 

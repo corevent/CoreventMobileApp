@@ -1,7 +1,8 @@
+using CoreventApp.Models.Dtos;
 using CoreventApp.Services;
 using CoreventApp.Services.Api;
 using CoreventApp.ViewModels;
-using RichardSzalay.MockHttp;
+using Moq;
 using Shouldly;
 using Xunit;
 
@@ -9,19 +10,13 @@ namespace CoreventApp.UnitTests.ViewModels;
 
 public class PurchaseHistoryViewModelTests
 {
-    private readonly MockHttpMessageHandler _httpMock;
-    private readonly OrdersService _ordersService;
+    private readonly Mock<IOrdersApi> _ordersApiMock;
     private readonly PurchaseHistoryViewModel _vm;
 
     public PurchaseHistoryViewModelTests()
     {
-        _httpMock = new MockHttpMessageHandler();
-        var client = _httpMock.ToHttpClient();
-        client.BaseAddress = new Uri("https://api.corevent.com");
-
-        var api = new OrdersApiClient(client);
-        _ordersService = new OrdersService(api);
-        _vm = new PurchaseHistoryViewModel(_ordersService);
+        _ordersApiMock = new Mock<IOrdersApi>();
+        _vm = new PurchaseHistoryViewModel(_ordersApiMock.Object);
     }
 
     [Fact]
@@ -35,10 +30,14 @@ public class PurchaseHistoryViewModelTests
     [Fact]
     public async Task LoadOrders_ShouldPopulateOrdersAndSetIsEmptyFalse()
     {
-        var json = "{\"data\":[{\"id\":\"ord_100\",\"event\":{\"id\":\"evt_1\",\"title\":\"Rock Fest\",\"startDate\":\"2026-10-10T19:00:00.000Z\",\"endDate\":\"2026-10-10T23:00:00.000Z\"},\"totalAmount\":250.0,\"status\":\"paid\",\"createdAt\":\"2026-09-01T00:00:00.000Z\"}],\"meta\":{\"totalItems\":1,\"totalPages\":1,\"page\":1,\"limit\":50}}";
+        var evt = new OrderEventDto("evt_1", "Rock Fest",
+            new DateTime(2026, 10, 10, 19, 0, 0, DateTimeKind.Utc),
+            new DateTime(2026, 10, 10, 23, 0, 0, DateTimeKind.Utc));
+        var order = new MyOrdersDataDto("ord_100", evt, 250.0m, "paid",
+            new DateTime(2026, 9, 1, 0, 0, 0, DateTimeKind.Utc));
 
-        _httpMock.Expect(HttpMethod.Get, "https://api.corevent.com/api/events/my/orders*")
-            .Respond("application/json", json);
+        _ordersApiMock.Setup(a => a.GetMyOrdersAsync(1, 50))
+            .ReturnsAsync(new PaginateMyOrdersDto(new List<MyOrdersDataDto> { order }, new PaginationMetaDto(1, 1, 1, 50)));
 
         await _vm.LoadOrdersCommand.ExecuteAsync(null);
 
@@ -51,10 +50,8 @@ public class PurchaseHistoryViewModelTests
     [Fact]
     public async Task LoadOrders_ShouldSetIsEmptyTrue_WhenNoOrders()
     {
-        var json = "{\"data\":[],\"meta\":{\"totalItems\":0,\"totalPages\":0,\"page\":1,\"limit\":50}}";
-
-        _httpMock.Expect(HttpMethod.Get, "https://api.corevent.com/api/events/my/orders*")
-            .Respond("application/json", json);
+        _ordersApiMock.Setup(a => a.GetMyOrdersAsync(1, 50))
+            .ReturnsAsync(new PaginateMyOrdersDto(new List<MyOrdersDataDto>(), new PaginationMetaDto(0, 0, 1, 50)));
 
         await _vm.LoadOrdersCommand.ExecuteAsync(null);
 

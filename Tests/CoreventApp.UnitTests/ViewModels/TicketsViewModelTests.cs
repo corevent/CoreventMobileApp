@@ -2,7 +2,7 @@ using CoreventApp.Models.Dtos;
 using CoreventApp.Services;
 using CoreventApp.Services.Api;
 using CoreventApp.ViewModels;
-using RichardSzalay.MockHttp;
+using Moq;
 using Shouldly;
 using Xunit;
 
@@ -10,20 +10,14 @@ namespace CoreventApp.UnitTests.ViewModels;
 
 public class TicketsViewModelTests
 {
-    private readonly MockHttpMessageHandler _httpMock;
-    private readonly TicketsService _ticketsService;
+    private readonly Mock<ITicketsApi> _ticketsApiMock;
     private readonly TicketsViewModel _vm;
 
     public TicketsViewModelTests()
     {
-        _httpMock = new MockHttpMessageHandler();
-        var client = _httpMock.ToHttpClient();
-        client.BaseAddress = new Uri("https://api.corevent.com");
+        _ticketsApiMock = new Mock<ITicketsApi>();
 
-        var api = new TicketsApiClient(client);
-        _ticketsService = new TicketsService(api);
-
-        _vm = new TicketsViewModel(_ticketsService);
+        _vm = new TicketsViewModel(_ticketsApiMock.Object);
     }
 
     [Fact]
@@ -51,10 +45,18 @@ public class TicketsViewModelTests
     [Fact]
     public async Task LoadTickets_ShouldCategorizeTicketsByStatus()
     {
-        var json = "{\"data\":[{\"id\":\"t1\",\"status\":\"paid\",\"ticketTypeId\":\"tt1\",\"eventId\":\"e1\",\"userId\":\"u1\",\"qrToken\":\"qr1\",\"user\":{\"id\":\"u1\",\"name\":\"Lucas\"},\"ticketType\":{\"id\":\"tt1\",\"name\":\"Pista\",\"price\":50.0},\"event\":{\"id\":\"e1\",\"title\":\"Rock Fest\",\"bannerUrl\":\"https://img.com/1.png\",\"startDate\":\"2026-10-10T20:00:00.000Z\",\"endDate\":\"2026-10-10T23:00:00.000Z\"},\"order\":{\"id\":\"o1\"}},{\"id\":\"t2\",\"status\":\"used\",\"ticketTypeId\":\"tt2\",\"eventId\":\"e2\",\"userId\":\"u1\",\"qrToken\":\"qr2\",\"user\":{\"id\":\"u1\",\"name\":\"Lucas\"},\"ticketType\":{\"id\":\"tt2\",\"name\":\"Camarote\",\"price\":100.0},\"event\":{\"id\":\"e2\",\"title\":\"Jazz Night\",\"bannerUrl\":\"https://img.com/2.png\",\"startDate\":\"2026-08-10T20:00:00.000Z\",\"endDate\":\"2026-08-10T23:00:00.000Z\"},\"order\":{\"id\":\"o2\"}}],\"meta\":{\"totalItems\":2,\"totalPages\":1,\"page\":1,\"limit\":100}}";
+        var t1 = new UserTicketDataDto("t1", "e1", "tt1", "paid", null, "qr1",
+            new UserTicketTypeDto("tt1", "Pista", 50.0m),
+            new UserTicketEventDto("e1", "Rock Fest"),
+            new UserTicketOrderDto("o1", "paid"));
+        var t2 = new UserTicketDataDto("t2", "e2", "tt2", "used", null, "qr2",
+            new UserTicketTypeDto("tt2", "Camarote", 100.0m),
+            new UserTicketEventDto("e2", "Jazz Night"),
+            new UserTicketOrderDto("o2", "paid"));
 
-        _httpMock.Expect(HttpMethod.Get, "https://api.corevent.com/api/users/me/tickets*")
-            .Respond("application/json", json);
+        _ticketsApiMock.Setup(a => a.GetMyTicketsAsync(1, 100, null))
+            .ReturnsAsync(new PaginateMyTicketsDto(
+                new List<UserTicketDataDto> { t1, t2 }, new PaginationMetaDto(2, 1, 1, 100)));
 
         await _vm.LoadTicketsCommand.ExecuteAsync(null);
 

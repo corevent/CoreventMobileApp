@@ -3,16 +3,17 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CoreventApp.Models.Dtos;
 using CoreventApp.Services;
+using CoreventApp.Services.Api;
 
 namespace CoreventApp.ViewModels;
 
 public partial class PurchaseHistoryViewModel : ObservableObject
 {
-    private readonly OrdersService _ordersService;
+    private readonly IOrdersApi _ordersApi;
 
-    public PurchaseHistoryViewModel(OrdersService ordersService)
+    public PurchaseHistoryViewModel(IOrdersApi ordersApi)
     {
-        _ordersService = ordersService;
+        _ordersApi = ordersApi;
     }
 
     [ObservableProperty]
@@ -28,7 +29,8 @@ public partial class PurchaseHistoryViewModel : ObservableObject
     {
         IsLoading = true;
 
-        var result = await _ordersService.GetMyOrdersAsync(page: 1, limit: 50);
+        var result = await ApiResult.TryExecuteAsync(() => _ordersApi.GetMyOrdersAsync(page: 1, limit: 50), "Load orders")
+            ?? new PaginateMyOrdersDto(new List<MyOrdersDataDto>(), new PaginationMetaDto(0, 0, 1, 50));
 
         Orders.Clear();
         foreach (var order in result.Data)

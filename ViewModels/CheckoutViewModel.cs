@@ -12,8 +12,8 @@ namespace CoreventApp.ViewModels;
 public partial class CheckoutViewModel : ObservableObject
 {
     private readonly IEventsApi _eventsApi;
-    private readonly TicketTypesApiClient _ticketTypesApi;
-    private readonly OrdersApiClient _ordersApi;
+    private readonly ITicketTypesApi _ticketTypesApi;
+    private readonly IOrdersApi _ordersApi;
     private readonly AgePolicyService _agePolicyService;
     private string? _eventId;
     private string? _orderId;
@@ -72,7 +72,7 @@ public partial class CheckoutViewModel : ObservableObject
 
     public string ButtonText => IsPurchasing ? "" : $"Finalizar Compra • R$ {Total:F2}";
 
-    public CheckoutViewModel(IEventsApi eventsApi, TicketTypesApiClient ticketTypesApi, OrdersApiClient ordersApi, AgePolicyService agePolicyService)
+    public CheckoutViewModel(IEventsApi eventsApi, ITicketTypesApi ticketTypesApi, IOrdersApi ordersApi, AgePolicyService agePolicyService)
     {
         _eventsApi = eventsApi;
         _ticketTypesApi = ticketTypesApi;
@@ -95,7 +95,9 @@ public partial class CheckoutViewModel : ObservableObject
             EventImageUrl = evt.BannerUrl ?? string.Empty;
             IsAdultOnly = evt.IsAdultOnly;
 
-            var ticketResult = await _ticketTypesApi.GetAllAsync(eventId, availableOnly: true);
+            var ticketResult = await ApiResult.TryExecuteAsync(
+                    () => _ticketTypesApi.GetAllAsync(eventId, availableOnly: true), "Load ticket types")
+                ?? new TicketTypeListPageDto(new List<TicketTypeDataDto>(), new TicketTypeListMeta(0, 0, 1, 20));
             TicketTypes.Clear();
             foreach (var tt in ticketResult.Data)
             {
@@ -159,9 +161,14 @@ public partial class CheckoutViewModel : ObservableObject
                 new(SelectedTicketType.TicketType.Id, Quantity)
             });
 
-            var result = await _ordersApi.CreateAsync(_eventId, dto);
-            _orderId = result.Data.OrderId;
-            _checkoutUrl = result.Data.CheckoutLinks?.FirstOrDefault(l => l.Rel == "PAY")?.Href;
+            var result = (await ApiResult.TryExecuteAsync(() => _ordersApi.CreateAsync(_eventId, dto), "Create order"))?.Data;
+            if (result is null)
+            {
+                await Shell.Current.DisplayAlertAsync("Erro", "Não foi possível finalizar a compra. Tente novamente.", "OK");
+                return;
+            }
+            _orderId = result.OrderId;
+            _checkoutUrl = result.CheckoutLinks?.FirstOrDefault(l => l.Rel == "PAY")?.Href;
 
             if (IsAdultOnly)
             {

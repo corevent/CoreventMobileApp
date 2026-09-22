@@ -53,13 +53,16 @@ public static class MauiProgram
 		builder.Services.AddHttpClient<AttractionsApiClient>(c => c.BaseAddress = new Uri(baseUrl))
 			.AddHttpMessageHandler<AuthTokenHandler>();
 
-		builder.Services.AddHttpClient<TicketTypesApiClient>(c => c.BaseAddress = new Uri(baseUrl))
+		builder.Services.AddRefitClient<ITicketTypesApi>(RefitConfig.CreateSettings())
+			.ConfigureHttpClient(c => c.BaseAddress = new Uri(baseUrl))
 			.AddHttpMessageHandler<AuthTokenHandler>();
 
-		builder.Services.AddHttpClient<OrdersApiClient>(c => c.BaseAddress = new Uri(baseUrl))
+		builder.Services.AddRefitClient<IOrdersApi>(RefitConfig.CreateSettings())
+			.ConfigureHttpClient(c => c.BaseAddress = new Uri(baseUrl))
 			.AddHttpMessageHandler<AuthTokenHandler>();
 
-		builder.Services.AddHttpClient<TicketsApiClient>(c => c.BaseAddress = new Uri(baseUrl))
+		builder.Services.AddRefitClient<ITicketsApi>(RefitConfig.CreateSettings())
+			.ConfigureHttpClient(c => c.BaseAddress = new Uri(baseUrl))
 			.AddHttpMessageHandler<AuthTokenHandler>();
 
 		builder.Services.AddHttpClient<EventStaffApiClient>(c => c.BaseAddress = new Uri(baseUrl))
@@ -90,8 +93,6 @@ public static class MauiProgram
 		builder.Services.AddTransient<PaymentInfoService>();
 		builder.Services.AddTransient<AttractionsService>();
 		builder.Services.AddTransient<FavoritesService>();
-		builder.Services.AddTransient<TicketsService>();
-		builder.Services.AddTransient<OrdersService>();
 		builder.Services.AddTransient<CheckInService>();
 		builder.Services.AddTransient<AgePolicyService>();
 		builder.Services.AddTransient<StorageService>();

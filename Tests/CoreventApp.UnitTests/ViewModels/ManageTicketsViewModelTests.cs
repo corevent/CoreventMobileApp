@@ -18,10 +18,10 @@ public class ManageTicketsViewModelTests
         var client = httpMock.ToHttpClient();
         client.BaseAddress = new Uri("https://api.corevent.com");
 
-        var ticketTypesApi = new TicketTypesApiClient(client);
+        var ticketTypesApiMock = new Mock<ITicketTypesApi>();
         var eventsApiMock = new Mock<IEventsApi>();
 
-        _vm = new ManageTicketsViewModel(ticketTypesApi, eventsApiMock.Object);
+        _vm = new ManageTicketsViewModel(ticketTypesApiMock.Object, eventsApiMock.Object);
     }
 
     [Fact]

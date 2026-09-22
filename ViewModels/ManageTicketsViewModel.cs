@@ -11,7 +11,7 @@ namespace CoreventApp.ViewModels;
 [QueryProperty(nameof(EventId), "EventId")]
 public partial class ManageTicketsViewModel : ObservableObject
 {
-    private readonly TicketTypesApiClient _ticketTypesApi;
+    private readonly ITicketTypesApi _ticketTypesApi;
     private readonly IEventsApi _eventsApi;
     private TicketTypeViewModel? _editingTicketType;
 
@@ -61,7 +61,7 @@ public partial class ManageTicketsViewModel : ObservableObject
 
     public ObservableCollection<TicketTypeViewModel> TicketTypes { get; } = new();
 
-    public ManageTicketsViewModel(TicketTypesApiClient ticketTypesApi, IEventsApi eventsApi)
+    public ManageTicketsViewModel(ITicketTypesApi ticketTypesApi, IEventsApi eventsApi)
     {
         _ticketTypesApi = ticketTypesApi;
         _eventsApi = eventsApi;
@@ -89,7 +89,11 @@ public partial class ManageTicketsViewModel : ObservableObject
                 NewEndDate = EventStartDate;
             }
 
-            var result = await _ticketTypesApi.GetAllAsync(EventId, page: 1, limit: 100, availableOnly: false);
+            var ticketResult = await ApiResult.TryExecuteAsync(
+                    () => _ticketTypesApi.GetAllAsync(EventId, page: 1, limit: 100, availableOnly: false),
+                    "Load ticket types")
+                ?? new TicketTypeListPageDto(new List<TicketTypeDataDto>(), new TicketTypeListMeta(0, 0, 1, 100));
+            var result = ticketResult;
             TicketTypes.Clear();
             foreach (var tt in result.Data)
                 TicketTypes.Add(MapToPresentation(tt));
@@ -167,7 +171,13 @@ public partial class ManageTicketsViewModel : ObservableObject
             if (IsEditing && _editingTicketType is not null)
             {
                 var updateDto = new UpdateTicketTypeDto(NewName.Trim(), price, quantity, NewStartDate, NewEndDate);
-                await _ticketTypesApi.UpdateAsync(_editingTicketType.Id, updateDto);
+                var updated = await ApiResult.TryExecuteAsync(
+                    () => _ticketTypesApi.UpdateAsync(_editingTicketType.Id, updateDto), "Update ticket type");
+                if (updated is null)
+                {
+                    await Shell.Current.DisplayAlertAsync("Erro", "Falha ao salvar ingresso.", "OK");
+                    return;
+                }
 
                 _editingTicketType.Name = NewName.Trim();
                 _editingTicketType.Price = price;
@@ -178,10 +188,10 @@ public partial class ManageTicketsViewModel : ObservableObject
             else
             {
                 var dto = new CreateTicketTypeDto(NewName.Trim(), price, quantity, NewStartDate, NewEndDate);
-                var result = await _ticketTypesApi.CreateAsync(EventId, dto);
+                var result = (await ApiResult.TryExecuteAsync(() => _ticketTypesApi.CreateAsync(EventId, dto), "Create ticket type"))?.Data;
                 if (result is null) return;
 
-                TicketTypes.Add(MapToPresentation(result.Data));
+                TicketTypes.Add(MapToPresentation(result));
                 HasTickets = true;
             }
 
@@ -198,7 +208,12 @@ public partial class ManageTicketsViewModel : ObservableObject
     {
         try
         {
-            await _ticketTypesApi.DeleteAsync(ticketType.Id);
+            var deleted = await ApiResult.TryExecuteAsync(() => _ticketTypesApi.DeleteAsync(ticketType.Id), "Delete ticket type");
+            if (!deleted)
+            {
+                await Shell.Current.DisplayAlertAsync("Erro", "Não foi possível excluir o ingresso.", "OK");
+                return;
+            }
             TicketTypes.Remove(ticketType);
 
             if (_editingTicketType?.Id == ticketType.Id)
