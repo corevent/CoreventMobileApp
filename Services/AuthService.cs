@@ -8,14 +8,14 @@ namespace CoreventApp.Services;
 
 public class AuthService : IAuthService
 {
-    private readonly AuthApiClient _authApi;
-    private readonly UsersApiClient _usersApi;
+    private readonly IAuthApi _authApi;
+    private readonly IUsersApi _usersApi;
     private readonly TokenService _tokenService;
     private User? _cachedUser;
 
     public User? CurrentCachedUser => _cachedUser;
 
-    public AuthService(AuthApiClient authApi, UsersApiClient usersApi, TokenService tokenService)
+    public AuthService(IAuthApi authApi, IUsersApi usersApi, TokenService tokenService)
     {
         _authApi = authApi;
         _usersApi = usersApi;
