@@ -3,8 +3,12 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="CoreventApp.Views.EditProfile"
              xmlns:mi="http://www.aathifmahir.com/dotnet/2022/maui/icons"
+             xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
              Title="EditProfile"
              BackgroundColor="{StaticResource background_color}">
+    <ContentPage.Behaviors>
+        <toolkit:EventToCommandBehavior EventName="Appearing" Command="{Binding LoadUserCommand}" />
+    </ContentPage.Behaviors>
     <Grid>
         <ScrollView>
             <Grid RowDefinitions="auto, *" Padding="20" RowSpacing="24">

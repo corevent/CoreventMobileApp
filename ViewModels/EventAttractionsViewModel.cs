@@ -13,6 +13,7 @@ public partial class EventAttractionsViewModel : ObservableObject
 {
     private readonly IAttractionsApi _attractionsApi;
     private readonly IEventsApi _eventsApi;
+    private readonly IDialogService _dialogs;
 
     [ObservableProperty]
     public partial string EventId { get; set; } = string.Empty;
@@ -63,10 +64,11 @@ public partial class EventAttractionsViewModel : ObservableObject
 
     public ObservableCollection<Attraction> Attractions { get; } = new();
 
-    public EventAttractionsViewModel(IAttractionsApi attractionsApi, IEventsApi eventsApi)
+    public EventAttractionsViewModel(IAttractionsApi attractionsApi, IEventsApi eventsApi, IDialogService dialogService)
     {
         _attractionsApi = attractionsApi;
         _eventsApi = eventsApi;
+        _dialogs = dialogService;
     }
 
     partial void OnEventIdChanged(string value)
@@ -143,13 +145,13 @@ public partial class EventAttractionsViewModel : ObservableObject
 
         if (NewTitle.Trim().Length < 3)
         {
-            await Shell.Current.DisplayAlertAsync("Erro", "O título da atração deve ter pelo menos 3 caracteres.", "OK");
+            await _dialogs.ShowErrorAsync("O título da atração deve ter pelo menos 3 caracteres.");
             return;
         }
 
         if (NewGuest.Trim().Length < 3)
         {
-            await Shell.Current.DisplayAlertAsync("Erro", "O nome do convidado deve ter pelo menos 3 caracteres.", "OK");
+            await _dialogs.ShowErrorAsync("O nome do convidado deve ter pelo menos 3 caracteres.");
             return;
         }
 
@@ -158,14 +160,14 @@ public partial class EventAttractionsViewModel : ObservableObject
 
         if (endDt <= startDt)
         {
-            await Shell.Current.DisplayAlertAsync("Erro", "O término deve ser posterior ao início.", "OK");
+            await _dialogs.ShowErrorAsync("O término deve ser posterior ao início.");
             return;
         }
 
         if (startDt.ToUniversalTime() < EventStartDate.ToUniversalTime() ||
             endDt.ToUniversalTime() > EventEndDate.ToUniversalTime())
         {
-            await Shell.Current.DisplayAlertAsync("Erro", "A atração deve estar dentro do período do evento.", "OK");
+            await _dialogs.ShowErrorAsync("A atração deve estar dentro do período do evento.");
             return;
         }
 
@@ -176,8 +178,8 @@ public partial class EventAttractionsViewModel : ObservableObject
 
         if (overlap)
         {
-            await Shell.Current.DisplayAlertAsync("Conflito de Horário",
-                "Já existe uma atração neste horário. Escolha outro horário.", "OK");
+            await _dialogs.ShowAlertAsync("Conflito de Horário",
+                "Já existe uma atração neste horário. Escolha outro horário.");
             return;
         }
 
@@ -205,14 +207,14 @@ public partial class EventAttractionsViewModel : ObservableObject
 
         if (endDt <= startDt)
         {
-            await Shell.Current.DisplayAlertAsync("Erro", "O término deve ser posterior ao início.", "OK");
+            await _dialogs.ShowErrorAsync("O término deve ser posterior ao início.");
             return;
         }
 
         if (startDt.ToUniversalTime() < EventStartDate.ToUniversalTime() ||
             endDt.ToUniversalTime() > EventEndDate.ToUniversalTime())
         {
-            await Shell.Current.DisplayAlertAsync("Erro", "A atração deve estar dentro do período do evento.", "OK");
+            await _dialogs.ShowErrorAsync("A atração deve estar dentro do período do evento.");
             return;
         }
 
@@ -223,8 +225,8 @@ public partial class EventAttractionsViewModel : ObservableObject
 
         if (overlap)
         {
-            await Shell.Current.DisplayAlertAsync("Conflito de Horário",
-                "Já existe uma atração neste horário. Escolha outro horário.", "OK");
+            await _dialogs.ShowAlertAsync("Conflito de Horário",
+                "Já existe uma atração neste horário. Escolha outro horário.");
             return;
         }
 

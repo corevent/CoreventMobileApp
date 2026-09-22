@@ -15,6 +15,7 @@ public partial class CheckoutViewModel : ObservableObject
     private readonly ITicketTypesApi _ticketTypesApi;
     private readonly IOrdersApi _ordersApi;
     private readonly IAgePoliciesApi _agePolicyApi;
+    private readonly IDialogService _dialogs;
     private string? _eventId;
     private string? _orderId;
     private string? _checkoutUrl;
@@ -72,12 +73,13 @@ public partial class CheckoutViewModel : ObservableObject
 
     public string ButtonText => IsPurchasing ? "" : $"Finalizar Compra • R$ {Total:F2}";
 
-    public CheckoutViewModel(IEventsApi eventsApi, ITicketTypesApi ticketTypesApi, IOrdersApi ordersApi, IAgePoliciesApi agePolicyApi)
+    public CheckoutViewModel(IEventsApi eventsApi, ITicketTypesApi ticketTypesApi, IOrdersApi ordersApi, IAgePoliciesApi agePolicyApi, IDialogService dialogService)
     {
         _eventsApi = eventsApi;
         _ticketTypesApi = ticketTypesApi;
         _ordersApi = ordersApi;
         _agePolicyApi = agePolicyApi;
+        _dialogs = dialogService;
     }
 
     private async Task LoadDataAsync(string eventId)
@@ -115,7 +117,7 @@ public partial class CheckoutViewModel : ObservableObject
         catch (Exception ex)
         {
             Debug.WriteLine($"Checkout LoadDataAsync failed: {ex.Message}");
-            await Shell.Current.DisplayAlertAsync("Erro", "Não foi possível carregar os dados do checkout.", "OK");
+            await _dialogs.ShowErrorAsync("Não foi possível carregar os dados do checkout.");
         }
         finally
         {
@@ -164,7 +166,7 @@ public partial class CheckoutViewModel : ObservableObject
             var result = (await ApiResult.TryExecuteAsync(() => _ordersApi.CreateAsync(_eventId, dto), "Create order"))?.Data;
             if (result is null)
             {
-                await Shell.Current.DisplayAlertAsync("Erro", "Não foi possível finalizar a compra. Tente novamente.", "OK");
+                await _dialogs.ShowErrorAsync("Não foi possível finalizar a compra. Tente novamente.");
                 return;
             }
             _orderId = result.OrderId;
@@ -179,7 +181,7 @@ public partial class CheckoutViewModel : ObservableObject
                     var policy = (await ApiResult.TryExecuteAsync(() => _agePolicyApi.GetActivePolicyAsync(), "Load age policy"))?.Data;
                     if (policy is not null)
                     {
-                        var consent = await Shell.Current.DisplayAlertAsync(
+                        var consent = await _dialogs.ConfirmAsync(
                             "Aviso de Conteúdo +18",
                             policy.Description,
                             "Estou ciente",
@@ -192,15 +194,15 @@ public partial class CheckoutViewModel : ObservableObject
 
             if (!string.IsNullOrEmpty(_checkoutUrl))
             {
-                await Shell.Current.DisplayAlertAsync("Pagamento",
-                    "Você será redirecionado ao PagBank para finalizar o pagamento.", "OK");
+                await _dialogs.ShowAlertAsync("Pagamento",
+                    "Você será redirecionado ao PagBank para finalizar o pagamento.");
                 await Browser.Default.OpenAsync(_checkoutUrl, BrowserLaunchMode.SystemPreferred);
             }
         }
         catch (Exception ex)
         {
             Debug.WriteLine($"Checkout FinalizePurchaseAsync failed: {ex.Message}");
-            await Shell.Current.DisplayAlertAsync("Erro", "Não foi possível finalizar a compra. Tente novamente.", "OK");
+            await _dialogs.ShowErrorAsync("Não foi possível finalizar a compra. Tente novamente.");
         }
         finally
         {

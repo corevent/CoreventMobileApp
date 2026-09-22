@@ -9,10 +9,12 @@ namespace CoreventApp.ViewModels;
 public partial class LoginViewModel : ObservableObject
 {
   private readonly IAuthService _authService;
+  private readonly IDialogService _dialogs;
 
-  public LoginViewModel(IAuthService authService)
+  public LoginViewModel(IAuthService authService, IDialogService dialogService)
   {
     _authService = authService;
+    _dialogs = dialogService;
   }
 
   [ObservableProperty]
@@ -28,7 +30,7 @@ public partial class LoginViewModel : ObservableObject
 
     if (!ValidationHelper.IsValidEmail(Form.Email) || string.IsNullOrWhiteSpace(Form.Password))
     {
-      await Shell.Current.DisplayAlertAsync("Erro", "Preencha todos os campos.", "OK");
+      await _dialogs.ShowErrorAsync("Preencha todos os campos.");
       return;
     }
 
@@ -44,7 +46,7 @@ public partial class LoginViewModel : ObservableObject
     }
     else
     {
-      await Shell.Current.DisplayAlertAsync("Erro", "E-mail ou senha incorretos.", "OK");
+      await _dialogs.ShowErrorAsync("E-mail ou senha incorretos.");
     }
   }
 

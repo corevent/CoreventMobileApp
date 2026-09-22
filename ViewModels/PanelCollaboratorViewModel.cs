@@ -13,6 +13,7 @@ public partial class PanelCollaboratorViewModel : ObservableObject
 {
     private readonly IEventsApi _eventsApi;
     private readonly IStaffInvitesApi _invitesApi;
+    private readonly IDialogService _dialogs;
 
     [ObservableProperty]
     public partial bool IsLoading { get; set; }
@@ -42,10 +43,11 @@ public partial class PanelCollaboratorViewModel : ObservableObject
     [ObservableProperty]
     public partial bool HasPastEvents { get; set; }
 
-    public PanelCollaboratorViewModel(IEventsApi eventsApi, IStaffInvitesApi invitesApi)
+    public PanelCollaboratorViewModel(IEventsApi eventsApi, IStaffInvitesApi invitesApi, IDialogService dialogService)
     {
         _eventsApi = eventsApi;
         _invitesApi = invitesApi;
+        _dialogs = dialogService;
     }
 
     [RelayCommand]
@@ -92,7 +94,7 @@ public partial class PanelCollaboratorViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            await Shell.Current.DisplayAlertAsync("Erro", $"PanelCollaborator LoadAsync failed: {ex.Message}", "OK");
+            await _dialogs.ShowErrorAsync($"PanelCollaborator LoadAsync failed: {ex.Message}");
         }
         finally
         {
@@ -155,7 +157,7 @@ public partial class PanelCollaboratorViewModel : ObservableObject
     [RelayCommand]
     private async Task RealizarCredenciamentoAsync()
     {
-        await Shell.Current.DisplayAlertAsync("Credenciamento", "Abrir câmera para leitura de QR Code", "OK");
+        await _dialogs.ShowAlertAsync("Credenciamento", "Abrir câmera para leitura de QR Code");
     }
 
     [RelayCommand]

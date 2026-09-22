@@ -23,7 +23,7 @@ public class PanelCollaboratorViewModelTests
         _eventsApiMock = new Mock<IEventsApi>();
         var invitesApi = Refit.RestService.For<IStaffInvitesApi>(client, RefitConfig.CreateSettings());
 
-        _vm = new PanelCollaboratorViewModel(_eventsApiMock.Object, invitesApi);
+        _vm = new PanelCollaboratorViewModel(_eventsApiMock.Object, invitesApi, new CoreventApp.Services.DialogService());
     }
 
     [Fact]

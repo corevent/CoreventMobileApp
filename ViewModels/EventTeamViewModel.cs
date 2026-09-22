@@ -3,6 +3,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CoreventApp.Helpers;
 using CoreventApp.Models.Dtos;
+using CoreventApp.Services;
 using CoreventApp.Services.Api;
 
 namespace CoreventApp.ViewModels;
@@ -14,6 +15,7 @@ public partial class EventTeamViewModel : ObservableObject
 {
     private readonly IEventStaffApi _staffApi;
     private readonly IStaffInvitesApi _invitesApi;
+    private readonly IDialogService _dialogs;
 
     private string? _eventId;
 
@@ -80,10 +82,12 @@ public partial class EventTeamViewModel : ObservableObject
 
     public EventTeamViewModel(
         IEventStaffApi staffApi,
-        IStaffInvitesApi invitesApi)
+        IStaffInvitesApi invitesApi,
+        IDialogService dialogService)
     {
         _staffApi = staffApi;
         _invitesApi = invitesApi;
+        _dialogs = dialogService;
     }
 
     private async Task LoadDataAsync(string eventId)
@@ -144,10 +148,8 @@ public partial class EventTeamViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            await Shell.Current.DisplayAlertAsync(
-                "Erro",
-                $"EventTeam LoadDataAsync failed: {ex.Message}",
-                "OK");
+            await _dialogs.ShowErrorAsync(
+                $"EventTeam LoadDataAsync failed: {ex.Message}");
         }
         finally
         {
@@ -195,10 +197,7 @@ public partial class EventTeamViewModel : ObservableObject
 
         if (!ValidationHelper.IsValidEmail(InviteEmail))
         {
-            await Shell.Current.DisplayAlertAsync(
-                "Erro",
-                "Informe um e-mail válido.",
-                "OK");
+            await _dialogs.ShowErrorAsync("Informe um e-mail válido.");
 
             return;
         }
@@ -229,10 +228,8 @@ public partial class EventTeamViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            await Shell.Current.DisplayAlertAsync(
-                "Erro",
-                $"EventTeam InviteAsync failed: {ex.Message}",
-                "OK");
+            await _dialogs.ShowErrorAsync(
+                $"EventTeam InviteAsync failed: {ex.Message}");
         }
     }
 
@@ -260,10 +257,8 @@ public partial class EventTeamViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            await Shell.Current.DisplayAlertAsync(
-                "Erro",
-                $"Falha ao atualizar função: {ex.Message}",
-                "OK");
+            await _dialogs.ShowErrorAsync(
+                $"Falha ao atualizar função: {ex.Message}");
         }
     }
 
@@ -294,10 +289,8 @@ public partial class EventTeamViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            await Shell.Current.DisplayAlertAsync(
-                "Erro",
-                $"EventTeam RemoveMember failed: {ex.Message}",
-                "OK");
+            await _dialogs.ShowErrorAsync(
+                $"EventTeam RemoveMember failed: {ex.Message}");
         }
     }
 

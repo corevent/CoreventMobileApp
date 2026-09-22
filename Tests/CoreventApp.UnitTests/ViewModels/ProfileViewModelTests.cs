@@ -29,7 +29,7 @@ public class ProfileViewModelTests
         };
         _authMock.SetupGet(x => x.CurrentCachedUser).Returns(user);
 
-        var vm = new ProfileViewModel(_authMock.Object);
+        var vm = new ProfileViewModel(_authMock.Object, new CoreventApp.Services.DialogService());
 
         vm.UserName.ShouldBe("Lucas Dev");
         vm.UserEmail.ShouldBe("lucas@test.com");

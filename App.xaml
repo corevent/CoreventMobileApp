@@ -3,6 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:local="clr-namespace:CoreventApp"
              xmlns:converters="clr-namespace:CoreventApp.Converters"
+             xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
              x:Class="CoreventApp.App">
     <Application.Resources>
         <ResourceDictionary>
@@ -12,7 +13,8 @@
             </ResourceDictionary.MergedDictionaries>
             <converters:CategoryDisplayConverter x:Key="CategoryDisplayConverter"/>
             <converters:LocationTypeDisplayConverter x:Key="LocationTypeDisplayConverter"/>
-            <converters:InvertedBoolConverter x:Key="InvertedBoolConverter"/>
+            <toolkit:InvertedBoolConverter x:Key="InvertedBoolConverter"/>
+            <toolkit:IsStringNotNullOrEmptyConverter x:Key="NotNullToVisibilityConverter"/>
         </ResourceDictionary>
     </Application.Resources>
 </Application>

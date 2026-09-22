@@ -17,6 +17,7 @@ public partial class CreateEventViewModel : ObservableObject
     private readonly IStatesApi _statesApi;
     private readonly PaymentInfoService _paymentInfoService;
     private readonly StorageService _storageService;
+    private readonly IDialogService _dialogs;
     private string? _editingEventId;
     private EventDetailDto? _originalEvent;
 
@@ -110,12 +111,13 @@ public partial class CreateEventViewModel : ObservableObject
         ["Híbrido"] = "hybrid"
     };
 
-    public CreateEventViewModel(IEventsApi eventsApi, IStatesApi statesApi, PaymentInfoService paymentInfoService, StorageService storageService)
+    public CreateEventViewModel(IEventsApi eventsApi, IStatesApi statesApi, PaymentInfoService paymentInfoService, StorageService storageService, IDialogService dialogService)
     {
         _eventsApi = eventsApi;
         _statesApi = statesApi;
         _paymentInfoService = paymentInfoService;
         _storageService = storageService;
+        _dialogs = dialogService;
     }
 
     public string? EditingEventId
@@ -222,7 +224,7 @@ public partial class CreateEventViewModel : ObservableObject
             if (response is null)
             {
                 Debug.WriteLine("Load states failed: no response");
-                await Shell.Current.DisplayAlertAsync("Erro", "Não foi possível carregar a lista de estados.", "OK");
+                await _dialogs.ShowErrorAsync("Não foi possível carregar a lista de estados.");
                 return;
             }
             Form.States.Clear();
@@ -232,7 +234,7 @@ public partial class CreateEventViewModel : ObservableObject
         catch (Exception ex)
         {
             Debug.WriteLine($"Load states failed: {ex.Message}");
-            await Shell.Current.DisplayAlertAsync("Erro", "Não foi possível carregar a lista de estados.", "OK");
+            await _dialogs.ShowErrorAsync("Não foi possível carregar a lista de estados.");
         }
         finally
         {
@@ -253,7 +255,7 @@ public partial class CreateEventViewModel : ObservableObject
             if (response is null)
             {
                 Debug.WriteLine("Load cities failed: no response");
-                await Shell.Current.DisplayAlertAsync("Erro", "Não foi possível carregar a lista de cidades.", "OK");
+                await _dialogs.ShowErrorAsync("Não foi possível carregar a lista de cidades.");
                 return;
             }
             Form.Cities.Clear();
@@ -263,7 +265,7 @@ public partial class CreateEventViewModel : ObservableObject
         catch (Exception ex)
         {
             Debug.WriteLine($"Load cities failed: {ex.Message}");
-            await Shell.Current.DisplayAlertAsync("Erro", "Não foi possível carregar a lista de cidades.", "OK");
+            await _dialogs.ShowErrorAsync("Não foi possível carregar a lista de cidades.");
         }
         finally
         {
@@ -276,7 +278,7 @@ public partial class CreateEventViewModel : ObservableObject
     {
         if (CurrentStep >= TotalSteps) return;
 
-        if (!ValidateStep(CurrentStep)) return;
+        if (!await ValidateStepAsync(CurrentStep)) return;
 
         CurrentStep++;
         UpdateUI();
@@ -305,7 +307,7 @@ public partial class CreateEventViewModel : ObservableObject
             var contentType = file.ContentType?.ToLowerInvariant() ?? string.Empty;
             if (contentType != "image/jpeg" && contentType != "image/png" && contentType != "image/webp" && contentType != "image/jpg")
             {
-                await Shell.Current.DisplayAlertAsync("Formato inválido", "Selecione uma imagem nos formatos JPEG, PNG ou WebP.", "OK");
+                await _dialogs.ShowAlertAsync("Formato inválido", "Selecione uma imagem nos formatos JPEG, PNG ou WebP.");
                 return;
             }
 
@@ -321,7 +323,7 @@ public partial class CreateEventViewModel : ObservableObject
     [RelayCommand]
     private async Task SaveDraftAsync()
     {
-        if (!ValidateAll()) return;
+        if (!await ValidateAllAsync()) return;
 
         bool isOpened = _originalEvent?.Status == "opened";
         string targetStatus = isOpened ? "opened" : "draft";
@@ -335,13 +337,12 @@ public partial class CreateEventViewModel : ObservableObject
                 var result = (await ApiResult.TryExecuteAsync(() => _eventsApi.UpdatePartialAsync(_editingEventId, payload), "Save event"))?.Data;
                 if (result is null)
                 {
-                    await Shell.Current.DisplayAlertAsync("Erro", "Não foi possível salvar as alterações.", "OK");
+                    await _dialogs.ShowErrorAsync("Não foi possível salvar as alterações.");
                     return;
                 }
                 await UploadBannerIfNeeded(_editingEventId);
-                var msg = isOpened ? "Alterações Salvas" : "Rascunho Atualizado";
                 var detail = isOpened ? "Suas alterações foram salvas com sucesso." : "As alterações foram salvas como rascunho.";
-                await Shell.Current.DisplayAlertAsync(msg, detail, "OK");
+                await _dialogs.ShowToastAsync(detail);
             }
             else
             {
@@ -349,12 +350,11 @@ public partial class CreateEventViewModel : ObservableObject
                 var result = (await ApiResult.TryExecuteAsync(() => _eventsApi.CreateAsync(dto), "Save event"))?.Data;
                 if (result is null)
                 {
-                    await Shell.Current.DisplayAlertAsync("Erro", "Não foi possível salvar o rascunho.", "OK");
+                    await _dialogs.ShowErrorAsync("Não foi possível salvar o rascunho.");
                     return;
                 }
                 await UploadBannerIfNeeded(result.Id);
-                await Shell.Current.DisplayAlertAsync("Rascunho Salvo",
-                    "Seu evento foi salvo como rascunho.", "OK");
+                await _dialogs.ShowToastAsync("Seu evento foi salvo como rascunho.");
             }
 
             await Shell.Current.GoToAsync("../..");
@@ -368,12 +368,12 @@ public partial class CreateEventViewModel : ObservableObject
     [RelayCommand]
     private async Task PublishEventAsync()
     {
-        if (!ValidateAll()) return;
+        if (!await ValidateAllAsync()) return;
 
         if (_originalEvent?.Status == "opened")
         {
-            await Shell.Current.DisplayAlertAsync("Já Publicado",
-                "Este evento já está publicado. Use 'Salvar Alterações' para editar os dados.", "OK");
+            await _dialogs.ShowAlertAsync("Já Publicado",
+                "Este evento já está publicado. Use 'Salvar Alterações' para editar os dados.");
             return;
         }
 
@@ -381,7 +381,7 @@ public partial class CreateEventViewModel : ObservableObject
         var paymentInfos = await _paymentInfoService.GetAllAsync();
         if (paymentInfos.Count == 0)
         {
-            var goToConfig = await Shell.Current.DisplayAlertAsync(
+            var goToConfig = await _dialogs.ConfirmAsync(
                 "Dados de Repasse Necessários",
                 "Você precisa cadastrar seus dados de repasse antes de publicar um evento. Deseja configurar agora?",
                 "Configurar Agora", "Cancelar");
@@ -399,12 +399,11 @@ public partial class CreateEventViewModel : ObservableObject
                 var result = (await ApiResult.TryExecuteAsync(() => _eventsApi.UpdatePartialAsync(_editingEventId, payload), "Save event"))?.Data;
                 if (result is null)
                 {
-                    await Shell.Current.DisplayAlertAsync("Erro", "Não foi possível publicar o evento.", "OK");
+                    await _dialogs.ShowErrorAsync("Não foi possível publicar o evento.");
                     return;
                 }
                 await UploadBannerIfNeeded(_editingEventId);
-                await Shell.Current.DisplayAlertAsync("Evento Atualizado",
-                    "Suas alterações foram publicadas.", "OK");
+                await _dialogs.ShowToastAsync("Suas alterações foram publicadas.");
             }
             else
             {
@@ -412,12 +411,11 @@ public partial class CreateEventViewModel : ObservableObject
                 var result = (await ApiResult.TryExecuteAsync(() => _eventsApi.CreateAsync(dto), "Save event"))?.Data;
                 if (result is null)
                 {
-                    await Shell.Current.DisplayAlertAsync("Erro", "Não foi possível publicar o evento.", "OK");
+                    await _dialogs.ShowErrorAsync("Não foi possível publicar o evento.");
                     return;
                 }
                 await UploadBannerIfNeeded(result.Id);
-                await Shell.Current.DisplayAlertAsync("Evento Publicado",
-                    "Seu evento foi publicado com sucesso!", "OK");
+                await _dialogs.ShowToastAsync("Seu evento foi publicado com sucesso!");
             }
 
             await Shell.Current.GoToAsync("../..");
@@ -441,11 +439,11 @@ public partial class CreateEventViewModel : ObservableObject
         await Shell.Current.GoToAsync("..");
     }
 
-    private bool ValidateStep(int step)
+    private async Task<bool> ValidateStepAsync(int step)
     {
         return step switch
         {
-            1 => ValidateStep1(),
+            1 => await ValidateStep1Async(),
             2 => Form.StartDate != default &&
                  (IsEditing || Form.StartDate > DateTime.Now) &&
                  Form.EndDate >= Form.StartDate,
@@ -453,29 +451,29 @@ public partial class CreateEventViewModel : ObservableObject
         };
     }
 
-    private bool ValidateStep1()
+    private async Task<bool> ValidateStep1Async()
     {
         if (string.IsNullOrWhiteSpace(Form.Title) || Form.Title.Trim().Length < 3)
         {
-            Shell.Current.DisplayAlertAsync("Erro", "O título deve ter pelo menos 3 caracteres.", "OK");
+            await _dialogs.ShowErrorAsync("O título deve ter pelo menos 3 caracteres.");
             return false;
         }
         if (Form.Title.Trim().Length > 200)
         {
-            Shell.Current.DisplayAlertAsync("Erro", "O título deve ter no máximo 200 caracteres.", "OK");
+            await _dialogs.ShowErrorAsync("O título deve ter no máximo 200 caracteres.");
             return false;
         }
         if (Form.Description?.Length > 2000)
         {
-            Shell.Current.DisplayAlertAsync("Erro", "A descrição deve ter no máximo 2000 caracteres.", "OK");
+            await _dialogs.ShowErrorAsync("A descrição deve ter no máximo 2000 caracteres.");
             return false;
         }
         return true;
     }
 
-    private bool ValidateAll()
+    private async Task<bool> ValidateAllAsync()
     {
-        var valid = ValidateStep1();
+        var valid = await ValidateStep1Async();
 
         valid = valid &&
             Form.StartDate != default &&
@@ -487,13 +485,13 @@ public partial class CreateEventViewModel : ObservableObject
 
         if (Form.MaxParticipants < 1)
         {
-            Shell.Current.DisplayAlertAsync("Erro", "O número máximo de participantes deve ser pelo menos 1.", "OK");
+            await _dialogs.ShowErrorAsync("O número máximo de participantes deve ser pelo menos 1.");
             return false;
         }
 
         if (string.IsNullOrWhiteSpace(Form.Category))
         {
-            Shell.Current.DisplayAlertAsync("Erro", "Selecione uma categoria para o evento.", "OK");
+            await _dialogs.ShowErrorAsync("Selecione uma categoria para o evento.");
             return false;
         }
 
@@ -508,7 +506,7 @@ public partial class CreateEventViewModel : ObservableObject
 
             if (!valid)
             {
-                Shell.Current.DisplayAlertAsync("Erro", "Preencha todos os campos de endereço corretamente.", "OK");
+                await _dialogs.ShowErrorAsync("Preencha todos os campos de endereço corretamente.");
                 return false;
             }
         }

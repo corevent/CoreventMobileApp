@@ -14,7 +14,7 @@ public class ManageEventViewModelTests
     {
         var eventsApiMock = new Mock<IEventsApi>();
 
-        _vm = new ManageEventViewModel(eventsApiMock.Object);
+        _vm = new ManageEventViewModel(eventsApiMock.Object, new CoreventApp.Services.DialogService());
     }
 
     [Fact]

@@ -14,6 +14,7 @@ public partial class PanelOrganizerViewModel : ObservableObject
 {
     private readonly IEventsApi _eventsApi;
     private readonly PaymentInfoService _paymentInfoService;
+    private readonly IDialogService _dialogs;
 
     [ObservableProperty]
     public partial bool IsLoading { get; set; }
@@ -25,10 +26,11 @@ public partial class PanelOrganizerViewModel : ObservableObject
     public ObservableCollection<EventListItemDto> FilteredEvents { get; } = new();
     public ObservableCollection<StatusFilterChip> FilterChips { get; } = new();
 
-    public PanelOrganizerViewModel(IEventsApi eventsApi, PaymentInfoService paymentInfoService)
+    public PanelOrganizerViewModel(IEventsApi eventsApi, PaymentInfoService paymentInfoService, IDialogService dialogService)
     {
         _eventsApi = eventsApi;
         _paymentInfoService = paymentInfoService;
+        _dialogs = dialogService;
 
         FilterChips.Add(new StatusFilterChip("Todos", null, true));
         FilterChips.Add(new StatusFilterChip("Rascunho", "draft", false));
@@ -59,7 +61,7 @@ public partial class PanelOrganizerViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            await Shell.Current.DisplayAlertAsync("Erro", "Não foi possível carregar seus eventos.", "OK");
+            await _dialogs.ShowErrorAsync("Não foi possível carregar seus eventos.");
             Debug.WriteLine($"PanelOrganizer LoadAsync failed: {ex.Message}");
         }
         finally
@@ -124,7 +126,7 @@ public partial class PanelOrganizerViewModel : ObservableObject
     {
         if (!HasPaymentInfo)
         {
-            await Shell.Current.DisplayAlertAsync("Atenção", "Configure seus dados de repasse antes de criar um evento.", "OK");
+            await _dialogs.ShowAlertAsync("Atenção", "Configure seus dados de repasse antes de criar um evento.");
             return;
         }
 

@@ -60,36 +60,6 @@ public class ConverterTests
     }
 
     [Theory]
-    [InlineData(1, "1", true)]
-    [InlineData(2, "2", true)]
-    [InlineData(1, "2", false)]
-    [InlineData(0, "1", false)]
-    [InlineData(null, "1", false)]
-    [InlineData(1, null, false)]
-    [InlineData(1, "invalid_number", false)]
-    public void IntegerToVisibilityConverter_ShouldConvertCorrectly(object? value, object? param, bool expected)
-    {
-        var converter = new IntegerToVisibilityConverter();
-        var result = converter.Convert(value, typeof(bool), param, CultureInfo.InvariantCulture);
-        result.ShouldBe(expected);
-    }
-
-    [Theory]
-    [InlineData(true, false)]
-    [InlineData(false, true)]
-    [InlineData(null, false)]
-    [InlineData("not_a_bool", false)]
-    public void InvertedBoolConverter_ShouldInvertCorrectly(object? input, bool expected)
-    {
-        var converter = new InvertedBoolConverter();
-        var result = converter.Convert(input, typeof(bool), null, CultureInfo.InvariantCulture);
-        result.ShouldBe(expected);
-
-        var backResult = converter.ConvertBack(input, typeof(bool), null, CultureInfo.InvariantCulture);
-        backResult.ShouldBe(expected);
-    }
-
-    [Theory]
     [InlineData(0, "☆☆☆☆☆")]
     [InlineData(1, "★☆☆☆☆")]
     [InlineData(3, "★★★☆☆")]
@@ -105,17 +75,4 @@ public class ConverterTests
         result.ShouldBe(expected);
     }
 
-    [Theory]
-    [InlineData(null, false)]
-    [InlineData("", false)]
-    [InlineData("hello", true)]
-    [InlineData(0, false)]
-    [InlineData(5, true)]
-    [InlineData(true, true)]
-    public void NotNullToVisibilityConverter_ShouldConvertCorrectly(object? input, bool expected)
-    {
-        var converter = new NotNullToVisibilityConverter();
-        var result = converter.Convert(input, typeof(bool), null, CultureInfo.InvariantCulture);
-        result.ShouldBe(expected);
-    }
 }

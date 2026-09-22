@@ -10,10 +10,12 @@ namespace CoreventApp.ViewModels;
 public partial class ResetPasswordViewModel : ObservableObject
 {
     private readonly IAuthService _authService;
+    private readonly IDialogService _dialogs;
 
-    public ResetPasswordViewModel(IAuthService authService)
+    public ResetPasswordViewModel(IAuthService authService, IDialogService dialogService)
     {
         _authService = authService;
+        _dialogs = dialogService;
     }
 
     [ObservableProperty]
@@ -73,8 +75,7 @@ public partial class ResetPasswordViewModel : ObservableObject
 
         if (success)
         {
-            await Shell.Current.DisplayAlertAsync("Sucesso",
-                "Senha redefinida com sucesso!", "OK");
+            await _dialogs.ShowToastAsync("Senha redefinida com sucesso!");
             await Shell.Current.GoToAsync($"//welcome/{nameof(CoreventApp.Views.Login)}");
         }
         else

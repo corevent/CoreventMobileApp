@@ -38,7 +38,7 @@ public class EditProfileViewModelTests
         };
         _authMock.SetupGet(x => x.CurrentCachedUser).Returns(user);
 
-        var vm = new EditProfileViewModel(_authMock.Object, _storageService);
+        var vm = new EditProfileViewModel(_authMock.Object, _storageService, new CoreventApp.Services.DialogService());
 
         vm.UserName.ShouldBe("Lucas Souza");
         vm.UserPhone.ShouldBe("11988887777");

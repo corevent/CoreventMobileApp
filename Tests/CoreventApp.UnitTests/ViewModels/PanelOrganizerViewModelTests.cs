@@ -24,7 +24,7 @@ public class PanelOrganizerViewModelTests
         var paymentInfoApi = Refit.RestService.For<IPaymentInfoApi>(client, RefitConfig.CreateSettings());
         var paymentInfoService = new PaymentInfoService(paymentInfoApi);
 
-        _vm = new PanelOrganizerViewModel(eventsApiMock.Object, paymentInfoService);
+        _vm = new PanelOrganizerViewModel(eventsApiMock.Object, paymentInfoService, new CoreventApp.Services.DialogService());
     }
 
     [Fact]

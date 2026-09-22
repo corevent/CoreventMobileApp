@@ -3,8 +3,9 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:vm="clr-namespace:CoreventApp.ViewModels"
              xmlns:dtos="clr-namespace:CoreventApp.Models.Dtos"
-             xmlns:cv="clr-namespace:CoreventApp.Converters"
-             x:Class="CoreventApp.Views.PanelOrganizer"
+              xmlns:cv="clr-namespace:CoreventApp.Converters"
+              xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
+              x:Class="CoreventApp.Views.PanelOrganizer"
              xmlns:mi="http://www.aathifmahir.com/dotnet/2022/maui/icons"
              x:DataType="vm:PanelOrganizerViewModel"
              x:Name="ThisPage"
@@ -14,9 +15,8 @@
 
     <ContentPage.Resources>
         <ResourceDictionary>
-            <cv:IntegerToVisibilityConverter x:Key="IntToVisibility"/>
             <cv:StatusDisplayConverter x:Key="StatusDisplayConverter"/>
-            <cv:InvertedBoolConverter x:Key="InvertedBool"/>
+            <toolkit:InvertedBoolConverter x:Key="InvertedBool"/>
         </ResourceDictionary>
     </ContentPage.Resources>
 

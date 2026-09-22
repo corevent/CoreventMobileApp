@@ -21,7 +21,7 @@ public class CheckInViewModelTests
         var eventsApiMock = new Mock<IEventsApi>();
         var checkInApiMock = new Mock<ICheckInApi>();
 
-        _vm = new CheckInViewModel(eventsApiMock.Object, checkInApiMock.Object);
+        _vm = new CheckInViewModel(eventsApiMock.Object, checkInApiMock.Object, new CoreventApp.Services.DialogService());
     }
 
     [Fact]

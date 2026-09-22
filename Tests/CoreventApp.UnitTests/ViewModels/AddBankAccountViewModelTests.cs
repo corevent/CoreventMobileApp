@@ -20,7 +20,7 @@ public class AddBankAccountViewModelTests
         var api = Refit.RestService.For<IPaymentInfoApi>(client, RefitConfig.CreateSettings());
         var service = new PaymentInfoService(api);
 
-        _vm = new AddBankAccountViewModel(service);
+        _vm = new AddBankAccountViewModel(service, new CoreventApp.Services.DialogService());
     }
 
     [Fact]

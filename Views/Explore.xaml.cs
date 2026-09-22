@@ -9,13 +9,4 @@ public partial class Explore : ContentPage
 		InitializeComponent();
 		BindingContext = viewModel;
 	}
-
-	protected override void OnAppearing()
-	{
-		base.OnAppearing();
-		if (BindingContext is ExploreViewModel vm)
-		{
-			_ = vm.SearchCommand.ExecuteAsync(null);
-		}
-	}
 }

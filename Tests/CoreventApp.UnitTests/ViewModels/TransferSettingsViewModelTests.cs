@@ -18,7 +18,7 @@ public class TransferSettingsViewModelTests
     {
         _apiMock = new Mock<IPaymentInfoApi>();
         _paymentInfoService = new PaymentInfoService(_apiMock.Object);
-        _vm = new TransferSettingsViewModel(_paymentInfoService);
+        _vm = new TransferSettingsViewModel(_paymentInfoService, new CoreventApp.Services.DialogService());
     }
 
     [Fact]

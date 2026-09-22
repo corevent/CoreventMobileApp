@@ -20,7 +20,7 @@ public class EventTeamViewModelTests
         var staffApiMock = new Mock<IEventStaffApi>();
         var invitesApiMock = new Mock<IStaffInvitesApi>();
 
-        _vm = new EventTeamViewModel(staffApiMock.Object, invitesApiMock.Object);
+        _vm = new EventTeamViewModel(staffApiMock.Object, invitesApiMock.Object, new CoreventApp.Services.DialogService());
     }
 
     [Fact]

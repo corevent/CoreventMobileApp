@@ -8,10 +8,12 @@ namespace CoreventApp.ViewModels;
 public partial class ForgotPasswordViewModel : ObservableObject
 {
     private readonly IAuthService _authService;
+    private readonly IDialogService _dialogs;
 
-    public ForgotPasswordViewModel(IAuthService authService)
+    public ForgotPasswordViewModel(IAuthService authService, IDialogService dialogService)
     {
         _authService = authService;
+        _dialogs = dialogService;
     }
 
     [ObservableProperty]
@@ -27,7 +29,7 @@ public partial class ForgotPasswordViewModel : ObservableObject
 
         if (!ValidationHelper.IsValidEmail(Email))
         {
-            await Shell.Current.DisplayAlertAsync("Aviso", "Informe seu e-mail para recuperar a senha.", "OK");
+            await _dialogs.ShowAlertAsync("Aviso", "Informe seu e-mail para recuperar a senha.");
             return;
         }
 
@@ -37,8 +39,7 @@ public partial class ForgotPasswordViewModel : ObservableObject
 
         IsLoading = false;
 
-        await Shell.Current.DisplayAlertAsync("E-mail enviado",
-            "Se o e-mail estiver cadastrado, enviaremos um código de verificação.", "OK");
+        await _dialogs.ShowToastAsync("E-mail enviado. Se o e-mail estiver cadastrado, enviaremos um código de verificação.");
 
         await Shell.Current.GoToAsync(
             $"EmailVerification?Email={Uri.EscapeDataString(Email)}&Mode=reset");

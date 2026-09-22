@@ -24,6 +24,7 @@ public partial class ExploreViewModel : ObservableObject
 {
     private readonly IEventsApi _eventsApi;
     private readonly IAuthService _authService;
+    private readonly IDialogService _dialogs;
     private int _currentPage = 1;
     private const int PageSize = 10;
     private bool _hasMorePages = true;
@@ -42,10 +43,11 @@ public partial class ExploreViewModel : ObservableObject
     public ObservableCollection<CategoryItem> Categories { get; } = new();
     public ObservableCollection<EventListItemDto> Events { get; } = new();
 
-    public ExploreViewModel(IEventsApi eventsApi, IAuthService authService)
+    public ExploreViewModel(IEventsApi eventsApi, IAuthService authService, IDialogService dialogService)
     {
         _eventsApi = eventsApi;
         _authService = authService;
+        _dialogs = dialogService;
 
         Categories.Add(new CategoryItem { Name = "Todos", ApiValue = "", IsSelected = true });
         Categories.Add(new CategoryItem { Name = "Música", ApiValue = "music" });
@@ -114,7 +116,7 @@ public partial class ExploreViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            await Shell.Current.DisplayAlertAsync("Erro", $"Explore SearchAsync failed: {ex.Message}", "OK");
+            await _dialogs.ShowErrorAsync($"Explore SearchAsync failed: {ex.Message}");
         }
         finally
         {
@@ -152,7 +154,7 @@ public partial class ExploreViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            await Shell.Current.DisplayAlertAsync("Erro", $"Explore LoadMoreAsync failed: {ex.Message}", "OK");
+            await _dialogs.ShowErrorAsync($"Explore LoadMoreAsync failed: {ex.Message}");
             _currentPage--;
         }
         finally

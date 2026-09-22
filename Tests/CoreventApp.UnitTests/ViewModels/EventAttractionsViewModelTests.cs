@@ -22,7 +22,7 @@ public class EventAttractionsViewModelTests
 
         var eventsApiMock = new Mock<IEventsApi>();
 
-        _vm = new EventAttractionsViewModel(attrApiMock.Object, eventsApiMock.Object);
+        _vm = new EventAttractionsViewModel(attrApiMock.Object, eventsApiMock.Object, new CoreventApp.Services.DialogService());
     }
 
     [Fact]

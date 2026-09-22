@@ -26,7 +26,7 @@ public class CreateEventViewModelTests
         var storageApi = Refit.RestService.For<IStorageApi>(client, RefitConfig.CreateSettings());
         var storageService = new StorageService(storageApi);
 
-        _vm = new CreateEventViewModel(eventsApiMock.Object, statesApiMock.Object, paymentInfoService, storageService);
+        _vm = new CreateEventViewModel(eventsApiMock.Object, statesApiMock.Object, paymentInfoService, storageService, new CoreventApp.Services.DialogService());
     }
 
     [Fact]

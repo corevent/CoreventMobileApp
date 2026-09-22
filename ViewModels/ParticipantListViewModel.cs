@@ -13,6 +13,7 @@ namespace CoreventApp.ViewModels;
 public partial class ParticipantListViewModel : ObservableObject
 {
     private readonly IParticipantsApi _participantsApi;
+    private readonly IDialogService _dialogs;
 
     [ObservableProperty]
     public partial string EventId { get; set; } = string.Empty;
@@ -27,9 +28,10 @@ public partial class ParticipantListViewModel : ObservableObject
 
     public ObservableCollection<ParticipantSummary> Participants { get; } = new();
 
-    public ParticipantListViewModel(IParticipantsApi participantsApi)
+    public ParticipantListViewModel(IParticipantsApi participantsApi, IDialogService dialogService)
     {
         _participantsApi = participantsApi;
+        _dialogs = dialogService;
     }
 
     partial void OnEventIdChanged(string value)
@@ -80,7 +82,7 @@ public partial class ParticipantListViewModel : ObservableObject
     [RelayCommand]
     private async Task ExportCsvAsync()
     {
-        await Shell.Current.DisplayAlertAsync("Exportar", "Lista exportada com sucesso!", "OK");
+        await _dialogs.ShowToastAsync("Lista exportada com sucesso!");
     }
 }
 

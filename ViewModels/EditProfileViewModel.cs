@@ -10,13 +10,15 @@ public partial class EditProfileViewModel : ObservableObject
 {
   private readonly IAuthService _authService;
   private readonly StorageService _storageService;
+  private readonly IDialogService _dialogs;
   private Stream? _avatarStream;
   private string? _avatarContentType;
 
-  public EditProfileViewModel(IAuthService authService, StorageService storageService)
+  public EditProfileViewModel(IAuthService authService, StorageService storageService, IDialogService dialogService)
   {
     _authService = authService;
     _storageService = storageService;
+    _dialogs = dialogService;
 
     var cached = _authService.CurrentCachedUser;
     if (cached != null)
@@ -35,6 +37,7 @@ public partial class EditProfileViewModel : ObservableObject
   [ObservableProperty]
   public partial string UserAvatar { get; set; } = string.Empty;
 
+  [RelayCommand]
   public async Task LoadUserAsync()
   {
     if (IsBusy)
@@ -49,7 +52,7 @@ public partial class EditProfileViewModel : ObservableObject
     }
     catch (Exception ex)
     {
-      await Shell.Current.DisplayAlertAsync("Erro", $"EditProfileViewModel.LoadUserAsync failed: {ex.Message}", "OK");
+      await _dialogs.ShowErrorAsync($"EditProfileViewModel.LoadUserAsync failed: {ex.Message}");
     }
     finally
     {
@@ -69,17 +72,20 @@ public partial class EditProfileViewModel : ObservableObject
   {
     try
     {
-      var photo = await MediaPicker.Default.PickPhotoAsync(new MediaPickerOptions
+      var photos = await MediaPicker.Default.PickPhotosAsync(new MediaPickerOptions
       {
+        SelectionLimit = 1,
         Title = "Selecionar foto"
       });
+
+      var photo = photos.FirstOrDefault();
 
       if (photo is null) return;
 
       var contentType = photo.ContentType?.ToLowerInvariant() ?? string.Empty;
       if (contentType != "image/jpeg" && contentType != "image/png" && contentType != "image/webp" && contentType != "image/jpg")
       {
-        await Shell.Current.DisplayAlertAsync("Formato inválido", "Selecione uma imagem nos formatos JPEG, PNG ou WebP.", "OK");
+        await _dialogs.ShowAlertAsync("Formato inválido", "Selecione uma imagem nos formatos JPEG, PNG ou WebP.");
         return;
       }
 
@@ -101,13 +107,13 @@ public partial class EditProfileViewModel : ObservableObject
   {
     if (string.IsNullOrWhiteSpace(UserName) || UserName.Trim().Length < 3)
     {
-      await Shell.Current.DisplayAlertAsync("Erro", "O nome deve ter pelo menos 3 caracteres.", "OK");
+      await _dialogs.ShowErrorAsync("O nome deve ter pelo menos 3 caracteres.");
       return;
     }
 
     if (!string.IsNullOrWhiteSpace(UserPhone) && !ValidationHelper.IsValidPhone(UserPhone))
     {
-      await Shell.Current.DisplayAlertAsync("Erro", "Telefone inválido. Use o formato (11) 91234-5678.", "OK");
+      await _dialogs.ShowErrorAsync("Telefone inválido. Use o formato (11) 91234-5678.");
       return;
     }
 
@@ -122,7 +128,7 @@ public partial class EditProfileViewModel : ObservableObject
 
       if (avatarUrl is null)
       {
-        await Shell.Current.DisplayAlertAsync("Erro", "Não foi possível fazer upload da imagem. Verifique sua conexão.", "OK");
+        await _dialogs.ShowErrorAsync("Não foi possível fazer upload da imagem. Verifique sua conexão.");
         return;
       }
     }

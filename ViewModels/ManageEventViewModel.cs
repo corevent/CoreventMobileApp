@@ -11,6 +11,7 @@ namespace CoreventApp.ViewModels;
 public partial class ManageEventViewModel : ObservableObject
 {
     private readonly IEventsApi _eventsApi;
+    private readonly IDialogService _dialogs;
     private string? _eventId;
     private EventDetailDto? _currentEvent;
 
@@ -53,9 +54,10 @@ public partial class ManageEventViewModel : ObservableObject
         }
     }
 
-    public ManageEventViewModel(IEventsApi eventsApi)
+    public ManageEventViewModel(IEventsApi eventsApi, IDialogService dialogService)
     {
         _eventsApi = eventsApi;
+        _dialogs = dialogService;
     }
 
     private async Task LoadEventAsync(string eventId)
@@ -86,7 +88,7 @@ public partial class ManageEventViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            await Shell.Current.DisplayAlertAsync("Erro", $"ManageEvent LoadEventAsync failed: {ex.Message}", "OK");
+            await _dialogs.ShowErrorAsync($"ManageEvent LoadEventAsync failed: {ex.Message}");
         }
         finally
         {
@@ -129,13 +131,12 @@ public partial class ManageEventViewModel : ObservableObject
             Status = "opened";
             StatusDisplayText = "ATIVO";
             UpdatePermissions();
-            await Shell.Current.DisplayAlertAsync("Evento Publicado",
-                "Agora seu evento está visível para o público.", "OK");
+            await _dialogs.ShowToastAsync("Agora seu evento está visível para o público.");
         }
         else
         {
-            await Shell.Current.DisplayAlertAsync("Erro",
-                "Não foi possível publicar o evento.", "OK");
+            await _dialogs.ShowErrorAsync(
+                "Não foi possível publicar o evento.");
         }
     }
 
@@ -144,7 +145,7 @@ public partial class ManageEventViewModel : ObservableObject
     {
         if (!CanCancel || _eventId is null) return;
 
-        bool confirm = await Shell.Current.DisplayAlertAsync("Cancelar Evento",
+        bool confirm = await _dialogs.ConfirmAsync("Cancelar Evento",
             "Tem certeza que deseja cancelar este evento? Esta ação não pode ser desfeita.",
             "Sim, Cancelar", "Voltar");
 
@@ -156,13 +157,12 @@ public partial class ManageEventViewModel : ObservableObject
             Status = "canceled";
             StatusDisplayText = "CANCELADO";
             UpdatePermissions();
-            await Shell.Current.DisplayAlertAsync("Evento Cancelado",
-                "O evento foi cancelado com sucesso.", "OK");
+            await _dialogs.ShowToastAsync("O evento foi cancelado com sucesso.");
         }
         else
         {
-            await Shell.Current.DisplayAlertAsync("Erro",
-                "Não foi possível cancelar o evento.", "OK");
+            await _dialogs.ShowErrorAsync(
+                "Não foi possível cancelar o evento.");
         }
     }
 
@@ -182,7 +182,7 @@ public partial class ManageEventViewModel : ObservableObject
     {
         if (!CanDelete || _eventId is null) return;
 
-        bool confirm = await Shell.Current.DisplayAlertAsync("Excluir Evento",
+        bool confirm = await _dialogs.ConfirmAsync("Excluir Evento",
             "Tem certeza que deseja excluir este evento? Esta ação não pode ser desfeita.",
             "Sim, Excluir", "Cancelar");
 
@@ -191,14 +191,13 @@ public partial class ManageEventViewModel : ObservableObject
         var success = await ApiResult.TryExecuteAsync(() => _eventsApi.DeleteAsync(_eventId), "Delete event");
         if (success)
         {
-            await Shell.Current.DisplayAlertAsync("Evento Excluído",
-                "O evento foi excluído com sucesso.", "OK");
+            await _dialogs.ShowToastAsync("O evento foi excluído com sucesso.");
             await Shell.Current.GoToAsync("..");
         }
         else
         {
-            await Shell.Current.DisplayAlertAsync("Erro",
-                "Não foi possível excluir o evento.", "OK");
+            await _dialogs.ShowErrorAsync(
+                "Não foi possível excluir o evento.");
         }
     }
 

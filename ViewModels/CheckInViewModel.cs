@@ -12,6 +12,7 @@ public partial class CheckInViewModel : ObservableObject
 {
     private readonly IEventsApi _eventsApi;
     private readonly ICheckInApi _checkInApi;
+    private readonly IDialogService _dialogs;
     private string? _eventId;
 
     [ObservableProperty]
@@ -46,10 +47,11 @@ public partial class CheckInViewModel : ObservableObject
         }
     }
 
-    public CheckInViewModel(IEventsApi eventsApi, ICheckInApi checkInApi)
+    public CheckInViewModel(IEventsApi eventsApi, ICheckInApi checkInApi, IDialogService dialogService)
     {
         _eventsApi = eventsApi;
         _checkInApi = checkInApi;
+        _dialogs = dialogService;
     }
 
     private async Task LoadEventAsync(string eventId)
@@ -76,7 +78,7 @@ public partial class CheckInViewModel : ObservableObject
         catch (Exception ex)
         {
             Debug.WriteLine($"CheckIn LoadEventAsync failed: {ex.Message}");
-            await Shell.Current.DisplayAlertAsync("Erro", "Não foi possível carregar os dados do evento.", "OK");
+            await _dialogs.ShowErrorAsync("Não foi possível carregar os dados do evento.");
         }
     }
 

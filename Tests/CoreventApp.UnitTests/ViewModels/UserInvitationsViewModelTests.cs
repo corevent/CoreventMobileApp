@@ -15,7 +15,7 @@ public class UserInvitationsViewModelTests
     public UserInvitationsViewModelTests()
     {
         _invitesApiMock = new Mock<IStaffInvitesApi>();
-        _vm = new UserInvitationsViewModel(_invitesApiMock.Object);
+        _vm = new UserInvitationsViewModel(_invitesApiMock.Object, new CoreventApp.Services.DialogService());
     }
 
     private static UserInvitationPageDto Page(params UserInvitationDto[] items) =>

@@ -19,7 +19,7 @@ public class HomeViewModelTests
         _eventsApiMock = new Mock<IEventsApi>();
         _authMock = new Mock<IAuthService>();
 
-        _vm = new HomeViewModel(_eventsApiMock.Object, _authMock.Object);
+        _vm = new HomeViewModel(_eventsApiMock.Object, _authMock.Object, new CoreventApp.Services.DialogService());
     }
 
     [Fact]

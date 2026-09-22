@@ -15,7 +15,7 @@ public class LoginViewModelTests
     public LoginViewModelTests()
     {
         _authServiceMock = new Mock<IAuthService>();
-        _viewModel = new LoginViewModel(_authServiceMock.Object);
+        _viewModel = new LoginViewModel(_authServiceMock.Object, new CoreventApp.Services.DialogService());
     }
 
     [Fact]

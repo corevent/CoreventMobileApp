@@ -4,6 +4,7 @@
              xmlns:vm="clr-namespace:CoreventApp.ViewModels"
              xmlns:cv="clr-namespace:CoreventApp.Converters"
              xmlns:mi="http://www.aathifmahir.com/dotnet/2022/maui/icons"
+             xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
              x:Class="CoreventApp.Views.EventTeam"
              x:DataType="vm:EventTeamViewModel"
              x:Name="ThisPage"
@@ -13,6 +14,9 @@
 
     <ContentPage.Resources>
         <ResourceDictionary>
+            <Style x:Key="InvalidEntryStyle" TargetType="Entry">
+                <Setter Property="TextColor" Value="{StaticResource error_color}" />
+            </Style>
         </ResourceDictionary>
     </ContentPage.Resources>
 
@@ -62,7 +66,12 @@
                            Keyboard="Email"
                            TextColor="{StaticResource input_text}"
                            BackgroundColor="{StaticResource input_color}"
-                           IsVisible="{Binding IsInviteFormVisible}"/>
+                           IsVisible="{Binding IsInviteFormVisible}">
+                        <Entry.Behaviors>
+                            <toolkit:EmailValidationBehavior Flags="ValidateOnValueChanged"
+                                                            InvalidStyle="{StaticResource InvalidEntryStyle}" />
+                        </Entry.Behaviors>
+                    </Entry>
 
                     <Label Text="Tipo de Colaborador"
                            FontSize="14"

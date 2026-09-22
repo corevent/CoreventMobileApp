@@ -21,7 +21,7 @@ public class ManageTicketsViewModelTests
         var ticketTypesApiMock = new Mock<ITicketTypesApi>();
         var eventsApiMock = new Mock<IEventsApi>();
 
-        _vm = new ManageTicketsViewModel(ticketTypesApiMock.Object, eventsApiMock.Object);
+        _vm = new ManageTicketsViewModel(ticketTypesApiMock.Object, eventsApiMock.Object, new CoreventApp.Services.DialogService());
     }
 
     [Fact]

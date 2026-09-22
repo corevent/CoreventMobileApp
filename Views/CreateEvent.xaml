@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             xmlns:vm="clr-namespace:CoreventApp.ViewModels"
-             xmlns:cv="clr-namespace:CoreventApp.Converters"
-             x:Class="CoreventApp.Views.CreateEvent"
+              xmlns:vm="clr-namespace:CoreventApp.ViewModels"
+              xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
+              x:Class="CoreventApp.Views.CreateEvent"
              xmlns:mi="http://www.aathifmahir.com/dotnet/2022/maui/icons"
              x:DataType="vm:CreateEventViewModel"
              Title="Criar Evento"
@@ -12,8 +12,22 @@
 
     <ContentPage.Resources>
         <ResourceDictionary>
-            <cv:IntegerToVisibilityConverter x:Key="StepConverter"/>
-            <cv:NotNullToVisibilityConverter x:Key="NotNullConverter"/>
+            <toolkit:CompareConverter x:Key="IsStep1" ComparisonOperator="Equal">
+                <toolkit:CompareConverter.ComparingValue>
+                    <x:Int32>1</x:Int32>
+                </toolkit:CompareConverter.ComparingValue>
+            </toolkit:CompareConverter>
+            <toolkit:CompareConverter x:Key="IsStep2" ComparisonOperator="Equal">
+                <toolkit:CompareConverter.ComparingValue>
+                    <x:Int32>2</x:Int32>
+                </toolkit:CompareConverter.ComparingValue>
+            </toolkit:CompareConverter>
+            <toolkit:CompareConverter x:Key="IsStep3" ComparisonOperator="Equal">
+                <toolkit:CompareConverter.ComparingValue>
+                    <x:Int32>3</x:Int32>
+                </toolkit:CompareConverter.ComparingValue>
+            </toolkit:CompareConverter>
+            <toolkit:IsStringNotNullOrEmptyConverter x:Key="NotNullConverter"/>
         </ResourceDictionary>
     </ContentPage.Resources>
 
@@ -70,7 +84,7 @@
             <Grid RowDefinitions="*">
 
                 <!-- Step 1: Basic Info -->
-                <VerticalStackLayout IsVisible="{Binding CurrentStep, Converter={StaticResource StepConverter}, ConverterParameter=1}"
+                <VerticalStackLayout IsVisible="{Binding CurrentStep, Converter={StaticResource IsStep1}}"
                                      Spacing="16">
                     <VerticalStackLayout Spacing="6">
                         <Label Text="Título do Evento"
@@ -153,7 +167,7 @@
                 </VerticalStackLayout>
 
                 <!-- Step 2: Date & Participation -->
-                <VerticalStackLayout IsVisible="{Binding CurrentStep, Converter={StaticResource StepConverter}, ConverterParameter=2}"
+                <VerticalStackLayout IsVisible="{Binding CurrentStep, Converter={StaticResource IsStep2}}"
                                      Spacing="16">
                     <VerticalStackLayout Spacing="6">
                         <Label Text="Data de início"
@@ -196,7 +210,7 @@
                 </VerticalStackLayout>
 
                 <!-- Step 3: Location -->
-                <VerticalStackLayout IsVisible="{Binding CurrentStep, Converter={StaticResource StepConverter}, ConverterParameter=3}"
+                <VerticalStackLayout IsVisible="{Binding CurrentStep, Converter={StaticResource IsStep3}}"
                                      Spacing="16">
                     <VerticalStackLayout Spacing="6">
                         <Label Text="Tipo de localização"
@@ -342,7 +356,7 @@
                     HeightRequest="48"
                     Background="{StaticResource gradient_button}"
                     Command="{Binding NextCommand}"
-                    IsVisible="{Binding CurrentStep, Converter={StaticResource StepConverter}, ConverterParameter=1}"/>
+                    IsVisible="{Binding CurrentStep, Converter={StaticResource IsStep1}}"/>
 
             <Button Text="{Binding ButtonNextText}"
                     TextColor="{StaticResource White}"
@@ -350,10 +364,10 @@
                     HeightRequest="48"
                     Background="{StaticResource gradient_button}"
                     Command="{Binding NextCommand}"
-                    IsVisible="{Binding CurrentStep, Converter={StaticResource StepConverter}, ConverterParameter=2}"/>
+                    IsVisible="{Binding CurrentStep, Converter={StaticResource IsStep2}}"/>
 
             <!-- Step 3: Draft / Publish -->
-            <VerticalStackLayout IsVisible="{Binding CurrentStep, Converter={StaticResource StepConverter}, ConverterParameter=3}"
+            <VerticalStackLayout IsVisible="{Binding CurrentStep, Converter={StaticResource IsStep3}}"
                                  Spacing="12">
                 <Button Text="{Binding DraftButtonText}"
                         TextColor="{StaticResource White}"

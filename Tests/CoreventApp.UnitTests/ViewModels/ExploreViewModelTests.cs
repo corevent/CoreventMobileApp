@@ -16,7 +16,7 @@ public class ExploreViewModelTests
         var eventsApiMock = new Mock<IEventsApi>();
         var authMock = new Mock<IAuthService>();
 
-        _vm = new ExploreViewModel(eventsApiMock.Object, authMock.Object);
+        _vm = new ExploreViewModel(eventsApiMock.Object, authMock.Object, new CoreventApp.Services.DialogService());
     }
 
     [Fact]

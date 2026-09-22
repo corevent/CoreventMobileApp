@@ -67,10 +67,12 @@ public partial class PixKeyItem : ObservableObject
 public partial class TransferSettingsViewModel : ObservableObject
 {
     private readonly PaymentInfoService _paymentInfoService;
+    private readonly IDialogService _dialogs;
 
-    public TransferSettingsViewModel(PaymentInfoService paymentInfoService)
+    public TransferSettingsViewModel(PaymentInfoService paymentInfoService, IDialogService dialogService)
     {
         _paymentInfoService = paymentInfoService;
+        _dialogs = dialogService;
     }
 
     public ObservableCollection<BankAccountItem> BankAccounts { get; } = new();
@@ -143,7 +145,7 @@ public partial class TransferSettingsViewModel : ObservableObject
     [RelayCommand]
     private async Task DeletePixKeyAsync(PixKeyItem key)
     {
-        bool answer = await Shell.Current.DisplayAlertAsync("Confirmar",
+        bool answer = await _dialogs.ConfirmAsync("Confirmar",
             $"Deseja excluir a chave Pix '{key.Description}'?", "Sim", "Não");
         if (!answer) return;
 
@@ -158,14 +160,14 @@ public partial class TransferSettingsViewModel : ObservableObject
         }
         else
         {
-            await Shell.Current.DisplayAlertAsync("Erro", "Não foi possível excluir a chave Pix.", "OK");
+            await _dialogs.ShowErrorAsync("Não foi possível excluir a chave Pix.");
         }
     }
 
     [RelayCommand]
     private async Task DeleteBankAccountAsync(BankAccountItem account)
     {
-        bool answer = await Shell.Current.DisplayAlertAsync("Confirmar",
+        bool answer = await _dialogs.ConfirmAsync("Confirmar",
             $"Deseja excluir a conta '{account.Description}'?", "Sim", "Não");
         if (!answer) return;
 
@@ -180,7 +182,7 @@ public partial class TransferSettingsViewModel : ObservableObject
         }
         else
         {
-            await Shell.Current.DisplayAlertAsync("Erro", "Não foi possível excluir a conta.", "OK");
+            await _dialogs.ShowErrorAsync("Não foi possível excluir a conta.");
         }
     }
 }

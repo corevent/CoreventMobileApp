@@ -100,6 +100,7 @@ public static class MauiProgram
 			.AddHttpMessageHandler<AuthTokenHandler>();
 
 		builder.Services.AddSingleton<IAuthService, AuthService>();
+		builder.Services.AddSingleton<IDialogService, DialogService>();
 		builder.Services.AddTransient<PaymentInfoService>();
 		builder.Services.AddTransient<FavoritesService>();
 		builder.Services.AddTransient<StorageService>();

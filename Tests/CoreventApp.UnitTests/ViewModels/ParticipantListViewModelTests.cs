@@ -20,7 +20,7 @@ public class ParticipantListViewModelTests
 
         var apiMock = new Mock<IParticipantsApi>();
 
-        _vm = new ParticipantListViewModel(apiMock.Object);
+        _vm = new ParticipantListViewModel(apiMock.Object, new CoreventApp.Services.DialogService());
     }
 
     [Fact]

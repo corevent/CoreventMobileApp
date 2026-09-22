@@ -9,6 +9,7 @@ namespace CoreventApp.ViewModels;
 public partial class UpdatePasswordViewModel : ObservableObject
 {
     private readonly IAuthService _authService;
+    private readonly IDialogService _dialogs;
 
     [ObservableProperty]
     public partial string CurrentPassword { get; set; } = string.Empty;
@@ -27,9 +28,10 @@ public partial class UpdatePasswordViewModel : ObservableObject
 
     public bool IsNotBusy => !IsBusy;
 
-    public UpdatePasswordViewModel(IAuthService authService)
+    public UpdatePasswordViewModel(IAuthService authService, IDialogService dialogService)
     {
         _authService = authService;
+        _dialogs = dialogService;
     }
 
     [RelayCommand]
@@ -65,7 +67,7 @@ public partial class UpdatePasswordViewModel : ObservableObject
             bool success = await _authService.UpdatePasswordAsync(CurrentPassword, NewPassword);
             if (success)
             {
-                await Shell.Current.DisplayAlertAsync("Sucesso", "Senha atualizada com sucesso!", "OK");
+                await _dialogs.ShowToastAsync("Senha atualizada com sucesso!");
                 await GoBack();
             }
             else
@@ -76,7 +78,7 @@ public partial class UpdatePasswordViewModel : ObservableObject
         catch (Exception ex)
         {
             Debug.WriteLine($"UpdatePassword failed: {ex.Message}");
-            await Shell.Current.DisplayAlertAsync("Erro", "Ocorreu um erro ao atualizar a senha.", "OK");
+            await _dialogs.ShowErrorAsync("Ocorreu um erro ao atualizar a senha.");
         }
         finally
         {

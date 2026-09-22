@@ -14,7 +14,7 @@ public class ResetPasswordViewModelTests
     public ResetPasswordViewModelTests()
     {
         _authMock = new Mock<IAuthService>();
-        _vm = new ResetPasswordViewModel(_authMock.Object);
+        _vm = new ResetPasswordViewModel(_authMock.Object, new CoreventApp.Services.DialogService());
     }
 
     [Fact]

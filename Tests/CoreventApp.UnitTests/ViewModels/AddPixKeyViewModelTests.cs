@@ -21,7 +21,7 @@ public class AddPixKeyViewModelTests
         var api = Refit.RestService.For<IPaymentInfoApi>(client, RefitConfig.CreateSettings());
         var service = new PaymentInfoService(api);
 
-        _vm = new AddPixKeyViewModel(service);
+        _vm = new AddPixKeyViewModel(service, new CoreventApp.Services.DialogService());
     }
 
     [Fact]

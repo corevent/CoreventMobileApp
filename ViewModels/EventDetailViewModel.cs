@@ -17,6 +17,7 @@ public partial class EventDetailViewModel : ObservableObject
     private readonly IAttractionsApi _attractionsApi;
     private readonly FavoritesService _favoritesService;
     private readonly IEventRatingsApi _ratingsApi;
+    private readonly IDialogService _dialogs;
     private readonly ConcurrentDictionary<string, (int Rating, string RatingId)> _ratingCache = new();
     private string? _eventId;
 
@@ -116,12 +117,13 @@ public partial class EventDetailViewModel : ObservableObject
 
     public ObservableCollection<AttractionDto> Attractions { get; } = new();
 
-    public EventDetailViewModel(IEventsApi eventsApi, IAttractionsApi attractionsApi, FavoritesService favoritesService, IEventRatingsApi ratingsApi)
+    public EventDetailViewModel(IEventsApi eventsApi, IAttractionsApi attractionsApi, FavoritesService favoritesService, IEventRatingsApi ratingsApi, IDialogService dialogService)
     {
         _eventsApi = eventsApi;
         _attractionsApi = attractionsApi;
         _favoritesService = favoritesService;
         _ratingsApi = ratingsApi;
+        _dialogs = dialogService;
     }
 
     private async Task LoadEventAsync(string eventId)
@@ -166,7 +168,7 @@ public partial class EventDetailViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            await Shell.Current.DisplayAlertAsync("Erro", $"EventDetail LoadEventAsync failed: {ex.Message}", "OK");
+            await _dialogs.ShowErrorAsync($"EventDetail LoadEventAsync failed: {ex.Message}");
         }
         finally
         {
@@ -191,7 +193,7 @@ public partial class EventDetailViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            await Shell.Current.DisplayAlertAsync("Erro", $"EventDetail LoadAttractionsAsync failed: {ex.Message}", "OK");
+            await _dialogs.ShowErrorAsync($"EventDetail LoadAttractionsAsync failed: {ex.Message}");
         }
     }
 
@@ -250,7 +252,7 @@ public partial class EventDetailViewModel : ObservableObject
                     () => _ratingsApi.CreateAsync(_eventId, new CreateEventRatingDto(rating)), "Create rating");
                 if (response is null)
                 {
-                    await Shell.Current.DisplayAlertAsync("Erro", "Falha ao avaliar. Tente novamente.", "OK");
+                    await _dialogs.ShowErrorAsync("Falha ao avaliar. Tente novamente.");
                     return;
                 }
                 SaveRatingToCache(_eventId, rating, response.Data.Id);
@@ -262,7 +264,7 @@ public partial class EventDetailViewModel : ObservableObject
                     () => _ratingsApi.DeleteAsync(cached.Value.RatingId), "Delete rating");
                 if (!deleted)
                 {
-                    await Shell.Current.DisplayAlertAsync("Erro", "Falha ao avaliar. Tente novamente.", "OK");
+                    await _dialogs.ShowErrorAsync("Falha ao avaliar. Tente novamente.");
                     return;
                 }
                 RemoveRatingFromCache(_eventId);
@@ -274,7 +276,7 @@ public partial class EventDetailViewModel : ObservableObject
                     () => _ratingsApi.UpdateAsync(cached.Value.RatingId, new CreateEventRatingDto(rating)), "Update rating");
                 if (!updated)
                 {
-                    await Shell.Current.DisplayAlertAsync("Erro", "Falha ao avaliar. Tente novamente.", "OK");
+                    await _dialogs.ShowErrorAsync("Falha ao avaliar. Tente novamente.");
                     return;
                 }
                 SaveRatingToCache(_eventId, rating, cached.Value.RatingId);
@@ -283,7 +285,7 @@ public partial class EventDetailViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            await Shell.Current.DisplayAlertAsync("Erro", $"Falha ao avaliar: {ex.Message}", "OK");
+            await _dialogs.ShowErrorAsync($"Falha ao avaliar: {ex.Message}");
         }
     }
 

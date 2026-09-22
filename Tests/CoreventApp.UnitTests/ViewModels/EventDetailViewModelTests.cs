@@ -27,7 +27,7 @@ public class EventDetailViewModelTests
 
         var ratingsApiMock = new Mock<IEventRatingsApi>();
 
-        _vm = new EventDetailViewModel(eventsApiMock.Object, attrApiMock.Object, favService, ratingsApiMock.Object);
+        _vm = new EventDetailViewModel(eventsApiMock.Object, attrApiMock.Object, favService, ratingsApiMock.Object, new CoreventApp.Services.DialogService());
     }
 
     [Fact]

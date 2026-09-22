@@ -14,7 +14,7 @@ public class RegisterViewModelTests
     public RegisterViewModelTests()
     {
         _authMock = new Mock<IAuthService>();
-        _vm = new RegisterViewModel(_authMock.Object);
+        _vm = new RegisterViewModel(_authMock.Object, new CoreventApp.Services.DialogService());
     }
 
     [Fact]

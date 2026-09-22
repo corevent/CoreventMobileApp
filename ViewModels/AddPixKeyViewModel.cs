@@ -10,6 +10,7 @@ namespace CoreventApp.ViewModels;
 public partial class AddPixKeyViewModel : ObservableObject
 {
     private readonly PaymentInfoService _paymentInfoService;
+    private readonly IDialogService _dialogs;
 
     private static readonly Dictionary<string, string> UiToApiPixType = new()
     {
@@ -20,9 +21,10 @@ public partial class AddPixKeyViewModel : ObservableObject
         ["Chave Aleatória"] = "random"
     };
 
-    public AddPixKeyViewModel(PaymentInfoService paymentInfoService)
+    public AddPixKeyViewModel(PaymentInfoService paymentInfoService, IDialogService dialogService)
     {
         _paymentInfoService = paymentInfoService;
+        _dialogs = dialogService;
         SelectedKeyType = KeyTypes[0];
     }
 
@@ -52,13 +54,13 @@ public partial class AddPixKeyViewModel : ObservableObject
     {
         if (string.IsNullOrWhiteSpace(Description))
         {
-            await Shell.Current.DisplayAlertAsync("Erro", "A descrição é obrigatória.", "OK");
+            await _dialogs.ShowErrorAsync("A descrição é obrigatória.");
             return;
         }
 
         if (string.IsNullOrWhiteSpace(KeyValue))
         {
-            await Shell.Current.DisplayAlertAsync("Erro", "Por favor, informe a chave Pix.", "OK");
+            await _dialogs.ShowErrorAsync("Por favor, informe a chave Pix.");
             return;
         }
 
@@ -92,7 +94,7 @@ public partial class AddPixKeyViewModel : ObservableObject
 
         if (!isValid)
         {
-            await Shell.Current.DisplayAlertAsync("Erro", errorMessage, "OK");
+            await _dialogs.ShowErrorAsync(errorMessage);
             return;
         }
 
@@ -115,7 +117,7 @@ public partial class AddPixKeyViewModel : ObservableObject
         if (result != null)
             await Shell.Current.GoToAsync("..");
         else
-            await Shell.Current.DisplayAlertAsync("Erro", "Não foi possível salvar a chave Pix. Tente novamente.", "OK");
+            await _dialogs.ShowErrorAsync("Não foi possível salvar a chave Pix. Tente novamente.");
     }
 
     [RelayCommand]

@@ -8,10 +8,12 @@ namespace CoreventApp.ViewModels;
 public partial class ProfileViewModel : ObservableObject
 {
   private readonly IAuthService _authService;
+  private readonly IDialogService _dialogs;
 
-  public ProfileViewModel(IAuthService authService)
+  public ProfileViewModel(IAuthService authService, IDialogService dialogService)
   {
     _authService = authService;
+    _dialogs = dialogService;
 
     var cached = _authService.CurrentCachedUser;
     if (cached != null)
@@ -33,6 +35,7 @@ public partial class ProfileViewModel : ObservableObject
   [ObservableProperty]
   public partial bool IsAdult { get; set; } = true;
 
+  [RelayCommand]
   public async Task LoadUserAsync()
   {
     if (IsBusy)
@@ -47,7 +50,7 @@ public partial class ProfileViewModel : ObservableObject
     }
     catch (Exception ex)
     {
-      await Shell.Current.DisplayAlertAsync("Erro", $"ProfileViewModel.LoadUserAsync failed: {ex.Message}", "OK");
+      await _dialogs.ShowErrorAsync($"ProfileViewModel.LoadUserAsync failed: {ex.Message}");
     }
     finally
     {
@@ -99,7 +102,7 @@ public partial class ProfileViewModel : ObservableObject
   [RelayCommand]
   private async Task LogoutAsync()
   {
-    bool confirm = await Shell.Current.DisplayAlertAsync("Aviso", "Deseja mesmo encerrar a sua sessão?", "Sim", "Cancelar");
+    bool confirm = await _dialogs.ConfirmAsync("Aviso", "Deseja mesmo encerrar a sua sessão?");
 
     if (confirm)
     {

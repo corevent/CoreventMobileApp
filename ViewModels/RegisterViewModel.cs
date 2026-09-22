@@ -8,11 +8,13 @@ namespace CoreventApp.ViewModels;
 public partial class RegisterViewModel : ObservableObject
 {
   private readonly IAuthService _authService;
+  private readonly IDialogService _dialogs;
   private const int TotalSteps = 4;
 
-  public RegisterViewModel(IAuthService authService)
+  public RegisterViewModel(IAuthService authService, IDialogService dialogService)
   {
     _authService = authService;
+    _dialogs = dialogService;
   }
 
   [ObservableProperty]
@@ -46,13 +48,13 @@ public partial class RegisterViewModel : ObservableObject
 
     if (CurrentStep < TotalSteps)
     {
-      if (!ValidateStep(CurrentStep)) return;
+      if (!await ValidateStepAsync(CurrentStep)) return;
       CurrentStep++;
       UpdateUI();
     }
     else
     {
-      if (!ValidateAll()) return;
+      if (!await ValidateAllAsync()) return;
 
       IsBusy = true;
 
@@ -97,26 +99,26 @@ public partial class RegisterViewModel : ObservableObject
     await Shell.Current.GoToAsync("..");
   }
 
-  private bool ValidateStep(int step)
+  private async Task<bool> ValidateStepAsync(int step)
   {
     return step switch
     {
       1 => !string.IsNullOrWhiteSpace(Form.Nome) && Form.Nome.Trim().Length >= 3,
       2 => true,
-      3 => ValidateDocument(),
-      4 => ValidateCredentials(),
+      3 => await ValidateDocumentAsync(),
+      4 => await ValidateCredentialsAsync(),
       _ => true
     };
   }
 
-  private bool ValidateDocument()
+  private async Task<bool> ValidateDocumentAsync()
   {
     var doc = Form.AccountType == "pj" ? Form.Cnpj : Form.Cpf;
     if (Form.AccountType == "pj")
     {
       if (!ValidationHelper.IsValidCnpj(doc))
       {
-        Shell.Current.DisplayAlertAsync("Erro", "CNPJ inválido. Informe um CNPJ com 14 dígitos.", "OK");
+        await _dialogs.ShowErrorAsync("CNPJ inválido. Informe um CNPJ com 14 dígitos.");
         return false;
       }
     }
@@ -124,43 +126,43 @@ public partial class RegisterViewModel : ObservableObject
     {
       if (!ValidationHelper.IsValidCpf(doc))
       {
-        Shell.Current.DisplayAlertAsync("Erro", "CPF inválido. Informe um CPF com 11 dígitos.", "OK");
+        await _dialogs.ShowErrorAsync("CPF inválido. Informe um CPF com 11 dígitos.");
         return false;
       }
     }
     return true;
   }
 
-  private bool ValidateCredentials()
+  private async Task<bool> ValidateCredentialsAsync()
   {
     if (!ValidationHelper.IsValidEmail(Form.Email))
     {
-      Shell.Current.DisplayAlertAsync("Erro", "Informe um e-mail válido.", "OK");
+      await _dialogs.ShowErrorAsync("Informe um e-mail válido.");
       return false;
     }
     if (!ValidationHelper.IsValidPassword(Form.Senha))
     {
-      Shell.Current.DisplayAlertAsync("Erro", "A senha deve ter 8+ caracteres, com maiúscula, minúscula, número e símbolo.", "OK");
+      await _dialogs.ShowErrorAsync("A senha deve ter 8+ caracteres, com maiúscula, minúscula, número e símbolo.");
       return false;
     }
     if (Form.Senha != Form.ConfirmarSenha)
     {
-      Shell.Current.DisplayAlertAsync("Erro", "As senhas não conferem.", "OK");
+      await _dialogs.ShowErrorAsync("As senhas não conferem.");
       return false;
     }
     return true;
   }
 
-  private bool ValidateAll()
+  private async Task<bool> ValidateAllAsync()
   {
     if (string.IsNullOrWhiteSpace(Form.Nome) || Form.Nome.Trim().Length < 3)
     {
-      Shell.Current.DisplayAlertAsync("Erro", "O nome deve ter pelo menos 3 caracteres.", "OK");
+      await _dialogs.ShowErrorAsync("O nome deve ter pelo menos 3 caracteres.");
       return false;
     }
-    if (!ValidateDocument())
+    if (!await ValidateDocumentAsync())
       return false;
-    return ValidateCredentials();
+    return await ValidateCredentialsAsync();
   }
 
   private void UpdateUI()

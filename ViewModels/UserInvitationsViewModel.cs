@@ -3,6 +3,7 @@ using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CoreventApp.Models.Dtos;
+using CoreventApp.Services;
 using CoreventApp.Services.Api;
 
 namespace CoreventApp.ViewModels;
@@ -67,6 +68,7 @@ public partial class UserInvitationItem : ObservableObject
 public partial class UserInvitationsViewModel : ObservableObject
 {
     private readonly IStaffInvitesApi _invitesApi;
+    private readonly IDialogService _dialogs;
 
     [ObservableProperty]
     public partial bool IsLoading { get; set; }
@@ -90,9 +92,10 @@ public partial class UserInvitationsViewModel : ObservableObject
     public ObservableCollection<UserInvitationItem> AcceptedInvitations { get; } = new();
     public ObservableCollection<UserInvitationItem> RejectedInvitations { get; } = new();
 
-    public UserInvitationsViewModel(IStaffInvitesApi invitesApi)
+    public UserInvitationsViewModel(IStaffInvitesApi invitesApi, IDialogService dialogService)
     {
         _invitesApi = invitesApi;
+        _dialogs = dialogService;
     }
 
     [RelayCommand]
@@ -133,8 +136,7 @@ public partial class UserInvitationsViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            if (Shell.Current is not null)
-                await Shell.Current.DisplayAlertAsync("Erro", $"Não foi possível carregar convites: {ex.Message}", "OK");
+            await _dialogs.ShowErrorAsync($"Não foi possível carregar convites: {ex.Message}");
         }
         finally
         {
@@ -156,12 +158,12 @@ public partial class UserInvitationsViewModel : ObservableObject
         try
         {
             await _invitesApi.AcceptAsync(item.Id);
-            await Shell.Current.DisplayAlertAsync("Convite Aceito", $"Você agora faz parte da equipe de \"{item.EventName}\"!", "OK");
+            await _dialogs.ShowToastAsync($"Você agora faz parte da equipe de \"{item.EventName}\"!");
             await LoadInvitationsAsync();
         }
         catch (Exception ex)
         {
-            await Shell.Current.DisplayAlertAsync("Erro", $"Não foi possível aceitar o convite: {ex.Message}", "OK");
+            await _dialogs.ShowErrorAsync($"Não foi possível aceitar o convite: {ex.Message}");
         }
     }
 
@@ -171,12 +173,12 @@ public partial class UserInvitationsViewModel : ObservableObject
         try
         {
             await _invitesApi.RejectAsync(item.Id);
-            await Shell.Current.DisplayAlertAsync("Convite Recusado", $"Convite para \"{item.EventName}\" recusado.", "OK");
+            await _dialogs.ShowToastAsync($"Convite para \"{item.EventName}\" recusado.");
             await LoadInvitationsAsync();
         }
         catch (Exception ex)
         {
-            await Shell.Current.DisplayAlertAsync("Erro", $"Não foi possível recusar o convite: {ex.Message}", "OK");
+            await _dialogs.ShowErrorAsync($"Não foi possível recusar o convite: {ex.Message}");
         }
     }
 

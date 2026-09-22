@@ -12,6 +12,7 @@ public partial class HomeViewModel : ObservableObject
 {
     private readonly IEventsApi _eventsApi;
     private readonly IAuthService _authService;
+    private readonly IDialogService _dialogs;
 
     [ObservableProperty]
     public partial bool IsLoading { get; set; }
@@ -22,10 +23,11 @@ public partial class HomeViewModel : ObservableObject
     [ObservableProperty]
     public partial ObservableCollection<EventListItemDto> OtherEvents { get; set; } = new();
 
-    public HomeViewModel(IEventsApi eventsApi, IAuthService authService)
+    public HomeViewModel(IEventsApi eventsApi, IAuthService authService, IDialogService dialogService)
     {
         _eventsApi = eventsApi;
         _authService = authService;
+        _dialogs = dialogService;
     }
 
     [RelayCommand]
@@ -48,7 +50,7 @@ public partial class HomeViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            await Shell.Current.DisplayAlertAsync("Erro", $"Home LoadAsync failed: {ex.Message}", "OK");
+            await _dialogs.ShowErrorAsync($"Home LoadAsync failed: {ex.Message}");
         }
         finally
         {

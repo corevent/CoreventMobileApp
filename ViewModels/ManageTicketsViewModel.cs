@@ -13,6 +13,7 @@ public partial class ManageTicketsViewModel : ObservableObject
 {
     private readonly ITicketTypesApi _ticketTypesApi;
     private readonly IEventsApi _eventsApi;
+    private readonly IDialogService _dialogs;
     private TicketTypeViewModel? _editingTicketType;
 
     [ObservableProperty]
@@ -61,10 +62,11 @@ public partial class ManageTicketsViewModel : ObservableObject
 
     public ObservableCollection<TicketTypeViewModel> TicketTypes { get; } = new();
 
-    public ManageTicketsViewModel(ITicketTypesApi ticketTypesApi, IEventsApi eventsApi)
+    public ManageTicketsViewModel(ITicketTypesApi ticketTypesApi, IEventsApi eventsApi, IDialogService dialogService)
     {
         _ticketTypesApi = ticketTypesApi;
         _eventsApi = eventsApi;
+        _dialogs = dialogService;
     }
 
     partial void OnEventIdChanged(string value)
@@ -101,7 +103,7 @@ public partial class ManageTicketsViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            await Shell.Current.DisplayAlertAsync("Erro", $"ManageTickets LoadDataAsync failed: {ex.Message}", "OK");
+            await _dialogs.ShowErrorAsync($"ManageTickets LoadDataAsync failed: {ex.Message}");
         }
         finally
         {
@@ -120,37 +122,37 @@ public partial class ManageTicketsViewModel : ObservableObject
 
         if (NewName.Trim().Length < 3)
         {
-            await Shell.Current.DisplayAlertAsync("Erro", "O nome do ingresso deve ter pelo menos 3 caracteres.", "OK");
+            await _dialogs.ShowErrorAsync("O nome do ingresso deve ter pelo menos 3 caracteres.");
             return;
         }
 
         if (!decimal.TryParse(NewPrice, out var price) || price < 0)
         {
-            await Shell.Current.DisplayAlertAsync("Erro", "Informe um preço válido (maior ou igual a zero).", "OK");
+            await _dialogs.ShowErrorAsync("Informe um preço válido (maior ou igual a zero).");
             return;
         }
 
         if (!int.TryParse(NewTotalQuantity, out var quantity) || quantity < 1)
         {
-            await Shell.Current.DisplayAlertAsync("Erro", "A quantidade total deve ser pelo menos 1.", "OK");
+            await _dialogs.ShowErrorAsync("A quantidade total deve ser pelo menos 1.");
             return;
         }
 
         if (NewEndDate <= NewStartDate)
         {
-            await Shell.Current.DisplayAlertAsync("Erro", "A data de término deve ser posterior à data de início.", "OK");
+            await _dialogs.ShowErrorAsync("A data de término deve ser posterior à data de início.");
             return;
         }
 
         if (NewStartDate < EventCreatedAt)
         {
-            await Shell.Current.DisplayAlertAsync("Erro", "A data de início deve ser a partir da criação do evento.", "OK");
+            await _dialogs.ShowErrorAsync("A data de início deve ser a partir da criação do evento.");
             return;
         }
 
         if (NewEndDate > EventStartDate)
         {
-            await Shell.Current.DisplayAlertAsync("Erro", "A data de término não pode ultrapassar a data de início do evento.", "OK");
+            await _dialogs.ShowErrorAsync("A data de término não pode ultrapassar a data de início do evento.");
             return;
         }
 
@@ -161,8 +163,8 @@ public partial class ManageTicketsViewModel : ObservableObject
 
         if (overlap)
         {
-            await Shell.Current.DisplayAlertAsync("Conflito de Período",
-                "Já existe um tipo de ingresso cujo período sobrepõe este. Ajuste as datas.", "OK");
+            await _dialogs.ShowAlertAsync("Conflito de Período",
+                "Já existe um tipo de ingresso cujo período sobrepõe este. Ajuste as datas.");
             return;
         }
 
@@ -175,7 +177,7 @@ public partial class ManageTicketsViewModel : ObservableObject
                     () => _ticketTypesApi.UpdateAsync(_editingTicketType.Id, updateDto), "Update ticket type");
                 if (updated is null)
                 {
-                    await Shell.Current.DisplayAlertAsync("Erro", "Falha ao salvar ingresso.", "OK");
+                    await _dialogs.ShowErrorAsync("Falha ao salvar ingresso.");
                     return;
                 }
 
@@ -199,7 +201,7 @@ public partial class ManageTicketsViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            await Shell.Current.DisplayAlertAsync("Erro", $"Falha ao salvar ingresso: {ex.Message}", "OK");
+            await _dialogs.ShowErrorAsync($"Falha ao salvar ingresso: {ex.Message}");
         }
     }
 
@@ -211,7 +213,7 @@ public partial class ManageTicketsViewModel : ObservableObject
             var deleted = await ApiResult.TryExecuteAsync(() => _ticketTypesApi.DeleteAsync(ticketType.Id), "Delete ticket type");
             if (!deleted)
             {
-                await Shell.Current.DisplayAlertAsync("Erro", "Não foi possível excluir o ingresso.", "OK");
+                await _dialogs.ShowErrorAsync("Não foi possível excluir o ingresso.");
                 return;
             }
             TicketTypes.Remove(ticketType);
@@ -223,7 +225,7 @@ public partial class ManageTicketsViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            await Shell.Current.DisplayAlertAsync("Erro", $"ManageTickets DeleteTicketTypeAsync failed: {ex.Message}", "OK");
+            await _dialogs.ShowErrorAsync($"ManageTickets DeleteTicketTypeAsync failed: {ex.Message}");
         }
     }
 

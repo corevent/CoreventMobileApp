@@ -9,12 +9,4 @@ public partial class EditProfile : ContentPage
 		InitializeComponent();
 		BindingContext = viewModel;
 	}
-
-    protected override void OnAppearing()
-    {
-        base.OnAppearing();
-
-        if (BindingContext is EditProfileViewModel vm)
-            _ = vm.LoadUserAsync();
-    }
 }

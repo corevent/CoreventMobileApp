@@ -3,9 +3,18 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:ViewModel="clr-namespace:CoreventApp.ViewModels"
              xmlns:mi="http://www.aathifmahir.com/dotnet/2022/maui/icons"
+             xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
              x:DataType="ViewModel:LoginViewModel"
              x:Class="CoreventApp.Views.Login"
              Title="Login">
+
+    <ContentPage.Resources>
+        <ResourceDictionary>
+            <Style x:Key="InvalidEntryStyle" TargetType="Entry">
+                <Setter Property="TextColor" Value="{StaticResource error_color}" />
+            </Style>
+        </ResourceDictionary>
+    </ContentPage.Resources>
 
     <Grid RowDefinitions="Auto, Auto, Auto, *"
           Padding="20"
@@ -53,7 +62,12 @@
                            Keyboard="Email"
                            VerticalOptions="Center"
                            TextColor="{StaticResource input_text}"
-                           BackgroundColor="Transparent"/>
+                           BackgroundColor="Transparent">
+                        <Entry.Behaviors>
+                            <toolkit:EmailValidationBehavior Flags="ValidateOnValueChanged"
+                                                            InvalidStyle="{StaticResource InvalidEntryStyle}" />
+                        </Entry.Behaviors>
+                    </Entry>
                 </Border>
 
 

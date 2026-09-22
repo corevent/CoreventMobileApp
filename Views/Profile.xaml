@@ -4,9 +4,14 @@
              xmlns:viewmodels="clr-namespace:CoreventApp.ViewModels"
              x:DataType="viewmodels:ProfileViewModel"
              xmlns:mi="http://www.aathifmahir.com/dotnet/2022/maui/icons"
+             xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
              x:Class="CoreventApp.Views.Profile"
              Title="Perfil"
              BackgroundColor="{StaticResource background_color}">
+
+  <ContentPage.Behaviors>
+    <toolkit:EventToCommandBehavior EventName="Appearing" Command="{Binding LoadUserCommand}" />
+  </ContentPage.Behaviors>
 
   <ScrollView>
     <VerticalStackLayout Padding="16,14,16,20"

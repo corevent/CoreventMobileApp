@@ -9,12 +9,4 @@ public partial class Profile : ContentPage
         InitializeComponent();
         BindingContext = viewModel;
     }
-
-    protected override void OnAppearing()
-    {
-        base.OnAppearing();
-
-        if (BindingContext is ProfileViewModel vm)
-            _ = vm.LoadUserAsync();
-    }
 }

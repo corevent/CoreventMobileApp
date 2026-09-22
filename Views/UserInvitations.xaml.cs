@@ -9,11 +9,4 @@ public partial class UserInvitations : ContentPage
         InitializeComponent();
         BindingContext = viewModel;
     }
-
-    protected override void OnAppearing()
-    {
-        base.OnAppearing();
-        if (BindingContext is UserInvitationsViewModel vm)
-            _ = vm.LoadInvitationsCommand.ExecuteAsync(null);
-    }
 }

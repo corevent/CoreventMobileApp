@@ -8,10 +8,12 @@ namespace CoreventApp.ViewModels;
 public partial class AddBankAccountViewModel : ObservableObject
 {
     private readonly PaymentInfoService _paymentInfoService;
+    private readonly IDialogService _dialogs;
 
-    public AddBankAccountViewModel(PaymentInfoService paymentInfoService)
+    public AddBankAccountViewModel(PaymentInfoService paymentInfoService, IDialogService dialogService)
     {
         _paymentInfoService = paymentInfoService;
+        _dialogs = dialogService;
     }
 
     [ObservableProperty]
@@ -40,25 +42,25 @@ public partial class AddBankAccountViewModel : ObservableObject
     {
         if (string.IsNullOrWhiteSpace(Description))
         {
-            await Shell.Current.DisplayAlertAsync("Erro", "A descrição é obrigatória.", "OK");
+            await _dialogs.ShowErrorAsync("A descrição é obrigatória.");
             return;
         }
 
         if (string.IsNullOrWhiteSpace(BankCode) || BankCode.Trim().Length != 3 || !BankCode.All(char.IsDigit))
         {
-            await Shell.Current.DisplayAlertAsync("Erro", "O código do banco deve ter exatamente 3 dígitos.", "OK");
+            await _dialogs.ShowErrorAsync("O código do banco deve ter exatamente 3 dígitos.");
             return;
         }
 
         if (string.IsNullOrWhiteSpace(BranchNumber) || BranchNumber.Trim().Length < 4 || !BranchNumber.All(char.IsDigit))
         {
-            await Shell.Current.DisplayAlertAsync("Erro", "A agência deve ter pelo menos 4 dígitos.", "OK");
+            await _dialogs.ShowErrorAsync("A agência deve ter pelo menos 4 dígitos.");
             return;
         }
 
         if (string.IsNullOrWhiteSpace(AccountNumber))
         {
-            await Shell.Current.DisplayAlertAsync("Erro", "O número da conta é obrigatório.", "OK");
+            await _dialogs.ShowErrorAsync("O número da conta é obrigatório.");
             return;
         }
 
@@ -79,7 +81,7 @@ public partial class AddBankAccountViewModel : ObservableObject
         if (result != null)
             await Shell.Current.GoToAsync("..");
         else
-            await Shell.Current.DisplayAlertAsync("Erro", "Não foi possível salvar a conta. Tente novamente.", "OK");
+            await _dialogs.ShowErrorAsync("Não foi possível salvar a conta. Tente novamente.");
     }
 
     [RelayCommand]

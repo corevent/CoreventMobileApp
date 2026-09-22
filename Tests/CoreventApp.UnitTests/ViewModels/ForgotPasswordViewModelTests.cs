@@ -14,7 +14,7 @@ public class ForgotPasswordViewModelTests
     public ForgotPasswordViewModelTests()
     {
         _authMock = new Mock<IAuthService>();
-        _vm = new ForgotPasswordViewModel(_authMock.Object);
+        _vm = new ForgotPasswordViewModel(_authMock.Object, new CoreventApp.Services.DialogService());
     }
 
     [Fact]
