@@ -1,7 +1,8 @@
+using CoreventApp.Models.Dtos;
 using CoreventApp.Services;
 using CoreventApp.Services.Api;
 using CoreventApp.ViewModels;
-using RichardSzalay.MockHttp;
+using Moq;
 using Shouldly;
 using Xunit;
 
@@ -9,18 +10,14 @@ namespace CoreventApp.UnitTests.ViewModels;
 
 public class TransferSettingsViewModelTests
 {
-    private readonly MockHttpMessageHandler _httpMock;
+    private readonly Mock<IPaymentInfoApi> _apiMock;
     private readonly PaymentInfoService _paymentInfoService;
     private readonly TransferSettingsViewModel _vm;
 
     public TransferSettingsViewModelTests()
     {
-        _httpMock = new MockHttpMessageHandler();
-        var client = _httpMock.ToHttpClient();
-        client.BaseAddress = new Uri("https://api.corevent.com");
-
-        var api = Refit.RestService.For<IPaymentInfoApi>(client, RefitConfig.CreateSettings());
-        _paymentInfoService = new PaymentInfoService(api);
+        _apiMock = new Mock<IPaymentInfoApi>();
+        _paymentInfoService = new PaymentInfoService(_apiMock.Object);
         _vm = new TransferSettingsViewModel(_paymentInfoService);
     }
 
@@ -37,18 +34,20 @@ public class TransferSettingsViewModelTests
     [Fact]
     public async Task LoadAsync_ShouldPopulateBankAccountsAndPixKeys()
     {
-        var pageJson = "{\"data\":[{\"id\":\"pi_1\",\"description\":\"Conta PJ\"},{\"id\":\"pi_2\",\"description\":\"Pix PF\"}],\"meta\":{\"totalItems\":2,\"totalPages\":1,\"page\":1,\"limit\":50}}";
-        var item1Json = "{\"data\":{\"id\":\"pi_1\",\"userId\":\"u1\",\"description\":\"Conta PJ\",\"branchNumber\":\"1234\",\"branchDigit\":\"5\",\"accountNumber\":\"98765\",\"accountDigit\":\"0\",\"pixKey\":null,\"pixType\":null,\"bankCode\":\"001\"}}";
-        var item2Json = "{\"data\":{\"id\":\"pi_2\",\"userId\":\"u1\",\"description\":\"Pix PF\",\"branchNumber\":null,\"branchDigit\":null,\"accountNumber\":null,\"accountDigit\":null,\"pixKey\":\"12345678901\",\"pixType\":\"cpf\",\"bankCode\":null}}";
-
-        _httpMock.Expect(HttpMethod.Get, "https://api.corevent.com/api/users/me/organizer-payment-info*")
-            .Respond("application/json", pageJson);
-
-        _httpMock.Expect(HttpMethod.Get, "https://api.corevent.com/api/users/me/organizer-payment-info/pi_1")
-            .Respond("application/json", item1Json);
-
-        _httpMock.Expect(HttpMethod.Get, "https://api.corevent.com/api/users/me/organizer-payment-info/pi_2")
-            .Respond("application/json", item2Json);
+        _apiMock.Setup(a => a.GetAllAsync(1, 50))
+            .ReturnsAsync(new OrganizerPaymentInfoPageDto(
+                new List<ListOrganizerPaymentInfoDto>
+                {
+                    new("pi_1", "Conta PJ"),
+                    new("pi_2", "Pix PF")
+                },
+                new PaginationMetaDto(2, 1, 1, 50)));
+        _apiMock.Setup(a => a.GetByIdAsync("pi_1"))
+            .ReturnsAsync(new OrganizerPaymentInfoResDto(
+                new OrganizerPaymentInfoDataDto("pi_1", "u1", "Conta PJ", "1234", "5", "98765", "0", null, null, "001")));
+        _apiMock.Setup(a => a.GetByIdAsync("pi_2"))
+            .ReturnsAsync(new OrganizerPaymentInfoResDto(
+                new OrganizerPaymentInfoDataDto("pi_2", "u1", "Pix PF", null, null, null, null, "12345678901", "cpf", null)));
 
         await _vm.LoadCommand.ExecuteAsync(null);
 

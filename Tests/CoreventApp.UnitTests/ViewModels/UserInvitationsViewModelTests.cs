@@ -1,7 +1,7 @@
 using CoreventApp.Models.Dtos;
 using CoreventApp.Services.Api;
 using CoreventApp.ViewModels;
-using RichardSzalay.MockHttp;
+using Moq;
 using Shouldly;
 using Xunit;
 
@@ -9,18 +9,17 @@ namespace CoreventApp.UnitTests.ViewModels;
 
 public class UserInvitationsViewModelTests
 {
-    private readonly MockHttpMessageHandler _httpMock;
+    private readonly Mock<IStaffInvitesApi> _invitesApiMock;
     private readonly UserInvitationsViewModel _vm;
 
     public UserInvitationsViewModelTests()
     {
-        _httpMock = new MockHttpMessageHandler();
-        var client = _httpMock.ToHttpClient();
-        client.BaseAddress = new Uri("https://api.corevent.com");
-
-        var api = Refit.RestService.For<IStaffInvitesApi>(client, RefitConfig.CreateSettings());
-        _vm = new UserInvitationsViewModel(api);
+        _invitesApiMock = new Mock<IStaffInvitesApi>();
+        _vm = new UserInvitationsViewModel(_invitesApiMock.Object);
     }
+
+    private static UserInvitationPageDto Page(params UserInvitationDto[] items) =>
+        new(new List<UserInvitationDto>(items), new PaginationMetaDto(items.Length, 1, 1, 50));
 
     [Fact]
     public void InitialState_ShouldHaveDefaultValues()
@@ -41,19 +40,14 @@ public class UserInvitationsViewModelTests
     {
         var org = new UserInfoDto("u1", "Lucas Org", "lucas@test.com", null);
         var eventRef = new EventRefDto("evt_1", "Tech Summit 2026", org);
+        var pending = new UserInvitationDto("inv_1", "u2", eventRef, "checkin", "pending", new DateTime(2026, 9, 1));
 
-        var pendingJson = "{\"data\":[{\"id\":\"inv_1\",\"userId\":\"u2\",\"event\":{\"id\":\"evt_1\",\"title\":\"Tech Summit 2026\",\"organizer\":{\"id\":\"u1\",\"name\":\"Lucas Org\",\"email\":\"lucas@test.com\",\"avatarUrl\":null}},\"originalAccessLevel\":\"checkin\",\"invitationStatus\":\"pending\",\"createdAt\":\"2026-09-01T00:00:00.000Z\"}],\"meta\":{\"totalItems\":1,\"totalPages\":1,\"page\":1,\"limit\":50}}";
-        var acceptedJson = "{\"data\":[],\"meta\":{\"totalItems\":0,\"totalPages\":0,\"page\":1,\"limit\":50}}";
-        var rejectedJson = "{\"data\":[],\"meta\":{\"totalItems\":0,\"totalPages\":0,\"page\":1,\"limit\":50}}";
-
-        _httpMock.Expect(HttpMethod.Get, "https://api.corevent.com/api/invitations/me?page=1&limit=50&invitationStatus=pending")
-            .Respond("application/json", pendingJson);
-
-        _httpMock.Expect(HttpMethod.Get, "https://api.corevent.com/api/invitations/me?page=1&limit=50&invitationStatus=accepted")
-            .Respond("application/json", acceptedJson);
-
-        _httpMock.Expect(HttpMethod.Get, "https://api.corevent.com/api/invitations/me?page=1&limit=50&invitationStatus=rejected")
-            .Respond("application/json", rejectedJson);
+        _invitesApiMock.Setup(a => a.GetMyInvitationsAsync(1, 50, null, null, "pending", null))
+            .ReturnsAsync(Page(pending));
+        _invitesApiMock.Setup(a => a.GetMyInvitationsAsync(1, 50, null, null, "accepted", null))
+            .ReturnsAsync(Page());
+        _invitesApiMock.Setup(a => a.GetMyInvitationsAsync(1, 50, null, null, "rejected", null))
+            .ReturnsAsync(Page());
 
         await _vm.LoadInvitationsCommand.ExecuteAsync(null);
 
