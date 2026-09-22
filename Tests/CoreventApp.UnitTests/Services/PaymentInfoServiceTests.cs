@@ -1,8 +1,7 @@
-using System.Net;
 using CoreventApp.Models.Dtos;
 using CoreventApp.Services;
 using CoreventApp.Services.Api;
-using RichardSzalay.MockHttp;
+using Moq;
 using Shouldly;
 using Xunit;
 
@@ -10,29 +9,25 @@ namespace CoreventApp.UnitTests.Services;
 
 public class PaymentInfoServiceTests
 {
-    private readonly MockHttpMessageHandler _httpMock;
-    private readonly PaymentInfoApiClient _api;
+    private readonly Mock<IPaymentInfoApi> _apiMock;
     private readonly PaymentInfoService _service;
 
     public PaymentInfoServiceTests()
     {
-        _httpMock = new MockHttpMessageHandler();
-        var httpClient = _httpMock.ToHttpClient();
-        httpClient.BaseAddress = new Uri("https://api.corevent.com");
-
-        _api = new PaymentInfoApiClient(httpClient);
-        _service = new PaymentInfoService(_api);
+        _apiMock = new Mock<IPaymentInfoApi>();
+        _service = new PaymentInfoService(_apiMock.Object);
     }
+
+    private static OrganizerPaymentInfoDataDto Item(string id, string description) =>
+        new(id, "u1", description, null, null, null, null, "12345678901", "cpf", null);
 
     [Fact]
     public async Task CreateAsync_ShouldReturnData_OnSuccess()
     {
-        var responseJson = "{\"data\":{\"id\":\"pi_1\",\"userId\":\"u1\",\"description\":\"Minha chave Pix\",\"branchNumber\":null,\"branchDigit\":null,\"accountNumber\":null,\"accountDigit\":null,\"pixKey\":\"12345678901\",\"pixType\":\"cpf\",\"bankCode\":null}}";
-
-        _httpMock.Expect(HttpMethod.Post, "https://api.corevent.com/api/users/me/organizer-payment-info")
-            .Respond("application/json", responseJson);
-
         var dto = new CreateOrganizerPaymentInfoDto("Minha chave Pix", null, null, null, null, "12345678901", "cpf", null);
+        _apiMock.Setup(a => a.CreateAsync(dto))
+            .ReturnsAsync(new OrganizerPaymentInfoResDto(Item("pi_1", "Minha chave Pix")));
+
         var result = await _service.CreateAsync(dto);
 
         result.ShouldNotBeNull();
@@ -45,10 +40,9 @@ public class PaymentInfoServiceTests
     [Fact]
     public async Task CreateAsync_ShouldReturnNull_OnError()
     {
-        _httpMock.Expect(HttpMethod.Post, "https://api.corevent.com/api/users/me/organizer-payment-info")
-            .Respond(HttpStatusCode.BadRequest);
-
         var dto = new CreateOrganizerPaymentInfoDto("Chave", null, null, null, null, "123", "cpf", null);
+        _apiMock.Setup(a => a.CreateAsync(dto)).ThrowsAsync(new HttpRequestException("boom"));
+
         var result = await _service.CreateAsync(dto);
 
         result.ShouldBeNull();
@@ -57,14 +51,12 @@ public class PaymentInfoServiceTests
     [Fact]
     public async Task GetAllAsync_ShouldFetchAllItems_WhenItemsExist()
     {
-        var pageJson = "{\"data\":[{\"id\":\"pi_1\",\"description\":\"Pix Principal\"}],\"meta\":{\"totalItems\":1,\"totalPages\":1,\"page\":1,\"limit\":50}}";
-        var itemJson = "{\"data\":{\"id\":\"pi_1\",\"userId\":\"u1\",\"description\":\"Pix Principal\",\"branchNumber\":null,\"branchDigit\":null,\"accountNumber\":null,\"accountDigit\":null,\"pixKey\":\"123\",\"pixType\":\"cpf\",\"bankCode\":null}}";
-
-        _httpMock.Expect(HttpMethod.Get, "https://api.corevent.com/api/users/me/organizer-payment-info*")
-            .Respond("application/json", pageJson);
-
-        _httpMock.Expect(HttpMethod.Get, "https://api.corevent.com/api/users/me/organizer-payment-info/pi_1")
-            .Respond("application/json", itemJson);
+        _apiMock.Setup(a => a.GetAllAsync(1, 50))
+            .ReturnsAsync(new OrganizerPaymentInfoPageDto(
+                new List<ListOrganizerPaymentInfoDto> { new("pi_1", "Pix Principal") },
+                new PaginationMetaDto(1, 1, 1, 50)));
+        _apiMock.Setup(a => a.GetByIdAsync("pi_1"))
+            .ReturnsAsync(new OrganizerPaymentInfoResDto(Item("pi_1", "Pix Principal")));
 
         var results = await _service.GetAllAsync();
 
@@ -77,8 +69,7 @@ public class PaymentInfoServiceTests
     [Fact]
     public async Task DeleteAsync_ShouldReturnTrue_OnSuccess()
     {
-        _httpMock.Expect(HttpMethod.Delete, "https://api.corevent.com/api/users/me/organizer-payment-info/pi_1")
-            .Respond(HttpStatusCode.OK);
+        _apiMock.Setup(a => a.DeleteAsync("pi_1")).Returns(Task.CompletedTask);
 
         var success = await _service.DeleteAsync("pi_1");
 

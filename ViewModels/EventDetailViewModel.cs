@@ -14,7 +14,7 @@ namespace CoreventApp.ViewModels;
 public partial class EventDetailViewModel : ObservableObject
 {
     private readonly IEventsApi _eventsApi;
-    private readonly AttractionsService _attractionsService;
+    private readonly IAttractionsApi _attractionsApi;
     private readonly FavoritesService _favoritesService;
     private readonly IEventRatingsApi _ratingsApi;
     private readonly ConcurrentDictionary<string, (int Rating, string RatingId)> _ratingCache = new();
@@ -116,10 +116,10 @@ public partial class EventDetailViewModel : ObservableObject
 
     public ObservableCollection<AttractionDto> Attractions { get; } = new();
 
-    public EventDetailViewModel(IEventsApi eventsApi, AttractionsService attractionsService, FavoritesService favoritesService, IEventRatingsApi ratingsApi)
+    public EventDetailViewModel(IEventsApi eventsApi, IAttractionsApi attractionsApi, FavoritesService favoritesService, IEventRatingsApi ratingsApi)
     {
         _eventsApi = eventsApi;
-        _attractionsService = attractionsService;
+        _attractionsApi = attractionsApi;
         _favoritesService = favoritesService;
         _ratingsApi = ratingsApi;
     }
@@ -178,7 +178,8 @@ public partial class EventDetailViewModel : ObservableObject
     {
         try
         {
-            var result = await _attractionsService.GetAllAsync(eventId);
+            var result = await ApiResult.TryExecuteAsync(() => _attractionsApi.GetAllAsync(eventId), "Load attractions")
+                ?? throw new InvalidOperationException("Load attractions failed.");
             Attractions.Clear();
             foreach (var item in result.Data)
                 Attractions.Add(item with

@@ -22,7 +22,7 @@ public class EditProfileViewModelTests
         var client = httpMock.ToHttpClient();
         client.BaseAddress = new Uri("https://api.corevent.com");
 
-        var storageApi = new StorageApiClient(client);
+        var storageApi = Refit.RestService.For<IStorageApi>(client, RefitConfig.CreateSettings());
         _storageService = new StorageService(storageApi);
     }
 

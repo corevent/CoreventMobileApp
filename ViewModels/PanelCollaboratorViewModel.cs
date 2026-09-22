@@ -12,7 +12,7 @@ namespace CoreventApp.ViewModels;
 public partial class PanelCollaboratorViewModel : ObservableObject
 {
     private readonly IEventsApi _eventsApi;
-    private readonly StaffInvitesApiClient _invitesApi;
+    private readonly IStaffInvitesApi _invitesApi;
 
     [ObservableProperty]
     public partial bool IsLoading { get; set; }
@@ -42,7 +42,7 @@ public partial class PanelCollaboratorViewModel : ObservableObject
     [ObservableProperty]
     public partial bool HasPastEvents { get; set; }
 
-    public PanelCollaboratorViewModel(IEventsApi eventsApi, StaffInvitesApiClient invitesApi)
+    public PanelCollaboratorViewModel(IEventsApi eventsApi, IStaffInvitesApi invitesApi)
     {
         _eventsApi = eventsApi;
         _invitesApi = invitesApi;

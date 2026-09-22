@@ -22,10 +22,9 @@ public class CheckoutViewModelTests
         var eventsApiMock = new Mock<IEventsApi>();
         var ticketTypesApiMock = new Mock<ITicketTypesApi>();
         var ordersApiMock = new Mock<IOrdersApi>();
-        var agePoliciesApi = new AgePoliciesApiClient(client);
-        var agePolicyService = new AgePolicyService(agePoliciesApi);
+        var agePoliciesApiMock = new Mock<IAgePoliciesApi>();
 
-        _vm = new CheckoutViewModel(eventsApiMock.Object, ticketTypesApiMock.Object, ordersApiMock.Object, agePolicyService);
+        _vm = new CheckoutViewModel(eventsApiMock.Object, ticketTypesApiMock.Object, ordersApiMock.Object, agePoliciesApiMock.Object);
     }
 
     [Fact]

@@ -21,9 +21,9 @@ public class CreateEventViewModelTests
 
         var eventsApiMock = new Mock<IEventsApi>();
         var statesApiMock = new Mock<IStatesApi>();
-        var paymentInfoApi = new PaymentInfoApiClient(client);
+        var paymentInfoApi = Refit.RestService.For<IPaymentInfoApi>(client, RefitConfig.CreateSettings());
         var paymentInfoService = new PaymentInfoService(paymentInfoApi);
-        var storageApi = new StorageApiClient(client);
+        var storageApi = Refit.RestService.For<IStorageApi>(client, RefitConfig.CreateSettings());
         var storageService = new StorageService(storageApi);
 
         _vm = new CreateEventViewModel(eventsApiMock.Object, statesApiMock.Object, paymentInfoService, storageService);

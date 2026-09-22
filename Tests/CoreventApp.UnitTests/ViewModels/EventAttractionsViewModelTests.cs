@@ -18,12 +18,11 @@ public class EventAttractionsViewModelTests
         var client = httpMock.ToHttpClient();
         client.BaseAddress = new Uri("https://api.corevent.com");
 
-        var attrApi = new AttractionsApiClient(client);
-        var attrService = new AttractionsService(attrApi);
+        var attrApiMock = new Mock<IAttractionsApi>();
 
         var eventsApiMock = new Mock<IEventsApi>();
 
-        _vm = new EventAttractionsViewModel(attrService, eventsApiMock.Object);
+        _vm = new EventAttractionsViewModel(attrApiMock.Object, eventsApiMock.Object);
     }
 
     [Fact]

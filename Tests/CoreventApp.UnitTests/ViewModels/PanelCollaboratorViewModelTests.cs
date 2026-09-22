@@ -21,7 +21,7 @@ public class PanelCollaboratorViewModelTests
         client.BaseAddress = new Uri("https://api.corevent.com");
 
         _eventsApiMock = new Mock<IEventsApi>();
-        var invitesApi = new StaffInvitesApiClient(client);
+        var invitesApi = Refit.RestService.For<IStaffInvitesApi>(client, RefitConfig.CreateSettings());
 
         _vm = new PanelCollaboratorViewModel(_eventsApiMock.Object, invitesApi);
     }

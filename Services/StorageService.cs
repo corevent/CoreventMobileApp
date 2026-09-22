@@ -1,13 +1,14 @@
 using System.Diagnostics;
+using CoreventApp.Models.Dtos;
 using CoreventApp.Services.Api;
 
 namespace CoreventApp.Services;
 
 public class StorageService
 {
-    private readonly StorageApiClient _api;
+    private readonly IStorageApi _api;
 
-    public StorageService(StorageApiClient api)
+    public StorageService(IStorageApi api)
     {
         _api = api;
     }
@@ -17,10 +18,10 @@ public class StorageService
         try
         {
             var presign = await _api.PresignUploadAsync(new("avatar", contentType, null));
-            var uploaded = await _api.UploadImageAsync(presign.Data.UploadUrl, imageStream, contentType);
+            var uploaded = await StorageUploadHelper.UploadImageAsync(presign.Data.UploadUrl, imageStream, contentType);
             if (!uploaded) return null;
 
-            await _api.ConfirmAvatarUploadAsync(presign.Data.Key);
+            await _api.ConfirmAvatarUploadAsync(new ConfirmImageUploadDto(presign.Data.Key));
             return presign.Data.PublicUrl;
         }
         catch (Exception ex)
@@ -35,10 +36,10 @@ public class StorageService
         try
         {
             var presign = await _api.PresignUploadAsync(new("event_banner", contentType, eventId));
-            var uploaded = await _api.UploadImageAsync(presign.Data.UploadUrl, imageStream, contentType);
+            var uploaded = await StorageUploadHelper.UploadImageAsync(presign.Data.UploadUrl, imageStream, contentType);
             if (!uploaded) return null;
 
-            await _api.ConfirmEventBannerAsync(eventId, presign.Data.Key);
+            await _api.ConfirmEventBannerAsync(eventId, new ConfirmImageUploadDto(presign.Data.Key));
             return presign.Data.PublicUrl;
         }
         catch (Exception ex)

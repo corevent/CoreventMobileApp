@@ -66,7 +66,7 @@ public partial class UserInvitationItem : ObservableObject
 
 public partial class UserInvitationsViewModel : ObservableObject
 {
-    private readonly StaffInvitesApiClient _invitesApi;
+    private readonly IStaffInvitesApi _invitesApi;
 
     [ObservableProperty]
     public partial bool IsLoading { get; set; }
@@ -90,7 +90,7 @@ public partial class UserInvitationsViewModel : ObservableObject
     public ObservableCollection<UserInvitationItem> AcceptedInvitations { get; } = new();
     public ObservableCollection<UserInvitationItem> RejectedInvitations { get; } = new();
 
-    public UserInvitationsViewModel(StaffInvitesApiClient invitesApi)
+    public UserInvitationsViewModel(IStaffInvitesApi invitesApi)
     {
         _invitesApi = invitesApi;
     }
@@ -133,7 +133,8 @@ public partial class UserInvitationsViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            await Shell.Current.DisplayAlertAsync("Erro", $"Não foi possível carregar convites: {ex.Message}", "OK");
+            if (Shell.Current is not null)
+                await Shell.Current.DisplayAlertAsync("Erro", $"Não foi possível carregar convites: {ex.Message}", "OK");
         }
         finally
         {

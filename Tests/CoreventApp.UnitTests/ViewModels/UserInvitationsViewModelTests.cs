@@ -18,7 +18,7 @@ public class UserInvitationsViewModelTests
         var client = _httpMock.ToHttpClient();
         client.BaseAddress = new Uri("https://api.corevent.com");
 
-        var api = new StaffInvitesApiClient(client);
+        var api = Refit.RestService.For<IStaffInvitesApi>(client, RefitConfig.CreateSettings());
         _vm = new UserInvitationsViewModel(api);
     }
 
@@ -46,13 +46,13 @@ public class UserInvitationsViewModelTests
         var acceptedJson = "{\"data\":[],\"meta\":{\"totalItems\":0,\"totalPages\":0,\"page\":1,\"limit\":50}}";
         var rejectedJson = "{\"data\":[],\"meta\":{\"totalItems\":0,\"totalPages\":0,\"page\":1,\"limit\":50}}";
 
-        _httpMock.Expect(HttpMethod.Get, "https://api.corevent.com/api/invitations/me*invitationStatus=pending*")
+        _httpMock.Expect(HttpMethod.Get, "https://api.corevent.com/api/invitations/me?page=1&limit=50&invitationStatus=pending")
             .Respond("application/json", pendingJson);
 
-        _httpMock.Expect(HttpMethod.Get, "https://api.corevent.com/api/invitations/me*invitationStatus=accepted*")
+        _httpMock.Expect(HttpMethod.Get, "https://api.corevent.com/api/invitations/me?page=1&limit=50&invitationStatus=accepted")
             .Respond("application/json", acceptedJson);
 
-        _httpMock.Expect(HttpMethod.Get, "https://api.corevent.com/api/invitations/me*invitationStatus=rejected*")
+        _httpMock.Expect(HttpMethod.Get, "https://api.corevent.com/api/invitations/me?page=1&limit=50&invitationStatus=rejected")
             .Respond("application/json", rejectedJson);
 
         await _vm.LoadInvitationsCommand.ExecuteAsync(null);

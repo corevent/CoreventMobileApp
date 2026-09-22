@@ -39,7 +39,8 @@ public static class MauiProgram
 			.ConfigureHttpClient(c => c.BaseAddress = new Uri(baseUrl))
 			.AddHttpMessageHandler<AuthTokenHandler>();
 
-		builder.Services.AddHttpClient<PaymentInfoApiClient>(c => c.BaseAddress = new Uri(baseUrl))
+		builder.Services.AddRefitClient<IPaymentInfoApi>(RefitConfig.CreateSettings())
+			.ConfigureHttpClient(c => c.BaseAddress = new Uri(baseUrl))
 			.AddHttpMessageHandler<AuthTokenHandler>();
 
 		builder.Services.AddRefitClient<IStatesApi>(RefitConfig.CreateSettings())
@@ -50,7 +51,8 @@ public static class MauiProgram
 			.ConfigureHttpClient(c => c.BaseAddress = new Uri(baseUrl))
 			.AddHttpMessageHandler<AuthTokenHandler>();
 
-		builder.Services.AddHttpClient<AttractionsApiClient>(c => c.BaseAddress = new Uri(baseUrl))
+		builder.Services.AddRefitClient<IAttractionsApi>(RefitConfig.CreateSettings())
+			.ConfigureHttpClient(c => c.BaseAddress = new Uri(baseUrl))
 			.AddHttpMessageHandler<AuthTokenHandler>();
 
 		builder.Services.AddRefitClient<ITicketTypesApi>(RefitConfig.CreateSettings())
@@ -65,10 +67,12 @@ public static class MauiProgram
 			.ConfigureHttpClient(c => c.BaseAddress = new Uri(baseUrl))
 			.AddHttpMessageHandler<AuthTokenHandler>();
 
-		builder.Services.AddHttpClient<EventStaffApiClient>(c => c.BaseAddress = new Uri(baseUrl))
+		builder.Services.AddRefitClient<IEventStaffApi>(RefitConfig.CreateSettings())
+			.ConfigureHttpClient(c => c.BaseAddress = new Uri(baseUrl))
 			.AddHttpMessageHandler<AuthTokenHandler>();
 
-		builder.Services.AddHttpClient<StaffInvitesApiClient>(c => c.BaseAddress = new Uri(baseUrl))
+		builder.Services.AddRefitClient<IStaffInvitesApi>(RefitConfig.CreateSettings())
+			.ConfigureHttpClient(c => c.BaseAddress = new Uri(baseUrl))
 			.AddHttpMessageHandler<AuthTokenHandler>();
 
 		builder.Services.AddRefitClient<IFavoritesApi>(RefitConfig.CreateSettings())
@@ -83,10 +87,12 @@ public static class MauiProgram
 			.ConfigureHttpClient(c => c.BaseAddress = new Uri(baseUrl))
 			.AddHttpMessageHandler<AuthTokenHandler>();
 
-		builder.Services.AddHttpClient<AgePoliciesApiClient>(c => c.BaseAddress = new Uri(baseUrl))
+		builder.Services.AddRefitClient<IAgePoliciesApi>(RefitConfig.CreateSettings())
+			.ConfigureHttpClient(c => c.BaseAddress = new Uri(baseUrl))
 			.AddHttpMessageHandler<AuthTokenHandler>();
 
-		builder.Services.AddHttpClient<StorageApiClient>(c => c.BaseAddress = new Uri(baseUrl))
+		builder.Services.AddRefitClient<IStorageApi>(RefitConfig.CreateSettings())
+			.ConfigureHttpClient(c => c.BaseAddress = new Uri(baseUrl))
 			.AddHttpMessageHandler<AuthTokenHandler>();
 
 		builder.Services.AddRefitClient<IParticipantsApi>(RefitConfig.CreateSettings())
@@ -95,9 +101,7 @@ public static class MauiProgram
 
 		builder.Services.AddSingleton<IAuthService, AuthService>();
 		builder.Services.AddTransient<PaymentInfoService>();
-		builder.Services.AddTransient<AttractionsService>();
 		builder.Services.AddTransient<FavoritesService>();
-		builder.Services.AddTransient<AgePolicyService>();
 		builder.Services.AddTransient<StorageService>();
 
 		// ViewModels

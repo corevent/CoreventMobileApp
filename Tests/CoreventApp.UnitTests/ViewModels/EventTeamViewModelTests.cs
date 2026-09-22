@@ -1,5 +1,6 @@
 using CoreventApp.Services.Api;
 using CoreventApp.ViewModels;
+using Moq;
 using RichardSzalay.MockHttp;
 using Shouldly;
 using Xunit;
@@ -16,10 +17,10 @@ public class EventTeamViewModelTests
         var client = httpMock.ToHttpClient();
         client.BaseAddress = new Uri("https://api.corevent.com");
 
-        var staffApi = new EventStaffApiClient(client);
-        var invitesApi = new StaffInvitesApiClient(client);
+        var staffApiMock = new Mock<IEventStaffApi>();
+        var invitesApiMock = new Mock<IStaffInvitesApi>();
 
-        _vm = new EventTeamViewModel(staffApi, invitesApi);
+        _vm = new EventTeamViewModel(staffApiMock.Object, invitesApiMock.Object);
     }
 
     [Fact]

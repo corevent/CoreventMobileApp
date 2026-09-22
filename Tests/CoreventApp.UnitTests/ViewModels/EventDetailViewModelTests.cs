@@ -20,15 +20,14 @@ public class EventDetailViewModelTests
 
         var eventsApiMock = new Mock<IEventsApi>();
 
-        var attrApi = new AttractionsApiClient(client);
-        var attrService = new AttractionsService(attrApi);
+        var attrApiMock = new Mock<IAttractionsApi>();
 
         var favApiMock = new Mock<IFavoritesApi>();
         var favService = new FavoritesService(favApiMock.Object);
 
         var ratingsApiMock = new Mock<IEventRatingsApi>();
 
-        _vm = new EventDetailViewModel(eventsApiMock.Object, attrService, favService, ratingsApiMock.Object);
+        _vm = new EventDetailViewModel(eventsApiMock.Object, attrApiMock.Object, favService, ratingsApiMock.Object);
     }
 
     [Fact]

@@ -12,8 +12,8 @@ namespace CoreventApp.ViewModels;
 [QueryProperty(nameof(EventStatus), nameof(EventStatus))]
 public partial class EventTeamViewModel : ObservableObject
 {
-    private readonly EventStaffApiClient _staffApi;
-    private readonly StaffInvitesApiClient _invitesApi;
+    private readonly IEventStaffApi _staffApi;
+    private readonly IStaffInvitesApi _invitesApi;
 
     private string? _eventId;
 
@@ -79,8 +79,8 @@ public partial class EventTeamViewModel : ObservableObject
     public int ActiveCount => ActiveTeam.Count;
 
     public EventTeamViewModel(
-        EventStaffApiClient staffApi,
-        StaffInvitesApiClient invitesApi)
+        IEventStaffApi staffApi,
+        IStaffInvitesApi invitesApi)
     {
         _staffApi = staffApi;
         _invitesApi = invitesApi;
@@ -94,16 +94,18 @@ public partial class EventTeamViewModel : ObservableObject
 
         try
         {
-            var eventStaff = await _staffApi.GetAllAsync(
+            var eventStaff = await ApiResult.TryExecuteAsync(() => _staffApi.GetAllAsync(
                 eventId,
                 page: 1,
-                limit: 10);
+                limit: 10), "Load team")
+                ?? throw new InvalidOperationException("Load team failed.");
 
-            var invites = await _invitesApi.GetAllAsync(
+            var invites = await ApiResult.TryExecuteAsync(() => _invitesApi.GetAllAsync(
                 eventId,
                 invitationStatus: "pending",
                 page: 1,
-                limit: 10);
+                limit: 10), "Load invites")
+                ?? throw new InvalidOperationException("Load invites failed.");
 
             PendingInvites.Clear();
 
@@ -211,7 +213,8 @@ public partial class EventTeamViewModel : ObservableObject
 
         try
         {
-            await _invitesApi.CreateAsync(EventId, dto);
+            _ =             _ = (await ApiResult.TryExecuteAsync(() => _invitesApi.CreateAsync(EventId, dto), "Invite member"))
+                ?? throw new InvalidOperationException("Invite failed.");
 
             PendingInvites.Add(new TeamMember
             {
@@ -247,7 +250,9 @@ public partial class EventTeamViewModel : ObservableObject
         try
         {
             var dto = new UpdateEventStaffAccessLevelDto(accessLevel);
-            await _staffApi.UpdateAccessLevelAsync(EditingMember.StaffId, dto);
+            _ =             _ = (await ApiResult.TryExecuteAsync(
+                () => _staffApi.UpdateAccessLevelAsync(EditingMember.StaffId, dto), "Update access level"))
+                ?? throw new InvalidOperationException("Update access level failed.");
 
             EditingMember.Role = SelectedRole;
             EditingMember = null;
@@ -270,7 +275,8 @@ public partial class EventTeamViewModel : ObservableObject
             if (member.IsPending &&
                 !string.IsNullOrEmpty(member.InvitationId))
             {
-                await _invitesApi.CancelAsync(member.InvitationId);
+                _ =                 _ = (await ApiResult.TryExecuteAsync(() => _invitesApi.CancelAsync(member.InvitationId), "Cancel invite"))
+                    ?? throw new InvalidOperationException("Cancel invite failed.");
 
                 PendingInvites.Remove(member);
 
@@ -278,7 +284,8 @@ public partial class EventTeamViewModel : ObservableObject
             }
             else if (!string.IsNullOrEmpty(member.StaffId))
             {
-                await _staffApi.DeleteAsync(member.StaffId);
+                if (!await ApiResult.TryExecuteAsync(() => _staffApi.DeleteAsync(member.StaffId), "Remove member"))
+                    throw new InvalidOperationException("Remove member failed.");
 
                 ActiveTeam.Remove(member);
 

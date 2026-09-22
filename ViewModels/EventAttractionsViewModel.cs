@@ -11,7 +11,7 @@ namespace CoreventApp.ViewModels;
 [QueryProperty(nameof(EventId), "EventId")]
 public partial class EventAttractionsViewModel : ObservableObject
 {
-    private readonly AttractionsService _attractionsService;
+    private readonly IAttractionsApi _attractionsApi;
     private readonly IEventsApi _eventsApi;
 
     [ObservableProperty]
@@ -63,9 +63,9 @@ public partial class EventAttractionsViewModel : ObservableObject
 
     public ObservableCollection<Attraction> Attractions { get; } = new();
 
-    public EventAttractionsViewModel(AttractionsService attractionsService, IEventsApi eventsApi)
+    public EventAttractionsViewModel(IAttractionsApi attractionsApi, IEventsApi eventsApi)
     {
-        _attractionsService = attractionsService;
+        _attractionsApi = attractionsApi;
         _eventsApi = eventsApi;
     }
 
@@ -91,7 +91,8 @@ public partial class EventAttractionsViewModel : ObservableObject
                 NewEndDate = EventStartDate;
             }
 
-            var result = await _attractionsService.GetAllAsync(EventId);
+            var result = await ApiResult.TryExecuteAsync(() => _attractionsApi.GetAllAsync(EventId), "Load attractions")
+                ?? new AttractionListPageDto(new List<AttractionDto>(), new PaginationMetaDto(0, 0, 1, 10));
             Attractions.Clear();
             foreach (var item in result.Data)
                 Attractions.Add(MapToPresentation(item));
@@ -186,7 +187,7 @@ public partial class EventAttractionsViewModel : ObservableObject
             startDt.ToUniversalTime(),
             endDt.ToUniversalTime());
 
-        var result = await _attractionsService.CreateAsync(EventId, dto);
+        var result = (await ApiResult.TryExecuteAsync(() => _attractionsApi.CreateAsync(EventId, dto), "Create attraction"))?.Data;
         if (result is null) return;
 
         Attractions.Add(MapToPresentation(result));
@@ -233,7 +234,7 @@ public partial class EventAttractionsViewModel : ObservableObject
             startDt.ToUniversalTime(),
             endDt.ToUniversalTime());
 
-        var result = await _attractionsService.UpdateAsync(EditingAttractionId, dto);
+        var result = (await ApiResult.TryExecuteAsync(() => _attractionsApi.UpdateAsync(EditingAttractionId, dto), "Update attraction"))?.Data;
         if (result is null) return;
 
         var existing = Attractions.FirstOrDefault(a => a.Id == EditingAttractionId);
@@ -263,7 +264,7 @@ public partial class EventAttractionsViewModel : ObservableObject
     [RelayCommand]
     private async Task RemoveAttraction(Attraction attraction)
     {
-        var success = await _attractionsService.DeleteAsync(attraction.Id);
+        var success = await ApiResult.TryExecuteAsync(() => _attractionsApi.DeleteAsync(attraction.Id), "Delete attraction");
         if (!success) return;
 
         Attractions.Remove(attraction);

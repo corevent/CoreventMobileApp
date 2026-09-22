@@ -14,7 +14,7 @@ public partial class CheckoutViewModel : ObservableObject
     private readonly IEventsApi _eventsApi;
     private readonly ITicketTypesApi _ticketTypesApi;
     private readonly IOrdersApi _ordersApi;
-    private readonly AgePolicyService _agePolicyService;
+    private readonly IAgePoliciesApi _agePolicyApi;
     private string? _eventId;
     private string? _orderId;
     private string? _checkoutUrl;
@@ -72,12 +72,12 @@ public partial class CheckoutViewModel : ObservableObject
 
     public string ButtonText => IsPurchasing ? "" : $"Finalizar Compra • R$ {Total:F2}";
 
-    public CheckoutViewModel(IEventsApi eventsApi, ITicketTypesApi ticketTypesApi, IOrdersApi ordersApi, AgePolicyService agePolicyService)
+    public CheckoutViewModel(IEventsApi eventsApi, ITicketTypesApi ticketTypesApi, IOrdersApi ordersApi, IAgePoliciesApi agePolicyApi)
     {
         _eventsApi = eventsApi;
         _ticketTypesApi = ticketTypesApi;
         _ordersApi = ordersApi;
-        _agePolicyService = agePolicyService;
+        _agePolicyApi = agePolicyApi;
     }
 
     private async Task LoadDataAsync(string eventId)
@@ -172,10 +172,11 @@ public partial class CheckoutViewModel : ObservableObject
 
             if (IsAdultOnly)
             {
-                var hasAccepted = await _agePolicyService.CheckIfUserHasAcceptedAsync();
+                var acceptance = await ApiResult.TryExecuteAsync(() => _agePolicyApi.CheckAcceptanceAsync(), "Check age policy");
+                var hasAccepted = acceptance?.Data.UserHasAccepted ?? false;
                 if (!hasAccepted)
                 {
-                    var policy = await _agePolicyService.GetActivePolicyAsync();
+                    var policy = (await ApiResult.TryExecuteAsync(() => _agePolicyApi.GetActivePolicyAsync(), "Load age policy"))?.Data;
                     if (policy is not null)
                     {
                         var consent = await Shell.Current.DisplayAlertAsync(
@@ -184,7 +185,7 @@ public partial class CheckoutViewModel : ObservableObject
                             "Estou ciente",
                             "Cancelar");
                         if (!consent) return;
-                        await _agePolicyService.AcceptAgePolicyAsync();
+                        await ApiResult.TryExecuteAsync(() => _agePolicyApi.AcceptPolicyAsync(), "Accept age policy");
                     }
                 }
             }
