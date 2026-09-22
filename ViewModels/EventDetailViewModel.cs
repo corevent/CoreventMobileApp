@@ -16,7 +16,7 @@ public partial class EventDetailViewModel : ObservableObject
     private readonly IEventsApi _eventsApi;
     private readonly AttractionsService _attractionsService;
     private readonly FavoritesService _favoritesService;
-    private readonly EventRatingsApiClient _ratingsApiClient;
+    private readonly IEventRatingsApi _ratingsApi;
     private readonly ConcurrentDictionary<string, (int Rating, string RatingId)> _ratingCache = new();
     private string? _eventId;
 
@@ -116,12 +116,12 @@ public partial class EventDetailViewModel : ObservableObject
 
     public ObservableCollection<AttractionDto> Attractions { get; } = new();
 
-    public EventDetailViewModel(IEventsApi eventsApi, AttractionsService attractionsService, FavoritesService favoritesService, EventRatingsApiClient ratingsApiClient)
+    public EventDetailViewModel(IEventsApi eventsApi, AttractionsService attractionsService, FavoritesService favoritesService, IEventRatingsApi ratingsApi)
     {
         _eventsApi = eventsApi;
         _attractionsService = attractionsService;
         _favoritesService = favoritesService;
-        _ratingsApiClient = ratingsApiClient;
+        _ratingsApi = ratingsApi;
     }
 
     private async Task LoadEventAsync(string eventId)
@@ -245,19 +245,37 @@ public partial class EventDetailViewModel : ObservableObject
             var cached = GetCachedRating(_eventId);
             if (cached is null)
             {
-                var result = await _ratingsApiClient.CreateAsync(_eventId, new CreateEventRatingDto(rating));
-                SaveRatingToCache(_eventId, rating, result.Data.Id);
+                var response = await ApiResult.TryExecuteAsync(
+                    () => _ratingsApi.CreateAsync(_eventId, new CreateEventRatingDto(rating)), "Create rating");
+                if (response is null)
+                {
+                    await Shell.Current.DisplayAlertAsync("Erro", "Falha ao avaliar. Tente novamente.", "OK");
+                    return;
+                }
+                SaveRatingToCache(_eventId, rating, response.Data.Id);
                 UserRating = rating;
             }
             else if (cached.Value.Rating == rating)
             {
-                await _ratingsApiClient.DeleteAsync(cached.Value.RatingId);
+                var deleted = await ApiResult.TryExecuteAsync(
+                    () => _ratingsApi.DeleteAsync(cached.Value.RatingId), "Delete rating");
+                if (!deleted)
+                {
+                    await Shell.Current.DisplayAlertAsync("Erro", "Falha ao avaliar. Tente novamente.", "OK");
+                    return;
+                }
                 RemoveRatingFromCache(_eventId);
                 UserRating = 0;
             }
             else
             {
-                await _ratingsApiClient.UpdateAsync(cached.Value.RatingId, new CreateEventRatingDto(rating));
+                var updated = await ApiResult.TryExecuteAsync(
+                    () => _ratingsApi.UpdateAsync(cached.Value.RatingId, new CreateEventRatingDto(rating)), "Update rating");
+                if (!updated)
+                {
+                    await Shell.Current.DisplayAlertAsync("Erro", "Falha ao avaliar. Tente novamente.", "OK");
+                    return;
+                }
                 SaveRatingToCache(_eventId, rating, cached.Value.RatingId);
                 UserRating = rating;
             }

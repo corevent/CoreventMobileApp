@@ -3,16 +3,17 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CoreventApp.Models.Dtos;
 using CoreventApp.Services;
+using CoreventApp.Services.Api;
 
 namespace CoreventApp.ViewModels;
 
 public partial class ReviewsViewModel : ObservableObject
 {
-    private readonly EventRatingsService _ratingsService;
+    private readonly IEventRatingsApi _ratingsApi;
 
-    public ReviewsViewModel(EventRatingsService ratingsService)
+    public ReviewsViewModel(IEventRatingsApi ratingsApi)
     {
-        _ratingsService = ratingsService;
+        _ratingsApi = ratingsApi;
     }
 
     [ObservableProperty]
@@ -31,7 +32,8 @@ public partial class ReviewsViewModel : ObservableObject
     {
         IsLoading = true;
 
-        var result = await _ratingsService.GetMyRatingsAsync(page: 1, limit: 100);
+        var result = await ApiResult.TryExecuteAsync(() => _ratingsApi.GetMyRatingsAsync(page: 1, limit: 100), "Load ratings")
+            ?? new MyRatingsListPageDto(new List<MyRatingItemDto>(), new PaginationMetaDto(0, 0, 1, 100));
 
         Items.Clear();
         foreach (var item in result.Data)
@@ -44,7 +46,8 @@ public partial class ReviewsViewModel : ObservableObject
     [RelayCommand]
     private async Task Refresh()
     {
-        var result = await _ratingsService.GetMyRatingsAsync(page: 1, limit: 100);
+        var result = await ApiResult.TryExecuteAsync(() => _ratingsApi.GetMyRatingsAsync(page: 1, limit: 100), "Refresh ratings")
+            ?? new MyRatingsListPageDto(new List<MyRatingItemDto>(), new PaginationMetaDto(0, 0, 1, 100));
 
         Items.Clear();
         foreach (var item in result.Data)

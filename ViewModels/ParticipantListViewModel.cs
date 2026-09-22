@@ -2,7 +2,9 @@ using System.Collections.ObjectModel;
 using System.Diagnostics;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using CoreventApp.Models.Dtos;
 using CoreventApp.Services;
+using CoreventApp.Services.Api;
 
 namespace CoreventApp.ViewModels;
 
@@ -10,7 +12,7 @@ namespace CoreventApp.ViewModels;
 [QueryProperty(nameof(EventName), "EventName")]
 public partial class ParticipantListViewModel : ObservableObject
 {
-    private readonly ParticipantsService _participantsService;
+    private readonly IParticipantsApi _participantsApi;
 
     [ObservableProperty]
     public partial string EventId { get; set; } = string.Empty;
@@ -25,9 +27,9 @@ public partial class ParticipantListViewModel : ObservableObject
 
     public ObservableCollection<ParticipantSummary> Participants { get; } = new();
 
-    public ParticipantListViewModel(ParticipantsService participantsService)
+    public ParticipantListViewModel(IParticipantsApi participantsApi)
     {
-        _participantsService = participantsService;
+        _participantsApi = participantsApi;
     }
 
     partial void OnEventIdChanged(string value)
@@ -43,7 +45,9 @@ public partial class ParticipantListViewModel : ObservableObject
 
         try
         {
-            var result = await _participantsService.GetAllAsync(eventId, page: 1, limit: 100);
+            var result = await ApiResult.TryExecuteAsync(
+                    () => _participantsApi.GetAllAsync(eventId, page: 1, limit: 100), "Load participants")
+                ?? new ParticipantListPageDto(new List<ParticipantDataDto>(), new ParticipantPaginationMetaDto(0, 0, 1, 100));
 
             Participants.Clear();
             foreach (var p in result.Data)

@@ -11,7 +11,7 @@ namespace CoreventApp.ViewModels;
 public partial class CheckInViewModel : ObservableObject
 {
     private readonly IEventsApi _eventsApi;
-    private readonly CheckInService _checkInService;
+    private readonly ICheckInApi _checkInApi;
     private string? _eventId;
 
     [ObservableProperty]
@@ -46,10 +46,10 @@ public partial class CheckInViewModel : ObservableObject
         }
     }
 
-    public CheckInViewModel(IEventsApi eventsApi, CheckInService checkInService)
+    public CheckInViewModel(IEventsApi eventsApi, ICheckInApi checkInApi)
     {
         _eventsApi = eventsApi;
-        _checkInService = checkInService;
+        _checkInApi = checkInApi;
     }
 
     private async Task LoadEventAsync(string eventId)
@@ -91,7 +91,8 @@ public partial class CheckInViewModel : ObservableObject
 
         IsScanning = false;
 
-        var data = await _checkInService.CheckinAsync(_eventId!, barcode);
+        var data = (await ApiResult.TryExecuteAsync(
+            () => _checkInApi.CheckinAsync(_eventId!, new CheckinDto(barcode)), "Check-in"))?.Data;
 
         if (data is not null)
         {

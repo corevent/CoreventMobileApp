@@ -7,10 +7,10 @@ namespace CoreventApp.Services;
 
 public class FavoritesService
 {
-    private readonly FavoritesApiClient _api;
+    private readonly IFavoritesApi _api;
     private readonly ConcurrentDictionary<string, string> _favoriteIdByEventId = new();
 
-    public FavoritesService(FavoritesApiClient api)
+    public FavoritesService(IFavoritesApi api)
     {
         _api = api;
     }
@@ -51,34 +51,23 @@ public class FavoritesService
 
     public async Task<FavoriteDataDto?> AddFavoriteAsync(string eventId)
     {
-        try
-        {
-            var result = await _api.CreateAsync(eventId);
-            _favoriteIdByEventId[eventId] = result.Data.Id;
-            return result.Data;
-        }
-        catch (Exception ex)
-        {
-            Debug.WriteLine($"Add favorite failed: {ex.Message}");
+        var result = await ApiResult.TryExecuteAsync(() => _api.CreateAsync(eventId), "Add favorite");
+        if (result is null)
             return null;
-        }
+
+        _favoriteIdByEventId[eventId] = result.Data.Id;
+        return result.Data;
     }
 
     public async Task<bool> RemoveFavoriteAsync(string eventId)
     {
-        try
-        {
-            var favoriteId = GetFavoriteId(eventId);
-            if (favoriteId is null) return false;
+        var favoriteId = GetFavoriteId(eventId);
+        if (favoriteId is null) return false;
 
-            await _api.DeleteAsync(favoriteId);
-            _favoriteIdByEventId.TryRemove(eventId, out _);
-            return true;
-        }
-        catch (Exception ex)
-        {
-            Debug.WriteLine($"Remove favorite failed: {ex.Message}");
-            return false;
-        }
+        var removed = await ApiResult.TryExecuteAsync(() => _api.DeleteAsync(favoriteId), "Remove favorite");
+        if (!removed) return false;
+
+        _favoriteIdByEventId.TryRemove(eventId, out _);
+        return true;
     }
 }

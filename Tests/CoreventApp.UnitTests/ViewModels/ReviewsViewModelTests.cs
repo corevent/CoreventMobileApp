@@ -1,7 +1,8 @@
+using CoreventApp.Models.Dtos;
 using CoreventApp.Services;
 using CoreventApp.Services.Api;
 using CoreventApp.ViewModels;
-using RichardSzalay.MockHttp;
+using Moq;
 using Shouldly;
 using Xunit;
 
@@ -9,19 +10,13 @@ namespace CoreventApp.UnitTests.ViewModels;
 
 public class ReviewsViewModelTests
 {
-    private readonly MockHttpMessageHandler _httpMock;
-    private readonly EventRatingsService _ratingsService;
+    private readonly Mock<IEventRatingsApi> _ratingsApiMock;
     private readonly ReviewsViewModel _vm;
 
     public ReviewsViewModelTests()
     {
-        _httpMock = new MockHttpMessageHandler();
-        var client = _httpMock.ToHttpClient();
-        client.BaseAddress = new Uri("https://api.corevent.com");
-
-        var api = new EventRatingsApiClient(client);
-        _ratingsService = new EventRatingsService(api);
-        _vm = new ReviewsViewModel(_ratingsService);
+        _ratingsApiMock = new Mock<IEventRatingsApi>();
+        _vm = new ReviewsViewModel(_ratingsApiMock.Object);
     }
 
     [Fact]
@@ -36,10 +31,11 @@ public class ReviewsViewModelTests
     [Fact]
     public async Task LoadItems_ShouldPopulateItemsAndSetIsEmpty()
     {
-        var json = "{\"data\":[{\"eventId\":\"evt_1\",\"eventTitle\":\"Show SP\",\"bannerUrl\":\"https://img.com/1.jpg\",\"averageRating\":4.9,\"userRating\":5}],\"meta\":{\"totalItems\":1,\"totalPages\":1,\"page\":1,\"limit\":100}}";
+        var item = new MyRatingItemDto("evt_1", "Show SP", "https://img.com/1.jpg", 4.9, 5);
 
-        _httpMock.Expect(HttpMethod.Get, "https://api.corevent.com/api/event-ratings/my-ratings*")
-            .Respond("application/json", json);
+        _ratingsApiMock.Setup(a => a.GetMyRatingsAsync(1, 100))
+            .ReturnsAsync(new MyRatingsListPageDto(
+                new List<MyRatingItemDto> { item }, new PaginationMetaDto(1, 1, 1, 100)));
 
         await _vm.LoadItemsCommand.ExecuteAsync(null);
 

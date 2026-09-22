@@ -1,6 +1,7 @@
 using CoreventApp.Services;
 using CoreventApp.Services.Api;
 using CoreventApp.ViewModels;
+using Moq;
 using RichardSzalay.MockHttp;
 using Shouldly;
 using Xunit;
@@ -17,10 +18,9 @@ public class ParticipantListViewModelTests
         var client = httpMock.ToHttpClient();
         client.BaseAddress = new Uri("https://api.corevent.com");
 
-        var api = new ParticipantsApiClient(client);
-        var service = new ParticipantsService(api);
+        var apiMock = new Mock<IParticipantsApi>();
 
-        _vm = new ParticipantListViewModel(service);
+        _vm = new ParticipantListViewModel(apiMock.Object);
     }
 
     [Fact]

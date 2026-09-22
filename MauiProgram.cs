@@ -71,13 +71,16 @@ public static class MauiProgram
 		builder.Services.AddHttpClient<StaffInvitesApiClient>(c => c.BaseAddress = new Uri(baseUrl))
 			.AddHttpMessageHandler<AuthTokenHandler>();
 
-		builder.Services.AddHttpClient<FavoritesApiClient>(c => c.BaseAddress = new Uri(baseUrl))
+		builder.Services.AddRefitClient<IFavoritesApi>(RefitConfig.CreateSettings())
+			.ConfigureHttpClient(c => c.BaseAddress = new Uri(baseUrl))
 			.AddHttpMessageHandler<AuthTokenHandler>();
 
-		builder.Services.AddHttpClient<CheckInApiClient>(c => c.BaseAddress = new Uri(baseUrl))
+		builder.Services.AddRefitClient<ICheckInApi>(RefitConfig.CreateSettings())
+			.ConfigureHttpClient(c => c.BaseAddress = new Uri(baseUrl))
 			.AddHttpMessageHandler<AuthTokenHandler>();
 
-		builder.Services.AddHttpClient<EventRatingsApiClient>(c => c.BaseAddress = new Uri(baseUrl))
+		builder.Services.AddRefitClient<IEventRatingsApi>(RefitConfig.CreateSettings())
+			.ConfigureHttpClient(c => c.BaseAddress = new Uri(baseUrl))
 			.AddHttpMessageHandler<AuthTokenHandler>();
 
 		builder.Services.AddHttpClient<AgePoliciesApiClient>(c => c.BaseAddress = new Uri(baseUrl))
@@ -86,18 +89,16 @@ public static class MauiProgram
 		builder.Services.AddHttpClient<StorageApiClient>(c => c.BaseAddress = new Uri(baseUrl))
 			.AddHttpMessageHandler<AuthTokenHandler>();
 
-		builder.Services.AddHttpClient<ParticipantsApiClient>(c => c.BaseAddress = new Uri(baseUrl))
+		builder.Services.AddRefitClient<IParticipantsApi>(RefitConfig.CreateSettings())
+			.ConfigureHttpClient(c => c.BaseAddress = new Uri(baseUrl))
 			.AddHttpMessageHandler<AuthTokenHandler>();
 
 		builder.Services.AddSingleton<IAuthService, AuthService>();
 		builder.Services.AddTransient<PaymentInfoService>();
 		builder.Services.AddTransient<AttractionsService>();
 		builder.Services.AddTransient<FavoritesService>();
-		builder.Services.AddTransient<CheckInService>();
 		builder.Services.AddTransient<AgePolicyService>();
 		builder.Services.AddTransient<StorageService>();
-		builder.Services.AddTransient<ParticipantsService>();
-		builder.Services.AddTransient<EventRatingsService>();
 
 		// ViewModels
 		builder.Services.AddTransient<ViewModels.WelcomeViewModel>();

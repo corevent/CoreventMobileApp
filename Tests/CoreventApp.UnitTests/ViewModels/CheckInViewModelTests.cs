@@ -19,11 +19,9 @@ public class CheckInViewModelTests
         client.BaseAddress = new Uri("https://api.corevent.com");
 
         var eventsApiMock = new Mock<IEventsApi>();
+        var checkInApiMock = new Mock<ICheckInApi>();
 
-        var checkInApi = new CheckInApiClient(client);
-        var checkInService = new CheckInService(checkInApi);
-
-        _vm = new CheckInViewModel(eventsApiMock.Object, checkInService);
+        _vm = new CheckInViewModel(eventsApiMock.Object, checkInApiMock.Object);
     }
 
     [Fact]

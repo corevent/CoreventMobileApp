@@ -19,8 +19,8 @@ public class FavoritesViewModelTests
     {
         _eventsApiMock = new Mock<IEventsApi>();
 
-        var favApi = new FavoritesApiClient(new HttpClient());
-        _favoritesService = new FavoritesService(favApi);
+        var favApiMock = new Mock<IFavoritesApi>();
+        _favoritesService = new FavoritesService(favApiMock.Object);
 
         _authMock = new Mock<IAuthService>();
 

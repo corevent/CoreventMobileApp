@@ -1,8 +1,8 @@
-using System.Net;
 using CoreventApp.Models.Dtos;
 using CoreventApp.Services;
 using CoreventApp.Services.Api;
-using RichardSzalay.MockHttp;
+using Moq;
+using Refit;
 using Shouldly;
 using Xunit;
 
@@ -10,18 +10,13 @@ namespace CoreventApp.UnitTests.Services;
 
 public class FavoritesServiceTests
 {
-    private readonly MockHttpMessageHandler _httpMock;
-    private readonly FavoritesApiClient _api;
+    private readonly Mock<IFavoritesApi> _apiMock;
     private readonly FavoritesService _service;
 
     public FavoritesServiceTests()
     {
-        _httpMock = new MockHttpMessageHandler();
-        var httpClient = _httpMock.ToHttpClient();
-        httpClient.BaseAddress = new Uri("https://api.corevent.com");
-
-        _api = new FavoritesApiClient(httpClient);
-        _service = new FavoritesService(_api);
+        _apiMock = new Mock<IFavoritesApi>();
+        _service = new FavoritesService(_apiMock.Object);
     }
 
     [Fact]
@@ -46,8 +41,8 @@ public class FavoritesServiceTests
     [Fact]
     public async Task AddFavoriteAsync_ShouldCallApiAndCacheId_OnSuccess()
     {
-        _httpMock.Expect(HttpMethod.Post, "https://api.corevent.com/api/favorites/events/evt_1")
-            .Respond("application/json", "{\"data\":{\"id\":\"fav_new\",\"userId\":\"u1\",\"eventId\":\"evt_1\",\"createdAt\":\"2026-09-01T00:00:00.000Z\"}}");
+        _apiMock.Setup(a => a.CreateAsync("evt_1"))
+            .ReturnsAsync(new FavoriteResponseDto(new FavoriteDataDto("fav_new", "u1", "evt_1")));
 
         var result = await _service.AddFavoriteAsync("evt_1");
 
@@ -60,8 +55,7 @@ public class FavoritesServiceTests
     [Fact]
     public async Task AddFavoriteAsync_ShouldReturnNull_OnApiError()
     {
-        _httpMock.Expect(HttpMethod.Post, "https://api.corevent.com/api/favorites/events/evt_error")
-            .Respond(HttpStatusCode.InternalServerError);
+        _apiMock.Setup(a => a.CreateAsync("evt_error")).ThrowsAsync(new HttpRequestException("boom"));
 
         var result = await _service.AddFavoriteAsync("evt_error");
 
@@ -73,9 +67,7 @@ public class FavoritesServiceTests
     public async Task RemoveFavoriteAsync_ShouldCallDeleteAndRemoveFromCache_WhenFavoriteExists()
     {
         _service.SetFavoriteIdByEventId("evt_1", "fav_123");
-
-        _httpMock.Expect(HttpMethod.Delete, "https://api.corevent.com/api/favorites/fav_123")
-            .Respond(HttpStatusCode.OK);
+        _apiMock.Setup(a => a.DeleteAsync("fav_123")).Returns(Task.CompletedTask);
 
         var success = await _service.RemoveFavoriteAsync("evt_1");
 
@@ -89,5 +81,17 @@ public class FavoritesServiceTests
         var success = await _service.RemoveFavoriteAsync("evt_not_cached");
 
         success.ShouldBeFalse();
+    }
+
+    [Fact]
+    public async Task RemoveFavoriteAsync_ShouldReturnFalse_OnApiError()
+    {
+        _service.SetFavoriteIdByEventId("evt_1", "fav_123");
+        _apiMock.Setup(a => a.DeleteAsync("fav_123")).ThrowsAsync(new HttpRequestException("boom"));
+
+        var success = await _service.RemoveFavoriteAsync("evt_1");
+
+        success.ShouldBeFalse();
+        _service.IsFavorite("evt_1").ShouldBeTrue();
     }
 }
