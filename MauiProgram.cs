@@ -31,6 +31,7 @@ public static class MauiProgram
 		builder.Services.AddTransient<AuthTokenHandler>();
 
 		string baseUrl = "https://corevent-app-fatec-d78bb2efd71a.herokuapp.com/";
+		builder.Services.AddHttpClient(AuthTokenHandler.RefreshClientName, c => c.BaseAddress = new Uri(baseUrl));
 		builder.Services.AddHttpClient<AuthApiClient>(c => c.BaseAddress = new Uri(baseUrl));
 		builder.Services.AddHttpClient<UsersApiClient>(c => c.BaseAddress = new Uri(baseUrl))
 			.AddHttpMessageHandler<AuthTokenHandler>();

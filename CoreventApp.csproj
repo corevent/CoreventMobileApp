@@ -70,13 +70,17 @@
 	<ItemGroup>
 		<PackageReference Include="AathifMahir.Maui.MauiIcons.Cupertino" Version="6.0.0" />
 		<PackageReference Include="CommunityToolkit.Maui" Version="13.0.0" />
-		<PackageReference Include="Microsoft.Extensions.Http" Version="10.0.8" />
+		<PackageReference Include="Microsoft.Extensions.Http" Version="10.0.11" />
 		<PackageReference Include="Microsoft.Maui.Controls" Version="$(MauiVersion)" />
 		<PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="10.0.0" />
 
 		<PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
 
 		<PackageReference Include="QRCoder" Version="1.6.0" />
+
+		<PackageReference Include="Refit" Version="15.2.0" />
+
+		<PackageReference Include="Refit.HttpClientFactory" Version="15.2.0" />
 
 		<PackageReference Include="ZXing.Net.Maui" Version="0.7.4" />
 

@@ -19,15 +19,16 @@ public class AuthTokenHandlerTests
         secureStorageMock.Setup(s => s.GetAsync("access_token")).ReturnsAsync("my-jwt-token");
 
         var tokenService = new TokenService(secureStorageMock.Object);
-        var authHttpMock = new MockHttpMessageHandler();
-        var authApi = new AuthApiClient(authHttpMock.ToHttpClient());
+        var httpClientFactoryMock = new Mock<IHttpClientFactory>();
+        httpClientFactoryMock.Setup(f => f.CreateClient(It.IsAny<string>()))
+            .Returns(new HttpClient());
 
         var innerHttpMock = new MockHttpMessageHandler();
         innerHttpMock.Expect(HttpMethod.Get, "https://api.corevent.com/api/events")
             .WithHeaders("Authorization", "Bearer my-jwt-token")
             .Respond(HttpStatusCode.OK, "application/json", "[]");
 
-        var handler = new AuthTokenHandler(tokenService, authApi)
+        var handler = new AuthTokenHandler(tokenService, httpClientFactoryMock.Object)
         {
             InnerHandler = innerHttpMock
         };
@@ -56,7 +57,9 @@ public class AuthTokenHandlerTests
 
         var authHttpClient = authHttpMock.ToHttpClient();
         authHttpClient.BaseAddress = new Uri("https://api.corevent.com");
-        var authApi = new AuthApiClient(authHttpClient);
+        var httpClientFactoryMock = new Mock<IHttpClientFactory>();
+        httpClientFactoryMock.Setup(f => f.CreateClient(AuthTokenHandler.RefreshClientName))
+            .Returns(authHttpClient);
 
         var innerHttpMock = new MockHttpMessageHandler();
         // 1st request -> 401 Unauthorized
@@ -69,7 +72,7 @@ public class AuthTokenHandlerTests
             .WithHeaders("Authorization", "Bearer new-access-token")
             .Respond(HttpStatusCode.OK, "application/json", "[]");
 
-        var handler = new AuthTokenHandler(tokenService, authApi)
+        var handler = new AuthTokenHandler(tokenService, httpClientFactoryMock.Object)
         {
             InnerHandler = innerHttpMock
         };

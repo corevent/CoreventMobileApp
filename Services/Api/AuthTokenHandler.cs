@@ -1,19 +1,27 @@
 using System.Diagnostics;
 using System.Net;
 using System.Net.Http.Headers;
+using System.Text;
+using System.Text.Json;
 using CoreventApp.Models.Dtos;
 
 namespace CoreventApp.Services.Api;
 
 public class AuthTokenHandler : DelegatingHandler
 {
-    private readonly TokenService _tokenService;
-    private readonly AuthApiClient _authApi;
+    /// <summary>
+    /// Named HttpClient used only for token refresh. It is registered WITHOUT this
+    /// handler to avoid a dependency cycle (and infinite 401 recursion).
+    /// </summary>
+    public const string RefreshClientName = "auth-refresh";
 
-    public AuthTokenHandler(TokenService tokenService, AuthApiClient authApi)
+    private readonly TokenService _tokenService;
+    private readonly IHttpClientFactory _httpClientFactory;
+
+    public AuthTokenHandler(TokenService tokenService, IHttpClientFactory httpClientFactory)
     {
         _tokenService = tokenService;
-        _authApi = authApi;
+        _httpClientFactory = httpClientFactory;
     }
 
     protected override async Task<HttpResponseMessage> SendAsync(
@@ -34,7 +42,7 @@ public class AuthTokenHandler : DelegatingHandler
 
         try
         {
-            var tokens = await _authApi.Refresh(new RefreshTokenDto(refreshToken));
+            var tokens = await RefreshAsync(refreshToken, cancellationToken);
             await _tokenService.SaveTokensAsync(tokens.AccessToken, tokens.RefreshToken);
 
             var retry = await CloneRequest(request);
@@ -47,6 +55,17 @@ public class AuthTokenHandler : DelegatingHandler
             await _tokenService.ClearTokensAsync();
             return response;
         }
+    }
+
+    private async Task<AuthTokensDto> RefreshAsync(string refreshToken, CancellationToken cancellationToken)
+    {
+        var refreshClient = _httpClientFactory.CreateClient(RefreshClientName);
+        var json = JsonSerializer.Serialize(new RefreshTokenDto(refreshToken), JsonConfig.Options);
+        using var content = new StringContent(json, Encoding.UTF8, "application/json");
+        using var refreshResponse = await refreshClient.PostAsync("/api/auth/refresh", content, cancellationToken);
+        refreshResponse.EnsureSuccessStatusCode();
+        var body = await refreshResponse.Content.ReadAsStringAsync(cancellationToken);
+        return JsonSerializer.Deserialize<AuthTokensDto>(body, JsonConfig.Options)!;
     }
 
     private static async Task<HttpRequestMessage> CloneRequest(HttpRequestMessage request)
