@@ -9,8 +9,9 @@ public class UtcDateTimeConverter : JsonConverter<DateTime>
     public override DateTime Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
         var str = reader.GetString();
-        if (str is null) return default;
-        var dt = DateTime.Parse(str, null, DateTimeStyles.RoundtripKind);
+        if (string.IsNullOrEmpty(str)) return default;
+        if (!DateTime.TryParse(str, null, DateTimeStyles.RoundtripKind, out var dt))
+            throw new JsonException($"Invalid DateTime value: '{str}'.");
         return dt.Kind == DateTimeKind.Unspecified
             ? DateTime.SpecifyKind(dt, DateTimeKind.Utc)
             : dt;

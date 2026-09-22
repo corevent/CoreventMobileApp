@@ -81,7 +81,10 @@ public partial class ExploreViewModel : ObservableObject
             if (!token.IsCancellationRequested)
                 await SearchCommand.ExecuteAsync(null);
         }
-        catch (TaskCanceledException) { }
+        catch (OperationCanceledException)
+        {
+            // Expected on every keystroke: a newer search superseded this one.
+        }
     }
 
     [RelayCommand]

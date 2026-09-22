@@ -19,8 +19,9 @@ public static class StorageUploadHelper
             var response = await uploadClient.PutAsync(uploadUrl, streamContent);
             return response.IsSuccessStatusCode;
         }
-        catch
+        catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException or InvalidOperationException)
         {
+            System.Diagnostics.Debug.WriteLine($"UploadImageAsync failed: {ex.Message}");
             return false;
         }
     }

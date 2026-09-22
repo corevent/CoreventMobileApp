@@ -93,7 +93,8 @@ public partial class EditProfileViewModel : ObservableObject
       _avatarStream = await photo.OpenReadAsync();
       _avatarContentType = contentType;
 
-      _avatarStream.Position = 0;
+      if (_avatarStream.CanSeek)
+          _avatarStream.Position = 0;
       UserAvatar = photo.FullPath;
     }
     catch (Exception ex)

@@ -52,6 +52,8 @@ public partial class TicketQrCodeViewModel : ObservableObject
 
     private void GenerateQrCode(string qrToken)
     {
+        if (string.IsNullOrEmpty(qrToken)) return;
+
         try
         {
             IsLoading = true;

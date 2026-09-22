@@ -72,8 +72,11 @@ public static class ApiResult
             if (doc.RootElement.TryGetProperty("message", out var message))
                 return message.GetString();
         }
-        catch (JsonException)
+        catch (JsonException jsonEx)
         {
+            // Not a {"message":...} payload — caller treats null as unknown error.
+            Debug.WriteLine($"ExtractMessage: unparsable error content: {jsonEx.Message}");
+            return null;
         }
 
         return null;

@@ -81,16 +81,11 @@ public partial class PanelCollaboratorViewModel : ObservableObject
             HasUpcomingEvents = UpcomingEvents.Count > 0;
             HasPastEvents = PastEvents.Count > 0;
 
-            try
-            {
-                var invites = await _invitesApi.GetMyInvitationsAsync(page: 1, limit: 10, invitationStatus: "pending");
-                PendingInvitesCount = invites.Meta.TotalItems;
-                HasPendingInvites = PendingInvitesCount > 0;
-            }
-            catch
-            {
-                HasPendingInvites = false;
-            }
+            var invites = await ApiResult.TryExecuteAsync(
+                () => _invitesApi.GetMyInvitationsAsync(page: 1, limit: 10, invitationStatus: "pending"),
+                "Load pending invites");
+            PendingInvitesCount = invites?.Meta.TotalItems ?? 0;
+            HasPendingInvites = PendingInvitesCount > 0;
         }
         catch (Exception ex)
         {

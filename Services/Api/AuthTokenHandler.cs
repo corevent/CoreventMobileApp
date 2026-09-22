@@ -65,7 +65,8 @@ public class AuthTokenHandler : DelegatingHandler
         using var refreshResponse = await refreshClient.PostAsync("/api/auth/refresh", content, cancellationToken);
         refreshResponse.EnsureSuccessStatusCode();
         var body = await refreshResponse.Content.ReadAsStringAsync(cancellationToken);
-        return JsonSerializer.Deserialize<AuthTokensDto>(body, JsonConfig.Options)!;
+        return JsonSerializer.Deserialize<AuthTokensDto>(body, JsonConfig.Options)
+            ?? throw new JsonException("Empty token refresh response.");
     }
 
     private static async Task<HttpRequestMessage> CloneRequest(HttpRequestMessage request)

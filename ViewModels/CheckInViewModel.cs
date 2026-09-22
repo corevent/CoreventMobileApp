@@ -91,10 +91,12 @@ public partial class CheckInViewModel : ObservableObject
         if (_eventStatus is not ("opened" or "going"))
             return;
 
+        if (_eventId is null) return;
+
         IsScanning = false;
 
         var data = (await ApiResult.TryExecuteAsync(
-            () => _checkInApi.CheckinAsync(_eventId!, new CheckinDto(barcode)), "Check-in"))?.Data;
+            () => _checkInApi.CheckinAsync(_eventId, new CheckinDto(barcode)), "Check-in"))?.Data;
 
         if (data is not null)
         {

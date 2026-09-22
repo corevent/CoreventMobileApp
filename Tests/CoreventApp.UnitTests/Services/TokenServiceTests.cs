@@ -49,15 +49,6 @@ public class TokenServiceTests
     }
 
     [Fact]
-    public void ClearTokens_ShouldRemoveBothTokens()
-    {
-        _tokenService.ClearTokens();
-
-        _secureStorageMock.Verify(s => s.Remove("access_token"), Times.Once);
-        _secureStorageMock.Verify(s => s.Remove("refresh_token"), Times.Once);
-    }
-
-    [Fact]
     public async Task ClearTokensAsync_ShouldRemoveBothTokens()
     {
         await _tokenService.ClearTokensAsync();

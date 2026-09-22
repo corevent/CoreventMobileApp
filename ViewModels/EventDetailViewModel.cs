@@ -180,8 +180,12 @@ public partial class EventDetailViewModel : ObservableObject
     {
         try
         {
-            var result = await ApiResult.TryExecuteAsync(() => _attractionsApi.GetAllAsync(eventId), "Load attractions")
-                ?? throw new InvalidOperationException("Load attractions failed.");
+            var result = await ApiResult.TryExecuteAsync(() => _attractionsApi.GetAllAsync(eventId), "Load attractions");
+            if (result is null)
+            {
+                await _dialogs.ShowErrorAsync("Não foi possível carregar as atrações.");
+                return;
+            }
             Attractions.Clear();
             foreach (var item in result.Data)
                 Attractions.Add(item with
@@ -297,7 +301,7 @@ public partial class EventDetailViewModel : ObservableObject
             return cached;
 
         var json = Preferences.Get($"rating_{eventId}", null);
-        if (json is not null)
+        if (!string.IsNullOrEmpty(json))
         {
             try
             {
@@ -308,7 +312,12 @@ public partial class EventDetailViewModel : ObservableObject
                     return (data.Rating, data.RatingId);
                 }
             }
-            catch { }
+            catch (JsonException ex)
+            {
+                // Corrupt cache entry: drop it so it is refetched.
+                Debug.WriteLine($"GetCachedRating: dropping corrupt entry for {eventId}: {ex.Message}");
+                Preferences.Remove($"rating_{eventId}");
+            }
         }
         return null;
     }

@@ -29,15 +29,11 @@ public class TokenService
         return await _secureStorage.GetAsync(RefreshTokenKey);
     }
 
-    public void ClearTokens()
+    public Task ClearTokensAsync()
     {
         _secureStorage.Remove(AccessTokenKey);
         _secureStorage.Remove(RefreshTokenKey);
-    }
-
-    public async Task ClearTokensAsync()
-    {
-        await Task.Run(ClearTokens);
+        return Task.CompletedTask;
     }
 
     public async Task<bool> IsAuthenticatedAsync()
