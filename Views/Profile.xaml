@@ -6,11 +6,14 @@
              xmlns:mi="http://www.aathifmahir.com/dotnet/2022/maui/icons"
              xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
              x:Class="CoreventApp.Views.Profile"
+             x:Name="ThisPage"
              Title="Perfil"
              BackgroundColor="{StaticResource background_color}">
 
   <ContentPage.Behaviors>
-    <toolkit:EventToCommandBehavior EventName="Appearing" Command="{Binding LoadUserCommand}" />
+    <toolkit:EventToCommandBehavior EventName="Appearing"
+                                      BindingContext="{Binding Source={x:Reference ThisPage}, Path=BindingContext}"
+                                      Command="{Binding LoadUserCommand}" />
   </ContentPage.Behaviors>
 
   <ScrollView>

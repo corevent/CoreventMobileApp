@@ -3,6 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:vm="clr-namespace:CoreventApp.ViewModels"
              x:Class="CoreventApp.Views.TransferSettings"
+             x:Name="ThisPage"
              x:DataType="vm:TransferSettingsViewModel"
              xmlns:mi="http://www.aathifmahir.com/dotnet/2022/maui/icons"
              xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
@@ -11,7 +12,9 @@
              BackgroundColor="{StaticResource background_color}">
 
     <ContentPage.Behaviors>
-        <toolkit:EventToCommandBehavior EventName="Appearing" Command="{Binding LoadCommand}" />
+        <toolkit:EventToCommandBehavior EventName="Appearing"
+                                          BindingContext="{Binding Source={x:Reference ThisPage}, Path=BindingContext}"
+                                          Command="{Binding LoadCommand}" />
     </ContentPage.Behaviors>
 
     <Grid RowDefinitions="Auto, *">

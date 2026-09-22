@@ -3,13 +3,16 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:vm="clr-namespace:CoreventApp.ViewModels"
              x:Class="CoreventApp.Views.Tickets"
+             x:Name="ThisPage"
              xmlns:mi="http://www.aathifmahir.com/dotnet/2022/maui/icons"
              xmlns:dtos="clr-namespace:CoreventApp.Models.Dtos"
              xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
              Title="Ingressos"
              BackgroundColor="{StaticResource background_color}">
   <ContentPage.Behaviors>
-    <toolkit:EventToCommandBehavior EventName="Appearing" Command="{Binding LoadTicketsCommand}" />
+    <toolkit:EventToCommandBehavior EventName="Appearing"
+                                      BindingContext="{Binding Source={x:Reference ThisPage}, Path=BindingContext}"
+                                      Command="{Binding LoadTicketsCommand}" />
   </ContentPage.Behaviors>
   <Grid RowDefinitions="auto,auto,*" Padding="20" RowSpacing="20">
 

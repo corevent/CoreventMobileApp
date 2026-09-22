@@ -13,7 +13,9 @@
              BackgroundColor="{StaticResource background_color}">
 
     <ContentPage.Behaviors>
-        <toolkit:EventToCommandBehavior EventName="Appearing" Command="{Binding LoadFavoritesCommand}" />
+        <toolkit:EventToCommandBehavior EventName="Appearing"
+                                          BindingContext="{Binding Source={x:Reference ThisPage}, Path=BindingContext}"
+                                          Command="{Binding LoadFavoritesCommand}" />
     </ContentPage.Behaviors>
 
     <Grid RowDefinitions="Auto, *" Padding="20" RowSpacing="20">

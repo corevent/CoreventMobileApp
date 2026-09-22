@@ -13,7 +13,9 @@
              BackgroundColor="{StaticResource background_color}">
 
     <ContentPage.Behaviors>
-        <toolkit:EventToCommandBehavior EventName="Appearing" Command="{Binding SearchCommand}" />
+        <toolkit:EventToCommandBehavior EventName="Appearing"
+                                          BindingContext="{Binding Source={x:Reference ThisPage}, Path=BindingContext}"
+                                          Command="{Binding SearchCommand}" />
     </ContentPage.Behaviors>
 
     <Grid RowDefinitions="Auto, Auto, *">
