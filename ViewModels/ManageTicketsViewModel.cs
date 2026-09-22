@@ -12,7 +12,7 @@ namespace CoreventApp.ViewModels;
 public partial class ManageTicketsViewModel : ObservableObject
 {
     private readonly TicketTypesApiClient _ticketTypesApi;
-    private readonly EventsService _eventsService;
+    private readonly IEventsApi _eventsApi;
     private TicketTypeViewModel? _editingTicketType;
 
     [ObservableProperty]
@@ -61,10 +61,10 @@ public partial class ManageTicketsViewModel : ObservableObject
 
     public ObservableCollection<TicketTypeViewModel> TicketTypes { get; } = new();
 
-    public ManageTicketsViewModel(TicketTypesApiClient ticketTypesApi, EventsService eventsService)
+    public ManageTicketsViewModel(TicketTypesApiClient ticketTypesApi, IEventsApi eventsApi)
     {
         _ticketTypesApi = ticketTypesApi;
-        _eventsService = eventsService;
+        _eventsApi = eventsApi;
     }
 
     partial void OnEventIdChanged(string value)
@@ -80,7 +80,7 @@ public partial class ManageTicketsViewModel : ObservableObject
 
         try
         {
-            var evt = await _eventsService.GetByIdAsync(EventId);
+            var evt = (await ApiResult.TryExecuteAsync(() => _eventsApi.GetByIdAsync(EventId), "Load event"))?.Data;
             if (evt is not null)
             {
                 EventCreatedAt = evt.CreatedAt?.ToLocalTime().Date ?? DateTime.Today;

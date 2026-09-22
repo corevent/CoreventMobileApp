@@ -13,8 +13,8 @@ namespace CoreventApp.ViewModels;
 public partial class CreateEventViewModel : ObservableObject
 {
     private const int TotalSteps = 3;
-    private readonly EventsService _eventsService;
-    private readonly StatesApiClient _statesApi;
+    private readonly IEventsApi _eventsApi;
+    private readonly IStatesApi _statesApi;
     private readonly PaymentInfoService _paymentInfoService;
     private readonly StorageService _storageService;
     private string? _editingEventId;
@@ -110,9 +110,9 @@ public partial class CreateEventViewModel : ObservableObject
         ["Híbrido"] = "hybrid"
     };
 
-    public CreateEventViewModel(EventsService eventsService, StatesApiClient statesApi, PaymentInfoService paymentInfoService, StorageService storageService)
+    public CreateEventViewModel(IEventsApi eventsApi, IStatesApi statesApi, PaymentInfoService paymentInfoService, StorageService storageService)
     {
-        _eventsService = eventsService;
+        _eventsApi = eventsApi;
         _statesApi = statesApi;
         _paymentInfoService = paymentInfoService;
         _storageService = storageService;
@@ -130,7 +130,7 @@ public partial class CreateEventViewModel : ObservableObject
 
     private async Task LoadEditingEventAsync(string eventId)
     {
-        var evt = await _eventsService.GetByIdAsync(eventId);
+        var evt = (await ApiResult.TryExecuteAsync(() => _eventsApi.GetByIdAsync(eventId), "Load event"))?.Data;
         if (evt is null) return;
 
         _originalEvent = evt;
@@ -218,7 +218,13 @@ public partial class CreateEventViewModel : ObservableObject
         try
         {
             IsLoadingStates = true;
-            var response = await _statesApi.GetStatesAsync();
+            var response = await ApiResult.TryExecuteAsync(() => _statesApi.GetStatesAsync(), "Load states");
+            if (response is null)
+            {
+                Debug.WriteLine("Load states failed: no response");
+                await Shell.Current.DisplayAlertAsync("Erro", "Não foi possível carregar a lista de estados.", "OK");
+                return;
+            }
             Form.States.Clear();
             foreach (var s in response.Data)
                 Form.States.Add(s);
@@ -243,7 +249,13 @@ public partial class CreateEventViewModel : ObservableObject
         try
         {
             IsLoadingStates = true;
-            var response = await _statesApi.GetCitiesAsync(state.Id);
+            var response = await ApiResult.TryExecuteAsync(() => _statesApi.GetCitiesAsync(state.Id), "Load cities");
+            if (response is null)
+            {
+                Debug.WriteLine("Load cities failed: no response");
+                await Shell.Current.DisplayAlertAsync("Erro", "Não foi possível carregar a lista de cidades.", "OK");
+                return;
+            }
             Form.Cities.Clear();
             foreach (var c in response.Data)
                 Form.Cities.Add(c);
@@ -320,7 +332,7 @@ public partial class CreateEventViewModel : ObservableObject
             if (IsEditing && _editingEventId is not null)
             {
                 var payload = BuildUpdatePayload(targetStatus);
-                var result = await _eventsService.UpdatePartialAsync(_editingEventId, payload);
+                var result = (await ApiResult.TryExecuteAsync(() => _eventsApi.UpdatePartialAsync(_editingEventId, payload), "Save event"))?.Data;
                 if (result is null)
                 {
                     await Shell.Current.DisplayAlertAsync("Erro", "Não foi possível salvar as alterações.", "OK");
@@ -334,7 +346,7 @@ public partial class CreateEventViewModel : ObservableObject
             else
             {
                 var dto = BuildCreateDto(targetStatus, forUpdate: IsEditing);
-                var result = await _eventsService.CreateAsync(dto);
+                var result = (await ApiResult.TryExecuteAsync(() => _eventsApi.CreateAsync(dto), "Save event"))?.Data;
                 if (result is null)
                 {
                     await Shell.Current.DisplayAlertAsync("Erro", "Não foi possível salvar o rascunho.", "OK");
@@ -384,7 +396,7 @@ public partial class CreateEventViewModel : ObservableObject
             if (IsEditing && _editingEventId is not null)
             {
                 var payload = BuildUpdatePayload("opened");
-                var result = await _eventsService.UpdatePartialAsync(_editingEventId, payload);
+                var result = (await ApiResult.TryExecuteAsync(() => _eventsApi.UpdatePartialAsync(_editingEventId, payload), "Save event"))?.Data;
                 if (result is null)
                 {
                     await Shell.Current.DisplayAlertAsync("Erro", "Não foi possível publicar o evento.", "OK");
@@ -397,7 +409,7 @@ public partial class CreateEventViewModel : ObservableObject
             else
             {
                 var dto = BuildCreateDto("opened", forUpdate: IsEditing);
-                var result = await _eventsService.CreateAsync(dto);
+                var result = (await ApiResult.TryExecuteAsync(() => _eventsApi.CreateAsync(dto), "Save event"))?.Data;
                 if (result is null)
                 {
                     await Shell.Current.DisplayAlertAsync("Erro", "Não foi possível publicar o evento.", "OK");

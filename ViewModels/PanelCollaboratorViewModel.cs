@@ -11,7 +11,7 @@ namespace CoreventApp.ViewModels;
 
 public partial class PanelCollaboratorViewModel : ObservableObject
 {
-    private readonly EventsService _eventsService;
+    private readonly IEventsApi _eventsApi;
     private readonly StaffInvitesApiClient _invitesApi;
 
     [ObservableProperty]
@@ -42,9 +42,9 @@ public partial class PanelCollaboratorViewModel : ObservableObject
     [ObservableProperty]
     public partial bool HasPastEvents { get; set; }
 
-    public PanelCollaboratorViewModel(EventsService eventsService, StaffInvitesApiClient invitesApi)
+    public PanelCollaboratorViewModel(IEventsApi eventsApi, StaffInvitesApiClient invitesApi)
     {
-        _eventsService = eventsService;
+        _eventsApi = eventsApi;
         _invitesApi = invitesApi;
     }
 
@@ -56,13 +56,13 @@ public partial class PanelCollaboratorViewModel : ObservableObject
 
         try
         {
-            var result = await _eventsService.GetMyStaffEventsAllAsync(page: 1, limit: 100);
+            var staffEvents = await LoadStaffEventsAsync();
 
             EventsToday.Clear();
             UpcomingEvents.Clear();
             PastEvents.Clear();
 
-            foreach (var item in result.Data)
+            foreach (var item in staffEvents)
             {
                 var ce = MapToCollaboratorEvent(item);
 
@@ -98,6 +98,17 @@ public partial class PanelCollaboratorViewModel : ObservableObject
         {
             IsLoading = false;
         }
+    }
+
+    private async Task<List<StaffEventListItemDto>> LoadStaffEventsAsync()
+    {
+        var statuses = new[] { "opened", "going", "finished" };
+        var tasks = statuses.Select(status =>
+            ApiResult.TryExecuteAsync(
+                () => _eventsApi.GetMyStaffEventsAsync(page: 1, limit: 100, status: status),
+                "Load staff events"));
+        var results = await Task.WhenAll(tasks);
+        return results.Where(r => r is not null).SelectMany(r => r!.Data).ToList();
     }
 
     private static CollaboratorEvent MapToCollaboratorEvent(StaffEventListItemDto item)

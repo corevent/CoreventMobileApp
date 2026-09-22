@@ -3,6 +3,7 @@ using CommunityToolkit.Mvvm.Input;
 using CoreventApp.Helpers;
 using CoreventApp.Models.Dtos;
 using CoreventApp.Services;
+using CoreventApp.Services.Api;
 using System.Collections.ObjectModel;
 
 namespace CoreventApp.ViewModels;
@@ -11,7 +12,7 @@ namespace CoreventApp.ViewModels;
 public partial class EventAttractionsViewModel : ObservableObject
 {
     private readonly AttractionsService _attractionsService;
-    private readonly EventsService _eventsService;
+    private readonly IEventsApi _eventsApi;
 
     [ObservableProperty]
     public partial string EventId { get; set; } = string.Empty;
@@ -62,10 +63,10 @@ public partial class EventAttractionsViewModel : ObservableObject
 
     public ObservableCollection<Attraction> Attractions { get; } = new();
 
-    public EventAttractionsViewModel(AttractionsService attractionsService, EventsService eventsService)
+    public EventAttractionsViewModel(AttractionsService attractionsService, IEventsApi eventsApi)
     {
         _attractionsService = attractionsService;
-        _eventsService = eventsService;
+        _eventsApi = eventsApi;
     }
 
     partial void OnEventIdChanged(string value)
@@ -81,7 +82,7 @@ public partial class EventAttractionsViewModel : ObservableObject
 
         try
         {
-            var eventDetail = await _eventsService.GetByIdAsync(EventId);
+            var eventDetail = (await ApiResult.TryExecuteAsync(() => _eventsApi.GetByIdAsync(EventId), "Load event"))?.Data;
             if (eventDetail is not null)
             {
                 EventStartDate = eventDetail.StartDate.ToLocalTime().Date;

@@ -4,6 +4,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CoreventApp.Models.Dtos;
 using CoreventApp.Services;
+using CoreventApp.Services.Api;
 
 namespace CoreventApp.ViewModels;
 
@@ -21,7 +22,7 @@ public partial class CategoryItem : ObservableObject
 
 public partial class ExploreViewModel : ObservableObject
 {
-    private readonly EventsService _eventsService;
+    private readonly IEventsApi _eventsApi;
     private readonly IAuthService _authService;
     private int _currentPage = 1;
     private const int PageSize = 10;
@@ -41,9 +42,9 @@ public partial class ExploreViewModel : ObservableObject
     public ObservableCollection<CategoryItem> Categories { get; } = new();
     public ObservableCollection<EventListItemDto> Events { get; } = new();
 
-    public ExploreViewModel(EventsService eventsService, IAuthService authService)
+    public ExploreViewModel(IEventsApi eventsApi, IAuthService authService)
     {
-        _eventsService = eventsService;
+        _eventsApi = eventsApi;
         _authService = authService;
 
         Categories.Add(new CategoryItem { Name = "Todos", ApiValue = "", IsSelected = true });
@@ -93,13 +94,14 @@ public partial class ExploreViewModel : ObservableObject
         {
             var selected = GetSelectedCategoryApiValue();
 
-            var result = await _eventsService.GetAllAsync(
+            var result = await ApiResult.TryExecuteAsync(() => _eventsApi.GetAllAsync(
                 page: _currentPage, limit: PageSize,
                 search: string.IsNullOrWhiteSpace(SearchText) ? null : SearchText,
                 category: selected,
                 stateId: null,
                 cityId: null,
-                status: "opened");
+                status: "opened"), "Explore search")
+                ?? new EventListPageDto(new List<EventListItemDto>(), new PaginationMetaDto(0, 0, _currentPage, PageSize));
 
             var filtered = _authService.CurrentCachedUser?.IsAdult == false
                 ? result.Data.Where(e => !e.IsAdultOnly)
@@ -131,13 +133,14 @@ public partial class ExploreViewModel : ObservableObject
             _currentPage++;
             var selected = GetSelectedCategoryApiValue();
 
-            var result = await _eventsService.GetAllAsync(
+            var result = await ApiResult.TryExecuteAsync(() => _eventsApi.GetAllAsync(
                 page: _currentPage, limit: PageSize,
                 search: string.IsNullOrWhiteSpace(SearchText) ? null : SearchText,
                 category: selected,
                 stateId: null,
                 cityId: null,
-                status: "opened");
+                status: "opened"), "Explore load more")
+                ?? new EventListPageDto(new List<EventListItemDto>(), new PaginationMetaDto(0, 0, _currentPage, PageSize));
 
             var filtered = _authService.CurrentCachedUser?.IsAdult == false
                 ? result.Data.Where(e => !e.IsAdultOnly)

@@ -1,6 +1,7 @@
 using CoreventApp.Services;
 using CoreventApp.Services.Api;
 using CoreventApp.ViewModels;
+using Moq;
 using RichardSzalay.MockHttp;
 using Shouldly;
 using Xunit;
@@ -20,10 +21,9 @@ public class EventAttractionsViewModelTests
         var attrApi = new AttractionsApiClient(client);
         var attrService = new AttractionsService(attrApi);
 
-        var eventsApi = new EventsApiClient(client);
-        var eventsService = new EventsService(eventsApi);
+        var eventsApiMock = new Mock<IEventsApi>();
 
-        _vm = new EventAttractionsViewModel(attrService, eventsService);
+        _vm = new EventAttractionsViewModel(attrService, eventsApiMock.Object);
     }
 
     [Fact]

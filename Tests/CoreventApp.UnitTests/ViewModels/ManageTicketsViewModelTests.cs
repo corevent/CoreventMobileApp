@@ -1,6 +1,7 @@
 using CoreventApp.Services;
 using CoreventApp.Services.Api;
 using CoreventApp.ViewModels;
+using Moq;
 using RichardSzalay.MockHttp;
 using Shouldly;
 using Xunit;
@@ -18,10 +19,9 @@ public class ManageTicketsViewModelTests
         client.BaseAddress = new Uri("https://api.corevent.com");
 
         var ticketTypesApi = new TicketTypesApiClient(client);
-        var eventsApi = new EventsApiClient(client);
-        var eventsService = new EventsService(eventsApi);
+        var eventsApiMock = new Mock<IEventsApi>();
 
-        _vm = new ManageTicketsViewModel(ticketTypesApi, eventsService);
+        _vm = new ManageTicketsViewModel(ticketTypesApi, eventsApiMock.Object);
     }
 
     [Fact]

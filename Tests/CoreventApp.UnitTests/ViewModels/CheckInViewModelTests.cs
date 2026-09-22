@@ -1,6 +1,7 @@
 using CoreventApp.Services;
 using CoreventApp.Services.Api;
 using CoreventApp.ViewModels;
+using Moq;
 using RichardSzalay.MockHttp;
 using Shouldly;
 using Xunit;
@@ -17,13 +18,12 @@ public class CheckInViewModelTests
         var client = httpMock.ToHttpClient();
         client.BaseAddress = new Uri("https://api.corevent.com");
 
-        var eventsApi = new EventsApiClient(client);
-        var eventsService = new EventsService(eventsApi);
+        var eventsApiMock = new Mock<IEventsApi>();
 
         var checkInApi = new CheckInApiClient(client);
         var checkInService = new CheckInService(checkInApi);
 
-        _vm = new CheckInViewModel(eventsService, checkInService);
+        _vm = new CheckInViewModel(eventsApiMock.Object, checkInService);
     }
 
     [Fact]

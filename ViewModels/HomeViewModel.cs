@@ -4,12 +4,13 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CoreventApp.Models.Dtos;
 using CoreventApp.Services;
+using CoreventApp.Services.Api;
 
 namespace CoreventApp.ViewModels;
 
 public partial class HomeViewModel : ObservableObject
 {
-    private readonly EventsService _eventsService;
+    private readonly IEventsApi _eventsApi;
     private readonly IAuthService _authService;
 
     [ObservableProperty]
@@ -21,9 +22,9 @@ public partial class HomeViewModel : ObservableObject
     [ObservableProperty]
     public partial ObservableCollection<EventListItemDto> OtherEvents { get; set; } = new();
 
-    public HomeViewModel(EventsService eventsService, IAuthService authService)
+    public HomeViewModel(IEventsApi eventsApi, IAuthService authService)
     {
-        _eventsService = eventsService;
+        _eventsApi = eventsApi;
         _authService = authService;
     }
 
@@ -35,7 +36,9 @@ public partial class HomeViewModel : ObservableObject
 
         try
         {
-            var result = await _eventsService.GetAllAsync(page: 1, limit: 50, status: "opened");
+            var result = await ApiResult.TryExecuteAsync(
+                    () => _eventsApi.GetAllAsync(page: 1, limit: 50, status: "opened"), "Home load")
+                ?? new EventListPageDto(new List<EventListItemDto>(), new PaginationMetaDto(0, 0, 1, 50));
             var filtered = _authService.CurrentCachedUser?.IsAdult == false
                 ? result.Data.Where(e => !e.IsAdultOnly)
                 : result.Data;

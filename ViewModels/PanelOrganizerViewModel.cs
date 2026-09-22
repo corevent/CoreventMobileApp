@@ -4,6 +4,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CoreventApp.Models.Dtos;
 using CoreventApp.Services;
+using CoreventApp.Services.Api;
 
 namespace CoreventApp.ViewModels;
 
@@ -11,7 +12,7 @@ public record StatusFilterChip(string Label, string? StatusValue, bool IsSelecte
 
 public partial class PanelOrganizerViewModel : ObservableObject
 {
-    private readonly EventsService _eventsService;
+    private readonly IEventsApi _eventsApi;
     private readonly PaymentInfoService _paymentInfoService;
 
     [ObservableProperty]
@@ -24,9 +25,9 @@ public partial class PanelOrganizerViewModel : ObservableObject
     public ObservableCollection<EventListItemDto> FilteredEvents { get; } = new();
     public ObservableCollection<StatusFilterChip> FilterChips { get; } = new();
 
-    public PanelOrganizerViewModel(EventsService eventsService, PaymentInfoService paymentInfoService)
+    public PanelOrganizerViewModel(IEventsApi eventsApi, PaymentInfoService paymentInfoService)
     {
-        _eventsService = eventsService;
+        _eventsApi = eventsApi;
         _paymentInfoService = paymentInfoService;
 
         FilterChips.Add(new StatusFilterChip("Todos", null, true));
@@ -45,10 +46,10 @@ public partial class PanelOrganizerViewModel : ObservableObject
 
         try
         {
-            var result = await _eventsService.GetMyOrganizerEventsAllAsync(page: 1, limit: 100);
+            var events = await LoadOrganizerEventsAsync();
 
             AllEvents.Clear();
-            foreach (var item in result.Data)
+            foreach (var item in events)
                 AllEvents.Add(item);
 
             ApplyFilter(null);
@@ -81,6 +82,17 @@ public partial class PanelOrganizerViewModel : ObservableObject
         }
 
         ApplyFilter(chip?.StatusValue);
+    }
+
+    private async Task<List<EventListItemDto>> LoadOrganizerEventsAsync()
+    {
+        var statuses = new[] { "draft", "opened", "going", "canceled", "finished" };
+        var tasks = statuses.Select(status =>
+            ApiResult.TryExecuteAsync(
+                () => _eventsApi.GetMyOrganizerEventsAsync(page: 1, limit: 100, status: status),
+                "Load organizer events"));
+        var results = await Task.WhenAll(tasks);
+        return results.Where(r => r is not null).SelectMany(r => r!.Data).ToList();
     }
 
     private void ApplyFilter(string? statusValue)

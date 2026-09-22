@@ -1,8 +1,8 @@
+using CoreventApp.Models.Dtos;
 using CoreventApp.Services;
 using CoreventApp.Services.Api;
 using CoreventApp.ViewModels;
 using Moq;
-using RichardSzalay.MockHttp;
 using Shouldly;
 using Xunit;
 
@@ -10,27 +10,21 @@ namespace CoreventApp.UnitTests.ViewModels;
 
 public class FavoritesViewModelTests
 {
-    private readonly MockHttpMessageHandler _httpMock;
-    private readonly EventsService _eventsService;
+    private readonly Mock<IEventsApi> _eventsApiMock;
     private readonly FavoritesService _favoritesService;
     private readonly Mock<IAuthService> _authMock;
     private readonly FavoritesViewModel _vm;
 
     public FavoritesViewModelTests()
     {
-        _httpMock = new MockHttpMessageHandler();
-        var client = _httpMock.ToHttpClient();
-        client.BaseAddress = new Uri("https://api.corevent.com");
+        _eventsApiMock = new Mock<IEventsApi>();
 
-        var eventsApi = new EventsApiClient(client);
-        _eventsService = new EventsService(eventsApi);
-
-        var favApi = new FavoritesApiClient(client);
+        var favApi = new FavoritesApiClient(new HttpClient());
         _favoritesService = new FavoritesService(favApi);
 
         _authMock = new Mock<IAuthService>();
 
-        _vm = new FavoritesViewModel(_eventsService, _favoritesService, _authMock.Object);
+        _vm = new FavoritesViewModel(_eventsApiMock.Object, _favoritesService, _authMock.Object);
     }
 
     [Fact]
@@ -44,10 +38,19 @@ public class FavoritesViewModelTests
     [Fact]
     public async Task LoadFavoritesAsync_ShouldPopulateFavoritesList()
     {
-        var json = "{\"data\":[{\"id\":\"evt_fav_1\",\"title\":\"Jazz Night\",\"maxParticipants\":500,\"cityName\":\"Rio\",\"stateAcronym\":\"RJ\",\"locationName\":\"Clube\",\"startDate\":\"2026-10-10T20:00:00.000Z\",\"endDate\":\"2026-10-10T22:00:00.000Z\",\"category\":\"music\",\"isAdultOnly\":false,\"status\":\"opened\",\"organizer\":{\"id\":\"o1\",\"name\":\"Org\",\"email\":\"o@t.com\",\"avatarUrl\":null},\"favoriteId\":\"fav_1\"}],\"meta\":{\"totalItems\":1,\"totalPages\":1,\"page\":1,\"limit\":50}}";
+        var organizer = new OrganizerInfoDto("o1", "Org", "o@t.com", null);
+        var item = new EventListItemDto("evt_fav_1", "Jazz Night", 500, "Rio", "RJ", "Clube",
+            new DateTime(2026, 10, 10, 20, 0, 0, DateTimeKind.Utc),
+            new DateTime(2026, 10, 10, 22, 0, 0, DateTimeKind.Utc),
+            "music", false, "opened", organizer, null, null, "fav_1");
+        var empty = new EventListPageDto(new List<EventListItemDto>(), new PaginationMetaDto(0, 0, 1, 100));
 
-        _httpMock.When(HttpMethod.Get, "https://api.corevent.com/api/events/my/favorites*")
-            .Respond("application/json", json);
+        _eventsApiMock.Setup(a => a.GetMyFavoriteEventsAsync(1, 100, "opened", null, null, null, null, null, null))
+            .ReturnsAsync(new EventListPageDto(new List<EventListItemDto> { item }, new PaginationMetaDto(1, 1, 1, 100)));
+        _eventsApiMock.Setup(a => a.GetMyFavoriteEventsAsync(1, 100, "going", null, null, null, null, null, null))
+            .ReturnsAsync(empty);
+        _eventsApiMock.Setup(a => a.GetMyFavoriteEventsAsync(1, 100, "finished", null, null, null, null, null, null))
+            .ReturnsAsync(empty);
 
         await _vm.LoadFavoritesCommand.ExecuteAsync(null);
 

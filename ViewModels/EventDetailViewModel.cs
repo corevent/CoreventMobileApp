@@ -13,7 +13,7 @@ namespace CoreventApp.ViewModels;
 [QueryProperty(nameof(EventId), "EventId")]
 public partial class EventDetailViewModel : ObservableObject
 {
-    private readonly EventsService _eventsService;
+    private readonly IEventsApi _eventsApi;
     private readonly AttractionsService _attractionsService;
     private readonly FavoritesService _favoritesService;
     private readonly EventRatingsApiClient _ratingsApiClient;
@@ -116,9 +116,9 @@ public partial class EventDetailViewModel : ObservableObject
 
     public ObservableCollection<AttractionDto> Attractions { get; } = new();
 
-    public EventDetailViewModel(EventsService eventsService, AttractionsService attractionsService, FavoritesService favoritesService, EventRatingsApiClient ratingsApiClient)
+    public EventDetailViewModel(IEventsApi eventsApi, AttractionsService attractionsService, FavoritesService favoritesService, EventRatingsApiClient ratingsApiClient)
     {
-        _eventsService = eventsService;
+        _eventsApi = eventsApi;
         _attractionsService = attractionsService;
         _favoritesService = favoritesService;
         _ratingsApiClient = ratingsApiClient;
@@ -131,7 +131,7 @@ public partial class EventDetailViewModel : ObservableObject
 
         try
         {
-            var evt = await _eventsService.GetByIdAsync(eventId);
+            var evt = (await ApiResult.TryExecuteAsync(() => _eventsApi.GetByIdAsync(eventId), "Load event"))?.Data;
             if (evt is null) return;
 
             EventName = evt.Title;

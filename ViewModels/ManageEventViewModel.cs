@@ -3,13 +3,14 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CoreventApp.Models.Dtos;
 using CoreventApp.Services;
+using CoreventApp.Services.Api;
 
 namespace CoreventApp.ViewModels;
 
 [QueryProperty(nameof(EventId), "EventId")]
 public partial class ManageEventViewModel : ObservableObject
 {
-    private readonly EventsService _eventsService;
+    private readonly IEventsApi _eventsApi;
     private string? _eventId;
     private EventDetailDto? _currentEvent;
 
@@ -52,9 +53,9 @@ public partial class ManageEventViewModel : ObservableObject
         }
     }
 
-    public ManageEventViewModel(EventsService eventsService)
+    public ManageEventViewModel(IEventsApi eventsApi)
     {
-        _eventsService = eventsService;
+        _eventsApi = eventsApi;
     }
 
     private async Task LoadEventAsync(string eventId)
@@ -64,7 +65,7 @@ public partial class ManageEventViewModel : ObservableObject
 
         try
         {
-            var evt = await _eventsService.GetByIdAsync(eventId);
+            var evt = (await ApiResult.TryExecuteAsync(() => _eventsApi.GetByIdAsync(eventId), "Load event"))?.Data;
             if (evt is null) return;
 
             _currentEvent = evt;
@@ -121,7 +122,7 @@ public partial class ManageEventViewModel : ObservableObject
     {
         if (!CanPublish || _eventId is null) return;
 
-        var result = await _eventsService.UpdateStatusAsync(_eventId, "opened");
+        var result = (await ApiResult.TryExecuteAsync(() => _eventsApi.UpdateStatusAsync(_eventId, new UpdateEventStatusDto("opened")), "Publish event"))?.Data;
 
         if (result is not null)
         {
@@ -149,7 +150,7 @@ public partial class ManageEventViewModel : ObservableObject
 
         if (!confirm) return;
 
-        var success = await _eventsService.CancelAsync(_eventId);
+        var success = await ApiResult.TryExecuteAsync(() => _eventsApi.CancelAsync(_eventId), "Cancel event");
         if (success)
         {
             Status = "canceled";
@@ -187,7 +188,7 @@ public partial class ManageEventViewModel : ObservableObject
 
         if (!confirm) return;
 
-        var success = await _eventsService.DeleteAsync(_eventId);
+        var success = await ApiResult.TryExecuteAsync(() => _eventsApi.DeleteAsync(_eventId), "Delete event");
         if (success)
         {
             await Shell.Current.DisplayAlertAsync("Evento Excluído",

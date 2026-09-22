@@ -2,7 +2,6 @@ using CoreventApp.Services;
 using CoreventApp.Services.Api;
 using CoreventApp.ViewModels;
 using Moq;
-using RichardSzalay.MockHttp;
 using Shouldly;
 using Xunit;
 
@@ -14,15 +13,10 @@ public class ExploreViewModelTests
 
     public ExploreViewModelTests()
     {
-        var httpMock = new MockHttpMessageHandler();
-        var client = httpMock.ToHttpClient();
-        client.BaseAddress = new Uri("https://api.corevent.com");
-
-        var eventsApi = new EventsApiClient(client);
-        var eventsService = new EventsService(eventsApi);
+        var eventsApiMock = new Mock<IEventsApi>();
         var authMock = new Mock<IAuthService>();
 
-        _vm = new ExploreViewModel(eventsService, authMock.Object);
+        _vm = new ExploreViewModel(eventsApiMock.Object, authMock.Object);
     }
 
     [Fact]

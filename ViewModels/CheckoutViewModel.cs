@@ -11,7 +11,7 @@ namespace CoreventApp.ViewModels;
 [QueryProperty(nameof(EventId), "EventId")]
 public partial class CheckoutViewModel : ObservableObject
 {
-    private readonly EventsService _eventsService;
+    private readonly IEventsApi _eventsApi;
     private readonly TicketTypesApiClient _ticketTypesApi;
     private readonly OrdersApiClient _ordersApi;
     private readonly AgePolicyService _agePolicyService;
@@ -72,9 +72,9 @@ public partial class CheckoutViewModel : ObservableObject
 
     public string ButtonText => IsPurchasing ? "" : $"Finalizar Compra • R$ {Total:F2}";
 
-    public CheckoutViewModel(EventsService eventsService, TicketTypesApiClient ticketTypesApi, OrdersApiClient ordersApi, AgePolicyService agePolicyService)
+    public CheckoutViewModel(IEventsApi eventsApi, TicketTypesApiClient ticketTypesApi, OrdersApiClient ordersApi, AgePolicyService agePolicyService)
     {
-        _eventsService = eventsService;
+        _eventsApi = eventsApi;
         _ticketTypesApi = ticketTypesApi;
         _ordersApi = ordersApi;
         _agePolicyService = agePolicyService;
@@ -87,7 +87,7 @@ public partial class CheckoutViewModel : ObservableObject
 
         try
         {
-            var evt = await _eventsService.GetByIdAsync(eventId);
+            var evt = (await ApiResult.TryExecuteAsync(() => _eventsApi.GetByIdAsync(eventId), "Load event"))?.Data;
             if (evt is null) return;
 
             EventName = evt.Title;

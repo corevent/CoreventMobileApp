@@ -2,6 +2,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CoreventApp.Models.Dtos;
 using CoreventApp.Services;
+using CoreventApp.Services.Api;
 using CoreventApp.Views;
 using System.Collections.ObjectModel;
 
@@ -9,7 +10,7 @@ namespace CoreventApp.ViewModels;
 
 public partial class FavoritesViewModel : ObservableObject
 {
-    private readonly EventsService _eventsService;
+    private readonly IEventsApi _eventsApi;
     private readonly FavoritesService _favoritesService;
     private readonly IAuthService _authService;
 
@@ -21,11 +22,22 @@ public partial class FavoritesViewModel : ObservableObject
 
     public ObservableCollection<EventListItemDto> FavoriteEvents { get; } = new();
 
-    public FavoritesViewModel(EventsService eventsService, FavoritesService favoritesService, IAuthService authService)
+    public FavoritesViewModel(IEventsApi eventsApi, FavoritesService favoritesService, IAuthService authService)
     {
-        _eventsService = eventsService;
+        _eventsApi = eventsApi;
         _favoritesService = favoritesService;
         _authService = authService;
+    }
+
+    private async Task<List<EventListItemDto>> LoadFavoriteEventsAsync()
+    {
+        var statuses = new[] { "opened", "going", "finished" };
+        var tasks = statuses.Select(status =>
+            ApiResult.TryExecuteAsync(
+                () => _eventsApi.GetMyFavoriteEventsAsync(page: 1, limit: 100, status: status),
+                "Load favorites"));
+        var results = await Task.WhenAll(tasks);
+        return results.Where(r => r is not null).SelectMany(r => r!.Data).ToList();
     }
 
     [RelayCommand]
@@ -36,10 +48,10 @@ public partial class FavoritesViewModel : ObservableObject
 
         try
         {
-            var result = await _eventsService.GetMyFavoriteEventsAsync();
+            var events = await LoadFavoriteEventsAsync();
             var filtered = _authService.CurrentCachedUser?.IsAdult == false
-                ? result.Data.Where(e => !e.IsAdultOnly).ToList()
-                : result.Data;
+                ? events.Where(e => !e.IsAdultOnly).ToList()
+                : events;
             FavoriteEvents.Clear();
             foreach (var item in filtered)
                 FavoriteEvents.Add(item);
@@ -59,10 +71,10 @@ public partial class FavoritesViewModel : ObservableObject
 
         try
         {
-            var result = await _eventsService.GetMyFavoriteEventsAsync();
+            var events = await LoadFavoriteEventsAsync();
             var filtered = _authService.CurrentCachedUser?.IsAdult == false
-                ? result.Data.Where(e => !e.IsAdultOnly).ToList()
-                : result.Data;
+                ? events.Where(e => !e.IsAdultOnly).ToList()
+                : events;
             FavoriteEvents.Clear();
             foreach (var item in filtered)
                 FavoriteEvents.Add(item);

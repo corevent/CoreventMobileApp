@@ -2,6 +2,7 @@ using CoreventApp.Models.Dtos;
 using CoreventApp.Services;
 using CoreventApp.Services.Api;
 using CoreventApp.ViewModels;
+using Moq;
 using RichardSzalay.MockHttp;
 using Shouldly;
 using Xunit;
@@ -18,14 +19,13 @@ public class CheckoutViewModelTests
         var client = httpMock.ToHttpClient();
         client.BaseAddress = new Uri("https://api.corevent.com");
 
-        var eventsApi = new EventsApiClient(client);
-        var eventsService = new EventsService(eventsApi);
+        var eventsApiMock = new Mock<IEventsApi>();
         var ticketTypesApi = new TicketTypesApiClient(client);
         var ordersApi = new OrdersApiClient(client);
         var agePoliciesApi = new AgePoliciesApiClient(client);
         var agePolicyService = new AgePolicyService(agePoliciesApi);
 
-        _vm = new CheckoutViewModel(eventsService, ticketTypesApi, ordersApi, agePolicyService);
+        _vm = new CheckoutViewModel(eventsApiMock.Object, ticketTypesApi, ordersApi, agePolicyService);
     }
 
     [Fact]

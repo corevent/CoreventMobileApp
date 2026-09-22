@@ -2,6 +2,7 @@ using CoreventApp.Models.Dtos;
 using CoreventApp.Services;
 using CoreventApp.Services.Api;
 using CoreventApp.ViewModels;
+using Moq;
 using RichardSzalay.MockHttp;
 using Shouldly;
 using Xunit;
@@ -18,15 +19,14 @@ public class CreateEventViewModelTests
         var client = httpMock.ToHttpClient();
         client.BaseAddress = new Uri("https://api.corevent.com");
 
-        var eventsApi = new EventsApiClient(client);
-        var eventsService = new EventsService(eventsApi);
-        var statesApi = new StatesApiClient(client);
+        var eventsApiMock = new Mock<IEventsApi>();
+        var statesApiMock = new Mock<IStatesApi>();
         var paymentInfoApi = new PaymentInfoApiClient(client);
         var paymentInfoService = new PaymentInfoService(paymentInfoApi);
         var storageApi = new StorageApiClient(client);
         var storageService = new StorageService(storageApi);
 
-        _vm = new CreateEventViewModel(eventsService, statesApi, paymentInfoService, storageService);
+        _vm = new CreateEventViewModel(eventsApiMock.Object, statesApiMock.Object, paymentInfoService, storageService);
     }
 
     [Fact]

@@ -3,13 +3,14 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CoreventApp.Models.Dtos;
 using CoreventApp.Services;
+using CoreventApp.Services.Api;
 
 namespace CoreventApp.ViewModels;
 
 [QueryProperty(nameof(EventId), "EventId")]
 public partial class CheckInViewModel : ObservableObject
 {
-    private readonly EventsService _eventsService;
+    private readonly IEventsApi _eventsApi;
     private readonly CheckInService _checkInService;
     private string? _eventId;
 
@@ -45,9 +46,9 @@ public partial class CheckInViewModel : ObservableObject
         }
     }
 
-    public CheckInViewModel(EventsService eventsService, CheckInService checkInService)
+    public CheckInViewModel(IEventsApi eventsApi, CheckInService checkInService)
     {
-        _eventsService = eventsService;
+        _eventsApi = eventsApi;
         _checkInService = checkInService;
     }
 
@@ -55,7 +56,7 @@ public partial class CheckInViewModel : ObservableObject
     {
         try
         {
-            var evt = await _eventsService.GetByIdAsync(eventId);
+            var evt = (await ApiResult.TryExecuteAsync(() => _eventsApi.GetByIdAsync(eventId), "Load event"))?.Data;
             if (evt is null) return;
 
             EventName = evt.Title;

@@ -2,6 +2,7 @@ using CoreventApp.Models.Dtos;
 using CoreventApp.Services;
 using CoreventApp.Services.Api;
 using CoreventApp.ViewModels;
+using Moq;
 using RichardSzalay.MockHttp;
 using Shouldly;
 using Xunit;
@@ -10,20 +11,19 @@ namespace CoreventApp.UnitTests.ViewModels;
 
 public class PanelCollaboratorViewModelTests
 {
-    private readonly MockHttpMessageHandler _httpMock;
+    private readonly Mock<IEventsApi> _eventsApiMock;
     private readonly PanelCollaboratorViewModel _vm;
 
     public PanelCollaboratorViewModelTests()
     {
-        _httpMock = new MockHttpMessageHandler();
-        var client = _httpMock.ToHttpClient();
+        var httpMock = new MockHttpMessageHandler();
+        var client = httpMock.ToHttpClient();
         client.BaseAddress = new Uri("https://api.corevent.com");
 
-        var eventsApi = new EventsApiClient(client);
-        var eventsService = new EventsService(eventsApi);
+        _eventsApiMock = new Mock<IEventsApi>();
         var invitesApi = new StaffInvitesApiClient(client);
 
-        _vm = new PanelCollaboratorViewModel(eventsService, invitesApi);
+        _vm = new PanelCollaboratorViewModel(_eventsApiMock.Object, invitesApi);
     }
 
     [Fact]
@@ -53,19 +53,19 @@ public class PanelCollaboratorViewModelTests
     [Fact]
     public async Task LoadAsync_ShouldCategorizeEventsByDate()
     {
-        var organizer = "{\"id\":\"o1\",\"name\":\"Org\",\"email\":\"o@t.com\",\"avatarUrl\":null}";
-        var pastDate = DateTime.UtcNow.AddDays(-10).ToString("o");
-        var futureDate = DateTime.UtcNow.AddDays(10).ToString("o");
+        var organizer = new OrganizerInfoDto("o1", "Org", "o@t.com", null);
+        var past = new StaffEventListItemDto("e_past", "Passado", 100, "SP", "SP", "Arena",
+            DateTime.UtcNow.AddDays(-10), DateTime.UtcNow.AddDays(-10), "music", false, "finished", organizer, "checkin");
+        var future = new StaffEventListItemDto("e_future", "Futuro", 200, "RJ", "RJ", "Centro",
+            DateTime.UtcNow.AddDays(10), DateTime.UtcNow.AddDays(10), "tech", false, "opened", organizer, "organizer");
+        var empty = new StaffEventListPageDto(new List<StaffEventListItemDto>(), new PaginationMetaDto(0, 0, 1, 100));
 
-        var eventsJson = $"{{\"data\":[{{\"id\":\"e_past\",\"title\":\"Passado\",\"maxParticipants\":100,\"cityName\":\"SP\",\"stateAcronym\":\"SP\",\"locationName\":\"Arena\",\"startDate\":\"{pastDate}\",\"endDate\":\"{pastDate}\",\"category\":\"music\",\"isAdultOnly\":false,\"status\":\"finished\",\"organizer\":{organizer},\"locationType\":\"in_person\",\"accessLevel\":\"checkin\"}},{{\"id\":\"e_future\",\"title\":\"Futuro\",\"maxParticipants\":200,\"cityName\":\"RJ\",\"stateAcronym\":\"RJ\",\"locationName\":\"Centro\",\"startDate\":\"{futureDate}\",\"endDate\":\"{futureDate}\",\"category\":\"tech\",\"isAdultOnly\":false,\"status\":\"opened\",\"organizer\":{organizer},\"locationType\":\"in_person\",\"accessLevel\":\"organizer\"}}],\"meta\":{{\"totalItems\":2,\"totalPages\":1,\"page\":1,\"limit\":100}}}}";
-
-        var invitesJson = "{\"data\":[],\"meta\":{\"totalItems\":0,\"totalPages\":0,\"page\":1,\"limit\":10}}";
-
-        _httpMock.Expect(HttpMethod.Get, "https://api.corevent.com/api/users/me/events/staff*")
-            .Respond("application/json", eventsJson);
-
-        _httpMock.Expect(HttpMethod.Get, "https://api.corevent.com/api/invitations/me*")
-            .Respond("application/json", invitesJson);
+        _eventsApiMock.Setup(a => a.GetMyStaffEventsAsync(1, 100, "opened", null, null, null, null, null, null))
+            .ReturnsAsync(new StaffEventListPageDto(new List<StaffEventListItemDto> { future }, new PaginationMetaDto(1, 1, 1, 100)));
+        _eventsApiMock.Setup(a => a.GetMyStaffEventsAsync(1, 100, "going", null, null, null, null, null, null))
+            .ReturnsAsync(empty);
+        _eventsApiMock.Setup(a => a.GetMyStaffEventsAsync(1, 100, "finished", null, null, null, null, null, null))
+            .ReturnsAsync(new StaffEventListPageDto(new List<StaffEventListItemDto> { past }, new PaginationMetaDto(1, 1, 1, 100)));
 
         await _vm.LoadCommand.ExecuteAsync(null);
 

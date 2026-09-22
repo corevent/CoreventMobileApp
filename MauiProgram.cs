@@ -42,10 +42,12 @@ public static class MauiProgram
 		builder.Services.AddHttpClient<PaymentInfoApiClient>(c => c.BaseAddress = new Uri(baseUrl))
 			.AddHttpMessageHandler<AuthTokenHandler>();
 
-		builder.Services.AddHttpClient<StatesApiClient>(c => c.BaseAddress = new Uri(baseUrl))
+		builder.Services.AddRefitClient<IStatesApi>(RefitConfig.CreateSettings())
+			.ConfigureHttpClient(c => c.BaseAddress = new Uri(baseUrl))
 			.AddHttpMessageHandler<AuthTokenHandler>();
 
-		builder.Services.AddHttpClient<EventsApiClient>(c => c.BaseAddress = new Uri(baseUrl))
+		builder.Services.AddRefitClient<IEventsApi>(RefitConfig.CreateSettings())
+			.ConfigureHttpClient(c => c.BaseAddress = new Uri(baseUrl))
 			.AddHttpMessageHandler<AuthTokenHandler>();
 
 		builder.Services.AddHttpClient<AttractionsApiClient>(c => c.BaseAddress = new Uri(baseUrl))
@@ -86,7 +88,6 @@ public static class MauiProgram
 
 		builder.Services.AddSingleton<IAuthService, AuthService>();
 		builder.Services.AddTransient<PaymentInfoService>();
-		builder.Services.AddTransient<EventsService>();
 		builder.Services.AddTransient<AttractionsService>();
 		builder.Services.AddTransient<FavoritesService>();
 		builder.Services.AddTransient<TicketsService>();
