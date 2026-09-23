@@ -1,7 +1,7 @@
+using System.Text;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CoreventApp.Services;
-using System.Text;
 
 namespace CoreventApp.ViewModels;
 
@@ -24,7 +24,7 @@ public partial class PrivacyViewModel : ObservableObject
     private async Task DownloadData()
     {
         var user = await _authService.GetCurrentUserAsync();
-        
+
         var sb = new StringBuilder();
         sb.AppendLine("RESUMO DE DADOS LOCAIS - COREVENT");
         sb.AppendLine($"Data de geração: {DateTime.UtcNow.ToLocalTime():dd/MM/yyyy HH:mm}");

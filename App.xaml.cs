@@ -1,4 +1,4 @@
-﻿using CoreventApp.Services;
+using CoreventApp.Services;
 using CoreventApp.Views;
 
 namespace CoreventApp;

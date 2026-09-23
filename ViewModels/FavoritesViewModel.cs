@@ -1,10 +1,10 @@
+using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CoreventApp.Models.Dtos;
 using CoreventApp.Services;
 using CoreventApp.Services.Api;
 using CoreventApp.Views;
-using System.Collections.ObjectModel;
 
 namespace CoreventApp.ViewModels;
 

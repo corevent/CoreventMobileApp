@@ -1,7 +1,7 @@
 using System.Collections.Concurrent;
 using System.Collections.ObjectModel;
-using System.Text.Json;
 using System.Diagnostics;
+using System.Text.Json;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CoreventApp.Models.Dtos;

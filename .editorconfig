@@ -1,0 +1,108 @@
+# Configuração Corevent - .editorconfig
+root = true
+
+# ==============================================================================
+# Regras Globais para todos os arquivos
+# ==============================================================================
+[*]
+charset = utf-8
+end_of_line = lf
+indent_size = 4
+indent_style = space
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+# ==============================================================================
+# Formatos específicos (JSON, YAML, Markdown)
+# ==============================================================================
+[*.{json,json5,yml,yaml}]
+indent_size = 2
+
+[*.md]
+trim_trailing_whitespace = false
+
+# ==============================================================================
+# XAML e XML
+# ==============================================================================
+[*.{xaml,xml,axml,props,targets,csproj,slnx}]
+indent_size = 4
+indent_style = space
+
+# ==============================================================================
+# Regras de Código C#
+# ==============================================================================
+[*.cs]
+# Indentação e espaçamento
+indent_size = 4
+indent_style = space
+tab_width = 4
+
+# --- Preferência por 'var' em todos os casos ---
+csharp_style_var_for_built_in_types = true:suggestion
+csharp_style_var_when_type_is_apparent = true:suggestion
+csharp_style_var_elsewhere = true:suggestion
+
+# --- Namespace em formato File-Scoped (C# 10+) ---
+csharp_style_namespace_declarations = file_scoped:warning
+
+# --- Organização de Diretivas Using ---
+dotnet_sort_system_directives_first = true:suggestion
+dotnet_separate_import_directive_groups = false:suggestion
+csharp_using_directive_placement = outside_namespace:suggestion
+
+# --- Modificadores de Acesso e Membros ---
+dotnet_style_require_accessibility_modifiers = for_non_interface_members:suggestion
+csharp_prefer_simple_default_expression = true:suggestion
+csharp_style_implicit_object_creation_when_type_is_apparent = true:suggestion
+csharp_style_pattern_matching = true:suggestion
+
+# --- Estilo de Chaves e Quebras de Linha ---
+csharp_new_line_before_open_brace = all
+csharp_new_line_before_else = true
+csharp_new_line_before_catch = true
+csharp_new_line_before_finally = true
+csharp_space_after_cast = false
+csharp_space_around_binary_operators = before_and_after
+
+# ==============================================================================
+# Convenções de Nomenclatura (Roslyn)
+# ==============================================================================
+# Interfaces: prefixo 'I'
+dotnet_naming_rule.interface_should_be_prefixed_with_i.severity = suggestion
+dotnet_naming_rule.interface_should_be_prefixed_with_i.symbols = interface
+dotnet_naming_rule.interface_should_be_prefixed_with_i.style = prefix_i
+
+dotnet_naming_symbols.interface.applicable_kinds = interface
+dotnet_naming_symbols.interface.applicable_accessibilities = *
+dotnet_naming_style.prefix_i.capitalization = pascal_case
+dotnet_naming_style.prefix_i.required_prefix = I
+
+# Tipos (Classes, Structs, Enums, Delegates): PascalCase
+dotnet_naming_rule.types_should_be_pascal_case.severity = suggestion
+dotnet_naming_rule.types_should_be_pascal_case.symbols = types
+dotnet_naming_rule.types_should_be_pascal_case.style = pascal_case
+
+dotnet_naming_symbols.types.applicable_kinds = class, struct, enum, delegate
+dotnet_naming_symbols.types.applicable_accessibilities = *
+
+# Propriedades, Métodos e Eventos: PascalCase
+dotnet_naming_rule.members_should_be_pascal_case.severity = suggestion
+dotnet_naming_rule.members_should_be_pascal_case.symbols = members
+dotnet_naming_rule.members_should_be_pascal_case.style = pascal_case
+
+dotnet_naming_symbols.members.applicable_kinds = property, method, event
+dotnet_naming_symbols.members.applicable_accessibilities = *
+
+# Campos privados e protegidos: _camelCase
+dotnet_naming_rule.private_fields_should_be_camel_case_with_underscore.severity = suggestion
+dotnet_naming_rule.private_fields_should_be_camel_case_with_underscore.symbols = private_fields
+dotnet_naming_rule.private_fields_should_be_camel_case_with_underscore.style = camel_case_with_underscore
+
+dotnet_naming_symbols.private_fields.applicable_kinds = field
+dotnet_naming_symbols.private_fields.applicable_accessibilities = private, protected
+dotnet_naming_style.camel_case_with_underscore.capitalization = camel_case
+dotnet_naming_style.camel_case_with_underscore.required_prefix = _
+
+# Estilos base de capitalização
+dotnet_naming_style.pascal_case.capitalization = pascal_case
+dotnet_naming_style.camel_case.capitalization = camel_case

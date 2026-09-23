@@ -4,9 +4,9 @@ namespace CoreventApp.Views;
 
 public partial class Explore : ContentPage
 {
-	public Explore(ExploreViewModel viewModel)
-	{
-		InitializeComponent();
-		BindingContext = viewModel;
-	}
+    public Explore(ExploreViewModel viewModel)
+    {
+        InitializeComponent();
+        BindingContext = viewModel;
+    }
 }

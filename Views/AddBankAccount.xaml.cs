@@ -4,9 +4,9 @@ namespace CoreventApp.Views;
 
 public partial class AddBankAccount : ContentPage
 {
-	public AddBankAccount(AddBankAccountViewModel viewModel)
-	{
-		InitializeComponent();
-		BindingContext = viewModel;
-	}
+    public AddBankAccount(AddBankAccountViewModel viewModel)
+    {
+        InitializeComponent();
+        BindingContext = viewModel;
+    }
 }
