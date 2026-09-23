@@ -11,7 +11,7 @@ using Microsoft.Maui.ApplicationModel;
 
 namespace CoreventApp.ViewModels;
 
-[QueryProperty(nameof(EditingEventId), "EventId")]
+[QueryProperty(nameof(EditingEventId), NavigationQuery.EventId)]
 public partial class CreateEventViewModel : ObservableObject
 {
     private const int TotalSteps = 3;

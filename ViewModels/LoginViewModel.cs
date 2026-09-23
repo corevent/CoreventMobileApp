@@ -42,7 +42,7 @@ public partial class LoginViewModel : ObservableObject
 
         if (user != null)
         {
-            await Shell.Current.GoToAsync("//main/home");
+            await Shell.Current.GoToAsync(AppRoutes.Home);
         }
         else
         {

@@ -36,7 +36,7 @@ public partial class App : Application
             window.Page = appShell;
 
             if (user != null)
-                await Shell.Current.GoToAsync("//main");
+                await Shell.Current.GoToAsync(AppRoutes.Main);
 
             _shellReady.TrySetResult();
 
@@ -69,10 +69,10 @@ public partial class App : Application
         switch (uri.Host)
         {
             case "orders":
-                await Shell.Current.GoToAsync("//main/tickets");
+                await Shell.Current.GoToAsync(AppRoutes.Tickets);
                 break;
             case "invites":
-                await Shell.Current.GoToAsync("UserInvitations");
+                await Shell.Current.GoToAsync(nameof(UserInvitations));
                 break;
         }
     }

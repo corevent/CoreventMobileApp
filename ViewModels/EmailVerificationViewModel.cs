@@ -91,8 +91,11 @@ public partial class EmailVerificationViewModel : ObservableObject
 
         if (Mode == "reset")
         {
-            await Shell.Current.GoToAsync(
-                $"ResetPassword?Email={Uri.EscapeDataString(Email)}&Code={Uri.EscapeDataString(Code)}");
+            await Shell.Current.GoToAsync(nameof(Views.ResetPassword), new ShellNavigationQueryParameters
+            {
+                [nameof(ResetPasswordViewModel.Email)] = Email,
+                [nameof(ResetPasswordViewModel.Code)] = Code
+            });
         }
         else
         {
@@ -101,7 +104,7 @@ public partial class EmailVerificationViewModel : ObservableObject
 
             if (user != null)
             {
-                await Shell.Current.GoToAsync("//main/home");
+                await Shell.Current.GoToAsync(AppRoutes.Home);
             }
             else
             {

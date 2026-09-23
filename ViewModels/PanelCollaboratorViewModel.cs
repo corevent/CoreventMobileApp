@@ -158,13 +158,22 @@ public partial class PanelCollaboratorViewModel : ObservableObject
     [RelayCommand]
     private async Task OpenEventDetailAsync(CollaboratorEvent evt)
     {
-        await Shell.Current.GoToAsync(
-            $"CollaboratorEventDetail?EventId={Uri.EscapeDataString(evt.Id)}&EventTitle={Uri.EscapeDataString(evt.Title)}&EventDate={Uri.EscapeDataString(evt.Date)}&EventImage={Uri.EscapeDataString(evt.ImageUrl)}&EventRole={Uri.EscapeDataString(evt.Role)}&EventRoleColor={Uri.EscapeDataString(evt.RoleColor)}&EventRoleTextColor={Uri.EscapeDataString(evt.RoleTextColor)}&ParticipantCount={evt.ParticipantCount}");
+        await Shell.Current.GoToAsync(nameof(Views.CollaboratorEventDetail), new ShellNavigationQueryParameters
+        {
+            [nameof(CollaboratorEventDetailViewModel.EventId)] = evt.Id,
+            [nameof(CollaboratorEventDetailViewModel.EventTitle)] = evt.Title,
+            [nameof(CollaboratorEventDetailViewModel.EventDate)] = evt.Date,
+            [nameof(CollaboratorEventDetailViewModel.EventImage)] = evt.ImageUrl,
+            [nameof(CollaboratorEventDetailViewModel.EventRole)] = evt.Role,
+            [nameof(CollaboratorEventDetailViewModel.EventRoleColor)] = evt.RoleColor,
+            [nameof(CollaboratorEventDetailViewModel.EventRoleTextColor)] = evt.RoleTextColor,
+            [nameof(CollaboratorEventDetailViewModel.ParticipantCount)] = evt.ParticipantCount
+        });
     }
 
     [RelayCommand]
     private async Task OpenInvitationsAsync()
     {
-        await Shell.Current.GoToAsync("UserInvitations");
+        await Shell.Current.GoToAsync(nameof(Views.UserInvitations));
     }
 }

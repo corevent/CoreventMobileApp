@@ -46,8 +46,11 @@ public partial class ForgotPasswordViewModel : ObservableObject
 
         await _dialogs.ShowToastAsync("E-mail enviado. Se o e-mail estiver cadastrado, enviaremos um código de verificação.");
 
-        await Shell.Current.GoToAsync(
-            $"EmailVerification?Email={Uri.EscapeDataString(Email)}&Mode=reset");
+        await Shell.Current.GoToAsync(nameof(Views.EmailVerification), new ShellNavigationQueryParameters
+        {
+            [nameof(EmailVerificationViewModel.Email)] = Email,
+            [nameof(EmailVerificationViewModel.Mode)] = "reset"
+        });
     }
 
     [RelayCommand]

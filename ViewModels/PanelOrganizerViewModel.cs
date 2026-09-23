@@ -132,7 +132,7 @@ public partial class PanelOrganizerViewModel : ObservableObject
 
         await Shell.Current.GoToAsync(nameof(Views.ManageEvent), new Dictionary<string, object>
         {
-            ["EventId"] = eventItem.Id
+            [nameof(ManageEventViewModel.EventId)] = eventItem.Id
         });
     }
 }

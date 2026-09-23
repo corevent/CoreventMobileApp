@@ -47,7 +47,7 @@ public partial class PurchaseHistoryViewModel : ObservableObject
 
         await Shell.Current.GoToAsync(nameof(Views.OrderDetailPage), new Dictionary<string, object>
         {
-            ["OrderId"] = order.Id
+            [nameof(OrderDetailViewModel.OrderId)] = order.Id
         });
     }
 

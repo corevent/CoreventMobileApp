@@ -76,7 +76,7 @@ public partial class ResetPasswordViewModel : ObservableObject
         if (success)
         {
             await _dialogs.ShowToastAsync("Senha redefinida com sucesso!");
-            await Shell.Current.GoToAsync($"//welcome/{nameof(CoreventApp.Views.Login)}");
+            await Shell.Current.GoToAsync(AppRoutes.WelcomeLogin);
         }
         else
         {

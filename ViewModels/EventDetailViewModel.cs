@@ -233,7 +233,10 @@ public partial class EventDetailViewModel : ObservableObject
     private async Task BuyTicket()
     {
         if (_eventId is null) return;
-        await Shell.Current.GoToAsync($"{nameof(Views.CheckoutPage)}?EventId={_eventId}");
+        await Shell.Current.GoToAsync(nameof(Views.CheckoutPage), new ShellNavigationQueryParameters
+        {
+            [nameof(CheckoutViewModel.EventId)] = _eventId
+        });
     }
 
     [RelayCommand]

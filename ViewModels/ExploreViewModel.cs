@@ -180,10 +180,7 @@ public partial class ExploreViewModel : ObservableObject
     {
         if (eventItem is null) return;
 
-        await Shell.Current.GoToAsync(nameof(Views.EventDetail), new Dictionary<string, object>
-        {
-            ["EventId"] = eventItem.Id
-        });
+        await AppNavigation.ToEventAsync(eventItem.Id);
     }
 
     private string? GetSelectedCategoryApiValue()

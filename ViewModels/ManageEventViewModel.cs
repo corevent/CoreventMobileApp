@@ -166,7 +166,7 @@ public partial class ManageEventViewModel : ObservableObject
 
         await Shell.Current.GoToAsync(nameof(Views.CreateEvent), new Dictionary<string, object>
         {
-            ["EventId"] = _eventId
+            [NavigationQuery.EventId] = _eventId
         });
     }
 
@@ -199,10 +199,7 @@ public partial class ManageEventViewModel : ObservableObject
     {
         if (_eventId is null) return;
 
-        await Shell.Current.GoToAsync(nameof(Views.CheckInPage), new Dictionary<string, object>
-        {
-            ["EventId"] = _eventId
-        });
+        await AppNavigation.ToCheckInAsync(_eventId);
     }
 
     [RelayCommand]
@@ -210,11 +207,7 @@ public partial class ManageEventViewModel : ObservableObject
     {
         if (_eventId is null) return;
 
-        await Shell.Current.GoToAsync(nameof(Views.ParticipantList), new Dictionary<string, object>
-        {
-            ["EventId"] = _eventId,
-            ["EventName"] = EventName
-        });
+        await AppNavigation.ToParticipantsAsync(_eventId, EventName);
     }
 
     [RelayCommand]
@@ -224,9 +217,9 @@ public partial class ManageEventViewModel : ObservableObject
 
         await Shell.Current.GoToAsync(nameof(Views.EventTeam), new Dictionary<string, object>
         {
-            ["EventId"] = _eventId,
-            ["EventName"] = EventName,
-            ["EventStatus"] = Status
+            [nameof(EventTeamViewModel.EventId)] = _eventId,
+            [nameof(EventTeamViewModel.EventName)] = EventName,
+            [nameof(EventTeamViewModel.EventStatus)] = Status
         });
     }
 
@@ -237,7 +230,7 @@ public partial class ManageEventViewModel : ObservableObject
 
         await Shell.Current.GoToAsync(nameof(Views.EventAttractions), new Dictionary<string, object>
         {
-            ["EventId"] = _eventId
+            [nameof(EventAttractionsViewModel.EventId)] = _eventId
         });
     }
 
@@ -248,7 +241,7 @@ public partial class ManageEventViewModel : ObservableObject
 
         await Shell.Current.GoToAsync(nameof(Views.ManageTicketsPage), new Dictionary<string, object>
         {
-            ["EventId"] = _eventId
+            [nameof(ManageTicketsViewModel.EventId)] = _eventId
         });
     }
 }

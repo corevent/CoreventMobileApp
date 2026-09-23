@@ -57,13 +57,13 @@ public partial class OrderDetailViewModel : ObservableObject
 
         await Shell.Current.GoToAsync(nameof(Views.TicketQrCodePage), new Dictionary<string, object>
         {
-            ["TicketId"] = ticket.Id,
-            ["QrToken"] = ticket.QrToken,
-            ["EventTitle"] = Order.Event.Title,
-            ["TicketTypeName"] = ticket.TicketType.Name,
-            ["Price"] = ticket.TicketType.Price,
-            ["Status"] = ticket.Status,
-            ["OrderId"] = Order.Id
+            [nameof(TicketQrCodeViewModel.TicketId)] = ticket.Id,
+            [nameof(TicketQrCodeViewModel.QrToken)] = ticket.QrToken,
+            [nameof(TicketQrCodeViewModel.EventTitle)] = Order.Event.Title,
+            [nameof(TicketQrCodeViewModel.TicketTypeName)] = ticket.TicketType.Name,
+            [nameof(TicketQrCodeViewModel.Price)] = ticket.TicketType.Price,
+            [nameof(TicketQrCodeViewModel.Status)] = ticket.Status,
+            [nameof(TicketQrCodeViewModel.OrderId)] = Order.Id
         });
     }
 

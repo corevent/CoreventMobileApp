@@ -92,10 +92,7 @@ public partial class FavoritesViewModel : ObservableObject
     {
         if (eventItem is null) return;
 
-        await Shell.Current.GoToAsync(nameof(Views.EventDetail), new Dictionary<string, object>
-        {
-            ["EventId"] = eventItem.Id
-        });
+        await AppNavigation.ToEventAsync(eventItem.Id);
     }
 
     [RelayCommand]

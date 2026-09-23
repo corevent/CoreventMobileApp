@@ -39,4 +39,24 @@ public partial class AppShell : Shell
         Routing.RegisterRoute(nameof(TicketQrCodePage), typeof(TicketQrCodePage));
         Routing.RegisterRoute(nameof(OrderDetailPage), typeof(OrderDetailPage));
     }
+
+    protected override void OnNavigated(ShellNavigatedEventArgs args)
+    {
+        base.OnNavigated(args);
+
+        if (args.Source != ShellNavigationSource.ShellSectionChanged)
+            return;
+
+        var selectedTab = CurrentItem?.CurrentItem;
+        if (selectedTab?.Stack.Count is null or 0)
+            return;
+
+        var rootRoute = selectedTab.CurrentItem?.Route;
+        if (string.IsNullOrEmpty(rootRoute))
+            return;
+
+        // Shell keeps a separate detail stack for each tab. An absolute route clears
+        // that stack when the tab becomes active again.
+        Dispatcher.Dispatch(() => _ = GoToAsync($"{AppRoutes.Main}/{rootRoute}"));
+    }
 }

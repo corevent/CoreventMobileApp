@@ -72,13 +72,15 @@ public partial class RegisterViewModel : ObservableObject
               : System.Text.RegularExpressions.Regex.Replace(Form.Cpf, @"\D", "");
             var documentType = Form.AccountType == "pj" ? "cnpj" : "cpf";
 
-            await Shell.Current.GoToAsync(
-              $"EmailVerification?Name={Uri.EscapeDataString(Form.Nome)}" +
-              $"&Email={Uri.EscapeDataString(Form.Email)}" +
-              $"&Password={Uri.EscapeDataString(Form.Senha)}" +
-              $"&Document={Uri.EscapeDataString(document)}" +
-              $"&DocumentType={Uri.EscapeDataString(documentType)}" +
-              $"&BirthDate={Uri.EscapeDataString(Form.DataNascimento.ToString("yyyy-MM-dd"))}");
+            await Shell.Current.GoToAsync(nameof(Views.EmailVerification), new ShellNavigationQueryParameters
+            {
+                [nameof(EmailVerificationViewModel.Name)] = Form.Nome,
+                [nameof(EmailVerificationViewModel.Email)] = Form.Email,
+                [nameof(EmailVerificationViewModel.Password)] = Form.Senha,
+                [nameof(EmailVerificationViewModel.Document)] = document,
+                [nameof(EmailVerificationViewModel.DocumentType)] = documentType,
+                [nameof(EmailVerificationViewModel.BirthDate)] = Form.DataNascimento.ToString("yyyy-MM-dd")
+            });
         }
     }
 

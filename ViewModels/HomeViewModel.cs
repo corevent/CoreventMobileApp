@@ -87,9 +87,6 @@ public partial class HomeViewModel : ObservableObject
     {
         if (eventItem is null) return;
 
-        await Shell.Current.GoToAsync(nameof(Views.EventDetail), new Dictionary<string, object>
-        {
-            ["EventId"] = eventItem.Id
-        });
+        await AppNavigation.ToEventAsync(eventItem.Id);
     }
 }
