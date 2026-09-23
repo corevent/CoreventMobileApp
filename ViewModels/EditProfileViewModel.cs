@@ -1,8 +1,8 @@
-using System.Diagnostics;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CoreventApp.Helpers;
 using CoreventApp.Services;
+using Microsoft.Maui.ApplicationModel;
 
 namespace CoreventApp.ViewModels;
 
@@ -70,6 +70,8 @@ public partial class EditProfileViewModel : ObservableObject
   [RelayCommand]
   private async Task PickAvatar()
   {
+    if (!await EnsurePhotoPermissionAsync()) return;
+
     try
     {
       var photos = await MediaPicker.Default.PickPhotosAsync(new MediaPickerOptions
@@ -97,10 +99,22 @@ public partial class EditProfileViewModel : ObservableObject
           _avatarStream.Position = 0;
       UserAvatar = photo.FullPath;
     }
-    catch (Exception ex)
+    catch (PermissionException)
     {
-      Debug.WriteLine($"PickAvatar failed: {ex.Message}");
+      await _dialogs.ShowErrorAsync("Permita o acesso às fotos para escolher uma imagem.");
     }
+  }
+
+  private async Task<bool> EnsurePhotoPermissionAsync()
+  {
+    var status = await Permissions.CheckStatusAsync<Permissions.StorageRead>();
+    if (status != PermissionStatus.Granted)
+        status = await Permissions.RequestAsync<Permissions.StorageRead>();
+
+    if (status == PermissionStatus.Granted) return true;
+
+    await _dialogs.ShowErrorAsync("Permita o acesso às fotos para escolher uma imagem.");
+    return false;
   }
 
   [RelayCommand]

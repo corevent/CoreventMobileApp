@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using QRCoder;
@@ -54,23 +53,13 @@ public partial class TicketQrCodeViewModel : ObservableObject
     {
         if (string.IsNullOrEmpty(qrToken)) return;
 
-        try
-        {
-            IsLoading = true;
-            var generator = new QRCodeGenerator();
-            var qrData = generator.CreateQrCode(qrToken, QRCodeGenerator.ECCLevel.Q);
-            var qrCode = new PngByteQRCode(qrData);
-            var bytes = qrCode.GetGraphic(20);
-            QrCodeSource = ImageSource.FromStream(() => new MemoryStream(bytes));
-        }
-        catch (Exception ex)
-        {
-            Debug.WriteLine($"QR code generation failed: {ex.Message}");
-        }
-        finally
-        {
-            IsLoading = false;
-        }
+        IsLoading = true;
+        var generator = new QRCodeGenerator();
+        var qrData = generator.CreateQrCode(qrToken, QRCodeGenerator.ECCLevel.Q);
+        var qrCode = new PngByteQRCode(qrData);
+        var bytes = qrCode.GetGraphic(20);
+        QrCodeSource = ImageSource.FromStream(() => new MemoryStream(bytes));
+        IsLoading = false;
     }
 
     [RelayCommand]

@@ -6,6 +6,7 @@ using CoreventApp.Models.Dtos;
 using CoreventApp.Services;
 using CoreventApp.Services.Api;
 using CoreventApp.Views;
+using Microsoft.Maui.ApplicationModel;
 
 namespace CoreventApp.ViewModels;
 
@@ -290,6 +291,8 @@ public partial class CreateEventViewModel : ObservableObject
     [RelayCommand]
     private async Task PickBanner()
     {
+        if (!await EnsurePhotoPermissionAsync()) return;
+
         try
         {
             var file = await FilePicker.Default.PickAsync(new PickOptions
@@ -314,10 +317,22 @@ public partial class CreateEventViewModel : ObservableObject
             _bannerFile = file;
             Form.BannerPreview = file.FullPath;
         }
-        catch (Exception ex)
+        catch (PermissionException)
         {
-            Debug.WriteLine($"PickBanner failed: {ex.Message}");
+            await _dialogs.ShowErrorAsync("Permita o acesso às fotos para escolher uma imagem.");
         }
+    }
+
+    private async Task<bool> EnsurePhotoPermissionAsync()
+    {
+        var status = await Permissions.CheckStatusAsync<Permissions.StorageRead>();
+        if (status != PermissionStatus.Granted)
+            status = await Permissions.RequestAsync<Permissions.StorageRead>();
+
+        if (status == PermissionStatus.Granted) return true;
+
+        await _dialogs.ShowErrorAsync("Permita o acesso às fotos para escolher uma imagem.");
+        return false;
     }
 
     [RelayCommand]
@@ -664,24 +679,17 @@ public partial class CreateEventViewModel : ObservableObject
     {
         if (_bannerFile is null) return;
 
-        try
-        {
-            IsUploadingBanner = true;
-            var contentType = _bannerFile.ContentType ?? "image/jpeg";
-            await using var stream = await _bannerFile.OpenReadAsync();
-            var publicUrl = await _storageService.UploadEventBannerAsync(eventId, stream, contentType);
-            if (publicUrl is not null)
-                Form.BannerUrl = publicUrl;
-        }
-        catch (Exception ex)
-        {
-            Debug.WriteLine($"Banner upload failed: {ex.Message}");
-        }
-        finally
-        {
-            _bannerFile = null;
-            IsUploadingBanner = false;
-        }
+        IsUploadingBanner = true;
+        var contentType = _bannerFile.ContentType ?? "image/jpeg";
+        await using var stream = await _bannerFile.OpenReadAsync();
+        var publicUrl = await _storageService.UploadEventBannerAsync(eventId, stream, contentType);
+        if (publicUrl is not null)
+            Form.BannerUrl = publicUrl;
+        else
+            await _dialogs.ShowToastAsync("Evento salvo sem o banner. Verifique sua conexão.");
+
+        _bannerFile = null;
+        IsUploadingBanner = false;
     }
 }
 

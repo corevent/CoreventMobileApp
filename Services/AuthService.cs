@@ -140,8 +140,6 @@ public class AuthService : IAuthService
             var dto = new RegisterDto(
                 name, "14981234567", "https://placehold.co/300x300/jpg", email, password, birthDate, documentType, document, code);
 
-            Debug.WriteLine($"RegisterDto: {System.Text.Json.JsonSerializer.Serialize(dto)}");
-
             await _authApi.Register(dto);
 
             // Auto-login after creation

@@ -1,5 +1,4 @@
 using System.Collections.ObjectModel;
-using System.Diagnostics;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CoreventApp.Models.Dtos;
@@ -45,32 +44,23 @@ public partial class ParticipantListViewModel : ObservableObject
         if (IsLoading) return;
         IsLoading = true;
 
-        try
-        {
-            var result = await ApiResult.TryExecuteAsync(
-                    () => _participantsApi.GetAllAsync(eventId, page: 1, limit: 100), "Load participants")
-                ?? new ParticipantListPageDto(new List<ParticipantDataDto>(), new ParticipantPaginationMetaDto(0, 0, 1, 100));
+        var result = await ApiResult.TryExecuteAsync(
+                () => _participantsApi.GetAllAsync(eventId, page: 1, limit: 100), "Load participants")
+            ?? new ParticipantListPageDto(new List<ParticipantDataDto>(), new ParticipantPaginationMetaDto(0, 0, 1, 100));
 
-            Participants.Clear();
-            foreach (var p in result.Data)
+        Participants.Clear();
+        foreach (var p in result.Data)
+        {
+            Participants.Add(new ParticipantSummary
             {
-                Participants.Add(new ParticipantSummary
-                {
-                    FullName = p.Name,
-                    Email = p.Email,
-                    TicketsCount = p.TicketsCount
-                });
-            }
+                FullName = p.Name,
+                Email = p.Email,
+                TicketsCount = p.TicketsCount
+            });
         }
-        catch (Exception ex)
-        {
-            Debug.WriteLine($"ParticipantList LoadDataAsync failed: {ex.Message}");
-        }
-        finally
-        {
-            IsLoading = false;
-            OnPropertyChanged(nameof(IsEmpty));
-        }
+
+        IsLoading = false;
+        OnPropertyChanged(nameof(IsEmpty));
     }
 
     [RelayCommand]
