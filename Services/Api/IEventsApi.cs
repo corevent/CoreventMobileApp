@@ -17,7 +17,8 @@ public interface IEventsApi
         string? status = null,
         bool? isAdultOnly = null,
         int? stateId = null,
-        int? cityId = null);
+        int? cityId = null,
+        CancellationToken cancellationToken = default);
 
     [Get("/api/events/{id}")]
     Task<EventResponseDto> GetByIdAsync(string id);

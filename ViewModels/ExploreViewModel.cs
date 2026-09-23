@@ -69,6 +69,7 @@ public partial class ExploreViewModel : ObservableObject
     partial void OnSearchTextChanged(string value)
     {
         _debounceCts?.Cancel();
+        SearchCommand.Cancel();
         _debounceCts = new CancellationTokenSource();
         _ = DebounceSearchAsync(_debounceCts.Token);
     }
@@ -88,7 +89,7 @@ public partial class ExploreViewModel : ObservableObject
     }
 
     [RelayCommand]
-    private async Task SearchAsync()
+    private async Task SearchAsync(CancellationToken cancellationToken)
     {
         if (IsLoading) return;
         IsLoading = true;
@@ -105,7 +106,7 @@ public partial class ExploreViewModel : ObservableObject
                 category: selected,
                 stateId: null,
                 cityId: null,
-                status: "opened"), "Explore search")
+                status: "opened", cancellationToken: cancellationToken), "Explore search")
                 ?? new EventListPageDto(new List<EventListItemDto>(), new PaginationMetaDto(0, 0, _currentPage, PageSize));
 
             var filtered = _authService.CurrentCachedUser?.IsAdult == false

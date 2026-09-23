@@ -3,6 +3,8 @@ using System.Diagnostics;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CoreventApp.Models.Dtos;
+using CoreventApp.Models;
+using CoreventApp.Helpers;
 using CoreventApp.Services;
 using CoreventApp.Services.Api;
 
@@ -33,11 +35,7 @@ public partial class PanelOrganizerViewModel : ObservableObject
         _dialogs = dialogService;
 
         FilterChips.Add(new StatusFilterChip("Todos", null, true));
-        FilterChips.Add(new StatusFilterChip("Rascunho", "draft", false));
-        FilterChips.Add(new StatusFilterChip("Ativo", "opened", false));
-        FilterChips.Add(new StatusFilterChip("Andamento", "going", false));
-        FilterChips.Add(new StatusFilterChip("Cancelado", "canceled", false));
-        FilterChips.Add(new StatusFilterChip("Encerrado", "finished", false));
+        FilterChips.AddRange(DomainCatalog.EventStatuses.Select(x => new StatusFilterChip(x.Label, x.ApiValue, false)));
     }
 
     [RelayCommand]
@@ -50,9 +48,7 @@ public partial class PanelOrganizerViewModel : ObservableObject
         {
             var events = await LoadOrganizerEventsAsync();
 
-            AllEvents.Clear();
-            foreach (var item in events)
-                AllEvents.Add(item);
+            AllEvents.ReplaceWith(events);
 
             ApplyFilter(null);
 
@@ -88,7 +84,7 @@ public partial class PanelOrganizerViewModel : ObservableObject
 
     private async Task<List<EventListItemDto>> LoadOrganizerEventsAsync()
     {
-        var statuses = new[] { "draft", "opened", "going", "canceled", "finished" };
+        var statuses = DomainCatalog.EventStatuses.Select(x => x.ApiValue);
         var tasks = statuses.Select(status =>
             ApiResult.TryExecuteAsync(
                 () => _eventsApi.GetMyOrganizerEventsAsync(page: 1, limit: 100, status: status),
@@ -99,14 +95,10 @@ public partial class PanelOrganizerViewModel : ObservableObject
 
     private void ApplyFilter(string? statusValue)
     {
-        FilteredEvents.Clear();
-
         var filtered = statusValue is null
             ? AllEvents
             : AllEvents.Where(e => e.Status == statusValue);
-
-        foreach (var item in filtered)
-            FilteredEvents.Add(item);
+        FilteredEvents.ReplaceWith(filtered);
     }
 
     [RelayCommand]

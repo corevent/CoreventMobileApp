@@ -33,71 +33,29 @@ public static class MauiProgram
 
         string baseUrl = "https://corevent-app-fatec-d78bb2efd71a.herokuapp.com/";
         builder.Services.AddHttpClient(AuthTokenHandler.RefreshClientName, c => c.BaseAddress = new Uri(baseUrl));
+        builder.Services.AddHttpClient<IStorageUploadService, StorageUploadService>("storage-upload", client =>
+        {
+            client.Timeout = TimeSpan.FromSeconds(60);
+        });
         builder.Services.AddRefitClient<IAuthApi>(RefitConfig.CreateSettings())
             .ConfigureHttpClient(c => c.BaseAddress = new Uri(baseUrl));
-        builder.Services.AddRefitClient<IUsersApi>(RefitConfig.CreateSettings())
-            .ConfigureHttpClient(c => c.BaseAddress = new Uri(baseUrl))
-            .AddHttpMessageHandler<AuthTokenHandler>();
 
-        builder.Services.AddRefitClient<IPaymentInfoApi>(RefitConfig.CreateSettings())
-            .ConfigureHttpClient(c => c.BaseAddress = new Uri(baseUrl))
-            .AddHttpMessageHandler<AuthTokenHandler>();
-
-        builder.Services.AddRefitClient<IStatesApi>(RefitConfig.CreateSettings())
-            .ConfigureHttpClient(c => c.BaseAddress = new Uri(baseUrl))
-            .AddHttpMessageHandler<AuthTokenHandler>();
-
-        builder.Services.AddRefitClient<IEventsApi>(RefitConfig.CreateSettings())
-            .ConfigureHttpClient(c => c.BaseAddress = new Uri(baseUrl))
-            .AddHttpMessageHandler<AuthTokenHandler>();
-
-        builder.Services.AddRefitClient<IAttractionsApi>(RefitConfig.CreateSettings())
-            .ConfigureHttpClient(c => c.BaseAddress = new Uri(baseUrl))
-            .AddHttpMessageHandler<AuthTokenHandler>();
-
-        builder.Services.AddRefitClient<ITicketTypesApi>(RefitConfig.CreateSettings())
-            .ConfigureHttpClient(c => c.BaseAddress = new Uri(baseUrl))
-            .AddHttpMessageHandler<AuthTokenHandler>();
-
-        builder.Services.AddRefitClient<IOrdersApi>(RefitConfig.CreateSettings())
-            .ConfigureHttpClient(c => c.BaseAddress = new Uri(baseUrl))
-            .AddHttpMessageHandler<AuthTokenHandler>();
-
-        builder.Services.AddRefitClient<ITicketsApi>(RefitConfig.CreateSettings())
-            .ConfigureHttpClient(c => c.BaseAddress = new Uri(baseUrl))
-            .AddHttpMessageHandler<AuthTokenHandler>();
-
-        builder.Services.AddRefitClient<IEventStaffApi>(RefitConfig.CreateSettings())
-            .ConfigureHttpClient(c => c.BaseAddress = new Uri(baseUrl))
-            .AddHttpMessageHandler<AuthTokenHandler>();
-
-        builder.Services.AddRefitClient<IStaffInvitesApi>(RefitConfig.CreateSettings())
-            .ConfigureHttpClient(c => c.BaseAddress = new Uri(baseUrl))
-            .AddHttpMessageHandler<AuthTokenHandler>();
-
-        builder.Services.AddRefitClient<IFavoritesApi>(RefitConfig.CreateSettings())
-            .ConfigureHttpClient(c => c.BaseAddress = new Uri(baseUrl))
-            .AddHttpMessageHandler<AuthTokenHandler>();
-
-        builder.Services.AddRefitClient<ICheckInApi>(RefitConfig.CreateSettings())
-            .ConfigureHttpClient(c => c.BaseAddress = new Uri(baseUrl))
-            .AddHttpMessageHandler<AuthTokenHandler>();
-
-        builder.Services.AddRefitClient<IEventRatingsApi>(RefitConfig.CreateSettings())
-            .ConfigureHttpClient(c => c.BaseAddress = new Uri(baseUrl))
-            .AddHttpMessageHandler<AuthTokenHandler>();
-
-        builder.Services.AddRefitClient<IAgePoliciesApi>(RefitConfig.CreateSettings())
-            .ConfigureHttpClient(c => c.BaseAddress = new Uri(baseUrl))
-            .AddHttpMessageHandler<AuthTokenHandler>();
-
-        builder.Services.AddRefitClient<IStorageApi>(RefitConfig.CreateSettings())
-            .ConfigureHttpClient(c => c.BaseAddress = new Uri(baseUrl))
-            .AddHttpMessageHandler<AuthTokenHandler>();
-
-        builder.Services.AddRefitClient<IParticipantsApi>(RefitConfig.CreateSettings())
-            .ConfigureHttpClient(c => c.BaseAddress = new Uri(baseUrl))
-            .AddHttpMessageHandler<AuthTokenHandler>();
+        builder.Services.AddAuthenticatedRefitClient<IUsersApi>(baseUrl);
+        builder.Services.AddAuthenticatedRefitClient<IPaymentInfoApi>(baseUrl);
+        builder.Services.AddAuthenticatedRefitClient<IStatesApi>(baseUrl);
+        builder.Services.AddAuthenticatedRefitClient<IEventsApi>(baseUrl);
+        builder.Services.AddAuthenticatedRefitClient<IAttractionsApi>(baseUrl);
+        builder.Services.AddAuthenticatedRefitClient<ITicketTypesApi>(baseUrl);
+        builder.Services.AddAuthenticatedRefitClient<IOrdersApi>(baseUrl);
+        builder.Services.AddAuthenticatedRefitClient<ITicketsApi>(baseUrl);
+        builder.Services.AddAuthenticatedRefitClient<IEventStaffApi>(baseUrl);
+        builder.Services.AddAuthenticatedRefitClient<IStaffInvitesApi>(baseUrl);
+        builder.Services.AddAuthenticatedRefitClient<IFavoritesApi>(baseUrl);
+        builder.Services.AddAuthenticatedRefitClient<ICheckInApi>(baseUrl);
+        builder.Services.AddAuthenticatedRefitClient<IEventRatingsApi>(baseUrl);
+        builder.Services.AddAuthenticatedRefitClient<IAgePoliciesApi>(baseUrl);
+        builder.Services.AddAuthenticatedRefitClient<IStorageApi>(baseUrl);
+        builder.Services.AddAuthenticatedRefitClient<IParticipantsApi>(baseUrl);
 
         builder.Services.AddSingleton<IAuthService, AuthService>();
         builder.Services.AddSingleton<IDialogService, DialogService>();
@@ -184,5 +142,12 @@ public static class MauiProgram
 #endif
 
         return builder.Build();
+    }
+
+    private static IHttpClientBuilder AddAuthenticatedRefitClient<T>(this IServiceCollection services, string baseUrl) where T : class
+    {
+        return services.AddRefitClient<T>(RefitConfig.CreateSettings())
+            .ConfigureHttpClient(c => c.BaseAddress = new Uri(baseUrl))
+            .AddHttpMessageHandler<AuthTokenHandler>();
     }
 }

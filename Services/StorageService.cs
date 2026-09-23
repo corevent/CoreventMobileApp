@@ -7,10 +7,12 @@ namespace CoreventApp.Services;
 public class StorageService
 {
     private readonly IStorageApi _api;
+    private readonly IStorageUploadService _uploadService;
 
-    public StorageService(IStorageApi api)
+    public StorageService(IStorageApi api, IStorageUploadService uploadService)
     {
         _api = api;
+        _uploadService = uploadService;
     }
 
     public async Task<string?> UploadAvatarAsync(Stream imageStream, string contentType)
@@ -18,7 +20,7 @@ public class StorageService
         try
         {
             var presign = await _api.PresignUploadAsync(new("avatar", contentType, null));
-            var uploaded = await StorageUploadHelper.UploadImageAsync(presign.Data.UploadUrl, imageStream, contentType);
+            var uploaded = await _uploadService.UploadImageAsync(presign.Data.UploadUrl, imageStream, contentType);
             if (!uploaded) return null;
 
             await _api.ConfirmAvatarUploadAsync(new ConfirmImageUploadDto(presign.Data.Key));
@@ -36,7 +38,7 @@ public class StorageService
         try
         {
             var presign = await _api.PresignUploadAsync(new("event_banner", contentType, eventId));
-            var uploaded = await StorageUploadHelper.UploadImageAsync(presign.Data.UploadUrl, imageStream, contentType);
+            var uploaded = await _uploadService.UploadImageAsync(presign.Data.UploadUrl, imageStream, contentType);
             if (!uploaded) return null;
 
             await _api.ConfirmEventBannerAsync(eventId, new ConfirmImageUploadDto(presign.Data.Key));

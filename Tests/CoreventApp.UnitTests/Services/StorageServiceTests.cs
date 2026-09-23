@@ -10,12 +10,14 @@ namespace CoreventApp.UnitTests.Services;
 public class StorageServiceTests
 {
     private readonly Mock<IStorageApi> _apiMock;
+    private readonly Mock<IStorageUploadService> _uploadMock;
     private readonly StorageService _service;
 
     public StorageServiceTests()
     {
         _apiMock = new Mock<IStorageApi>();
-        _service = new StorageService(_apiMock.Object);
+        _uploadMock = new Mock<IStorageUploadService>();
+        _service = new StorageService(_apiMock.Object, _uploadMock.Object);
     }
 
     [Fact]

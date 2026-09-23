@@ -6,6 +6,7 @@
              x:Name="ThisPage"
              xmlns:mi="http://www.aathifmahir.com/dotnet/2022/maui/icons"
              xmlns:dtos="clr-namespace:CoreventApp.Models.Dtos"
+             xmlns:controls="clr-namespace:CoreventApp.Views.Controls"
              xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
              Title="Ingressos"
              BackgroundColor="{StaticResource background_color}">
@@ -110,46 +111,7 @@
                          TextColor="{StaticResource primary_text_color}"
                          LineBreakMode="TailTruncation"/>
 
-                  <Border Grid.Column="1"
-                          Padding="10,3"
-                          StrokeThickness="0"
-                          StrokeShape="RoundRectangle 20"
-                          VerticalOptions="Start">
-                    <Border.Triggers>
-                      <DataTrigger TargetType="Border" Binding="{Binding Status}" Value="pending">
-                        <Setter Property="BackgroundColor" Value="#FEF3C7"/>
-                      </DataTrigger>
-                      <DataTrigger TargetType="Border" Binding="{Binding Status}" Value="paid">
-                        <Setter Property="BackgroundColor" Value="#DCFCE7"/>
-                      </DataTrigger>
-                      <DataTrigger TargetType="Border" Binding="{Binding Status}" Value="checked_in">
-                        <Setter Property="BackgroundColor" Value="#DBEAFE"/>
-                      </DataTrigger>
-                      <DataTrigger TargetType="Border" Binding="{Binding Status}" Value="cancelled">
-                        <Setter Property="BackgroundColor" Value="#FEE2E2"/>
-                      </DataTrigger>
-                    </Border.Triggers>
-                    <Label FontSize="11" FontAttributes="Bold">
-                      <Label.Triggers>
-                        <DataTrigger TargetType="Label" Binding="{Binding Status}" Value="pending">
-                          <Setter Property="Text" Value="Pendente"/>
-                          <Setter Property="TextColor" Value="#D97706"/>
-                        </DataTrigger>
-                        <DataTrigger TargetType="Label" Binding="{Binding Status}" Value="paid">
-                          <Setter Property="Text" Value="Confirmado"/>
-                          <Setter Property="TextColor" Value="#16A34A"/>
-                        </DataTrigger>
-                        <DataTrigger TargetType="Label" Binding="{Binding Status}" Value="checked_in">
-                          <Setter Property="Text" Value="Finalizado"/>
-                          <Setter Property="TextColor" Value="#2563EB"/>
-                        </DataTrigger>
-                        <DataTrigger TargetType="Label" Binding="{Binding Status}" Value="cancelled">
-                          <Setter Property="Text" Value="Cancelado"/>
-                          <Setter Property="TextColor" Value="#DC2626"/>
-                        </DataTrigger>
-                      </Label.Triggers>
-                    </Label>
-                  </Border>
+                  <controls:StatusBadge Grid.Column="1" Status="{Binding Status}" Kind="Ticket" />
 
                   <HorizontalStackLayout Grid.Row="1" Grid.ColumnSpan="2" Spacing="6">
                     <mi:MauiIcon Icon="{mi:Cupertino TagCircleFill}"
@@ -214,32 +176,7 @@
                          TextColor="{StaticResource primary_text_color}"
                          LineBreakMode="TailTruncation"/>
 
-                  <Border Grid.Column="1"
-                          Padding="10,3"
-                          StrokeThickness="0"
-                          StrokeShape="RoundRectangle 20"
-                          VerticalOptions="Start">
-                    <Border.Triggers>
-                      <DataTrigger TargetType="Border" Binding="{Binding Status}" Value="checked_in">
-                        <Setter Property="BackgroundColor" Value="#DBEAFE"/>
-                      </DataTrigger>
-                      <DataTrigger TargetType="Border" Binding="{Binding Status}" Value="cancelled">
-                        <Setter Property="BackgroundColor" Value="#FEE2E2"/>
-                      </DataTrigger>
-                    </Border.Triggers>
-                    <Label FontSize="11" FontAttributes="Bold">
-                      <Label.Triggers>
-                        <DataTrigger TargetType="Label" Binding="{Binding Status}" Value="checked_in">
-                          <Setter Property="Text" Value="Finalizado"/>
-                          <Setter Property="TextColor" Value="#2563EB"/>
-                        </DataTrigger>
-                        <DataTrigger TargetType="Label" Binding="{Binding Status}" Value="cancelled">
-                          <Setter Property="Text" Value="Cancelado"/>
-                          <Setter Property="TextColor" Value="#DC2626"/>
-                        </DataTrigger>
-                      </Label.Triggers>
-                    </Label>
-                  </Border>
+                  <controls:StatusBadge Grid.Column="1" Status="{Binding Status}" Kind="Ticket" />
 
                   <HorizontalStackLayout Grid.Row="1" Grid.ColumnSpan="2" Spacing="6">
                     <mi:MauiIcon Icon="{mi:Cupertino TagCircleFill}"

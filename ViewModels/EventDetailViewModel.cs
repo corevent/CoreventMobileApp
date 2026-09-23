@@ -5,6 +5,7 @@ using System.Text.Json;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CoreventApp.Models.Dtos;
+using CoreventApp.Models;
 using CoreventApp.Services;
 using CoreventApp.Services.Api;
 
@@ -154,13 +155,7 @@ public partial class EventDetailViewModel : ObservableObject
             OrganizerName = evt.Organizer.Name ?? string.Empty;
             OrganizerAvatar = evt.Organizer.AvatarUrl ?? "profile_default_icon.png";
             OnlineUrl = evt.LocationType == "online" ? evt.LocationName : string.Empty;
-            LocationTypeDisplay = evt.LocationType switch
-            {
-                "online" => "Online",
-                "in_person" => "Presencial",
-                "hybrid" => "Híbrido",
-                _ => "Presencial"
-            };
+            LocationTypeDisplay = DomainCatalog.LocationTypeLabel(evt.LocationType);
 
             IsFavorite = _favoritesService.IsFavorite(eventId);
 

@@ -3,6 +3,7 @@ using System.Diagnostics;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CoreventApp.Models.Dtos;
+using CoreventApp.Models;
 using CoreventApp.Services;
 using CoreventApp.Services.Api;
 using CoreventApp.Views;
@@ -72,45 +73,12 @@ public partial class CreateEventViewModel : ObservableObject
 
     public DateTime StartDateMinimum => IsEditing ? Form.StartDate.AddDays(-1) : Tomorrow;
 
-    public List<string> Categories { get; } = new()
-    {
-        "Música", "Esportes", "Tecnologia", "Negócios", "Educação",
-        "Arte e Cultura", "Gastronomia", "Saúde e Bem-estar",
-        "Família e Crianças", "Religioso/Espiritual", "Jogos",
-        "Comunidade/Social", "Moda e Beleza", "Outro"
-    };
+    public List<string> Categories { get; } = DomainCatalog.Categories.Select(x => x.Label).ToList();
 
-    public ObservableCollection<string> LocationTypes { get; } = new()
-    {
-        "Online", "Presencial", "Híbrido"
-    };
-
-    private static readonly Dictionary<string, string> CategoryToApi = new()
-    {
-        ["Música"] = "music",
-        ["Esportes"] = "sports",
-        ["Tecnologia"] = "tech",
-        ["Negócios"] = "business",
-        ["Educação"] = "education",
-        ["Arte e Cultura"] = "art_culture",
-        ["Gastronomia"] = "gastronomy",
-        ["Saúde e Bem-estar"] = "health_wellness",
-        ["Família e Crianças"] = "family_kids",
-        ["Religioso/Espiritual"] = "religious_spiritual",
-        ["Jogos"] = "games",
-        ["Comunidade/Social"] = "community_social",
-        ["Moda e Beleza"] = "fashion_beauty",
-        ["Outro"] = "other"
-    };
+    public ObservableCollection<string> LocationTypes { get; } = new(DomainCatalog.LocationTypes.Select(x => x.Label));
 
     private FileResult? _bannerFile;
 
-    private static readonly Dictionary<string, string> LocationTypeToApi = new()
-    {
-        ["Online"] = "online",
-        ["Presencial"] = "in_person",
-        ["Híbrido"] = "hybrid"
-    };
 
     public CreateEventViewModel(IEventsApi eventsApi, IStatesApi statesApi, PaymentInfoService paymentInfoService, StorageService storageService, IDialogService dialogService)
     {
@@ -154,15 +122,8 @@ public partial class CreateEventViewModel : ObservableObject
         Form.LocationName = evt.LocationName;
         Form.BannerUrl = evt.BannerUrl ?? string.Empty;
 
-        var locationTypeDisplay = LocationTypeToApi
-            .FirstOrDefault(x => x.Value == evt.LocationType).Key;
-        if (locationTypeDisplay is not null)
-            Form.LocationType = locationTypeDisplay;
-
-        var categoryDisplay = CategoryToApi
-            .FirstOrDefault(x => x.Value == evt.Category).Key;
-        if (categoryDisplay is not null)
-            Form.Category = categoryDisplay;
+        Form.LocationType = DomainCatalog.LocationTypeLabel(evt.LocationType);
+        Form.Category = DomainCatalog.CategoryLabel(evt.Category);
 
         UpdateLocationTypesForEditing();
 
@@ -532,8 +493,8 @@ public partial class CreateEventViewModel : ObservableObject
     private CreateEventDto BuildCreateDto(string status, bool forUpdate = false)
     {
         var title = Form.Title.Trim();
-        var category = CategoryToApi.GetValueOrDefault(Form.Category, "other");
-        var locationType = LocationTypeToApi.GetValueOrDefault(Form.LocationType, "in_person");
+        var category = DomainCatalog.CategoryValue(Form.Category);
+        var locationType = DomainCatalog.LocationTypeValue(Form.LocationType);
         var isOnline = locationType == "online";
 
         int number = 0;
@@ -574,7 +535,7 @@ public partial class CreateEventViewModel : ObservableObject
         if (Form.MaxParticipants != o.MaxParticipants)
             payload["maxParticipants"] = Form.MaxParticipants;
 
-        var locationType = LocationTypeToApi.GetValueOrDefault(Form.LocationType, "in_person");
+        var locationType = DomainCatalog.LocationTypeValue(Form.LocationType);
         if (locationType != o.LocationType)
             payload["locationType"] = locationType;
 
@@ -625,7 +586,7 @@ public partial class CreateEventViewModel : ObservableObject
         if (Form.EndDate != o.EndDate)
             payload["endDate"] = Form.EndDate;
 
-        var category = CategoryToApi.GetValueOrDefault(Form.Category, "other");
+        var category = DomainCatalog.CategoryValue(Form.Category);
         if (category != o.Category)
             payload["category"] = category;
 

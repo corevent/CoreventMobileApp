@@ -23,7 +23,7 @@ public class EditProfileViewModelTests
         client.BaseAddress = new Uri("https://api.corevent.com");
 
         var storageApi = Refit.RestService.For<IStorageApi>(client, RefitConfig.CreateSettings());
-        _storageService = new StorageService(storageApi);
+        _storageService = new StorageService(storageApi, new Mock<IStorageUploadService>().Object);
     }
 
     [Fact]

@@ -2,6 +2,7 @@ using System.Diagnostics;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CoreventApp.Models.Dtos;
+using CoreventApp.Models;
 using CoreventApp.Services;
 using CoreventApp.Services.Api;
 
@@ -75,15 +76,7 @@ public partial class ManageEventViewModel : ObservableObject
             EventDate = $"{evt.StartDate.ToLocalTime():dd MMM, yyyy - HH:mm}";
             EventImage = evt.BannerUrl ?? string.Empty;
             Status = evt.Status;
-            StatusDisplayText = evt.Status switch
-            {
-                "draft" => "RASCUNHO",
-                "opened" => "ATIVO",
-                "going" => "EM ANDAMENTO",
-                "canceled" => "CANCELADO",
-                "finished" => "ENCERRADO",
-                _ => "ATIVO"
-            };
+            StatusDisplayText = DomainCatalog.Status(StatusKind.Event, evt.Status).Label;
             UpdatePermissions();
         }
         catch (Exception ex)

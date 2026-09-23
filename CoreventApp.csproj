@@ -50,6 +50,9 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+		<MauiXaml Update="Views\Controls\StatusBadge.xaml">
+			<Generator>MSBuild:Compile</Generator>
+		</MauiXaml>
 		<!-- App Icon -->
 		<MauiIcon Include="Resources\AppIcon\appicon.png" />
 		<MauiIcon Update="Resources\AppIcon\appicon.png" Condition="$(TargetFramework.Contains('-android'))" Color="#FFFFFF" ForegroundScale="0.8" />

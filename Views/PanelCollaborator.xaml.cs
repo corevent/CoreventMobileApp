@@ -8,6 +8,5 @@ public partial class PanelCollaborator : ContentPage
     {
         InitializeComponent();
         BindingContext = viewModel;
-        _ = viewModel.LoadCommand.ExecuteAsync(null);
     }
 }
