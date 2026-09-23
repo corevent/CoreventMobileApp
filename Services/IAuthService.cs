@@ -13,10 +13,10 @@ public interface IAuthService
     Task<bool> UpdatePasswordAsync(string currentPassword, string newPassword);
     Task<bool> UpdateProfileAsync(string name, string? phoneNumber);
 
-    Task SendVerificationEmailAsync(string email);
+    Task<bool> SendVerificationEmailAsync(string email);
     Task<User?> CreateUserAsync(string name, string email, string password,
         string documentType, string document, string birthDate, string code);
 
-    Task SendResetCodeAsync(string email);
+    Task<bool> SendResetCodeAsync(string email);
     Task<bool> ResetPasswordAsync(string email, string code, string newPassword);
 }

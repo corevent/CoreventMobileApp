@@ -35,9 +35,14 @@ public partial class ForgotPasswordViewModel : ObservableObject
 
         IsLoading = true;
 
-        await _authService.SendResetCodeAsync(Email);
-
+        var resetCodeSent = await _authService.SendResetCodeAsync(Email);
         IsLoading = false;
+
+        if (!resetCodeSent)
+        {
+            await _dialogs.ShowErrorAsync("Não foi possível enviar o código de recuperação. Tente novamente.");
+            return;
+        }
 
         await _dialogs.ShowToastAsync("E-mail enviado. Se o e-mail estiver cadastrado, enviaremos um código de verificação.");
 

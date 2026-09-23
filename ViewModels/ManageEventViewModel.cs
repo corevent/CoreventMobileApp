@@ -68,8 +68,12 @@ public partial class ManageEventViewModel : ObservableObject
 
         try
         {
-            var evt = (await ApiResult.TryExecuteAsync(() => _eventsApi.GetByIdAsync(eventId), "Load event"))?.Data;
-            if (evt is null) return;
+            var response = await ApiResult.TryExecuteAsync(() => _eventsApi.GetByIdAsync(eventId), "Load event");
+            if (response?.Data is not { } evt)
+            {
+                await _dialogs.ShowErrorAsync("Não foi possível carregar os dados do evento.");
+                return;
+            }
 
             _currentEvent = evt;
             EventName = evt.Title;
@@ -78,10 +82,6 @@ public partial class ManageEventViewModel : ObservableObject
             Status = evt.Status;
             StatusDisplayText = DomainCatalog.Status(StatusKind.Event, evt.Status).Label;
             UpdatePermissions();
-        }
-        catch (Exception ex)
-        {
-            await _dialogs.ShowErrorAsync($"ManageEvent LoadEventAsync failed: {ex.Message}");
         }
         finally
         {

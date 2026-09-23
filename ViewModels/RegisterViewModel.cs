@@ -58,9 +58,14 @@ public partial class RegisterViewModel : ObservableObject
 
             IsBusy = true;
 
-            await _authService.SendVerificationEmailAsync(Form.Email);
-
+            var verificationEmailSent = await _authService.SendVerificationEmailAsync(Form.Email);
             IsBusy = false;
+
+            if (!verificationEmailSent)
+            {
+                await _dialogs.ShowErrorAsync("Não foi possível enviar o código de verificação. Tente novamente.");
+                return;
+            }
 
             var document = Form.AccountType == "pj"
               ? System.Text.RegularExpressions.Regex.Replace(Form.Cnpj, @"\D", "")

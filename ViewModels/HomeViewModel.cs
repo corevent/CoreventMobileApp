@@ -39,18 +39,18 @@ public partial class HomeViewModel : ObservableObject
         try
         {
             var result = await ApiResult.TryExecuteAsync(
-                    () => _eventsApi.GetAllAsync(page: 1, limit: 50, status: "opened"), "Home load")
-                ?? new EventListPageDto(new List<EventListItemDto>(), new PaginationMetaDto(0, 0, 1, 50));
+                () => _eventsApi.GetAllAsync(page: 1, limit: 50, status: "opened"), "Home load");
+            if (result is null)
+            {
+                await _dialogs.ShowErrorAsync("Não foi possível carregar os eventos.");
+                return;
+            }
             var filtered = _authService.CurrentCachedUser?.IsAdult == false
                 ? result.Data.Where(e => !e.IsAdultOnly)
                 : result.Data;
             var scored = filtered.OrderByDescending(CalculateScore).ToList();
             HighlightedEvents = new ObservableCollection<EventListItemDto>(scored.Take(5));
             OtherEvents = new ObservableCollection<EventListItemDto>(scored.Skip(5));
-        }
-        catch (Exception ex)
-        {
-            await _dialogs.ShowErrorAsync($"Home LoadAsync failed: {ex.Message}");
         }
         finally
         {

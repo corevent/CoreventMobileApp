@@ -49,7 +49,7 @@ public class AuthTokenHandler : DelegatingHandler
             retry.Headers.Authorization = new AuthenticationHeaderValue("Bearer", tokens.AccessToken);
             return await base.SendAsync(retry, cancellationToken);
         }
-        catch (Exception ex)
+        catch (Exception ex) when (ex is HttpRequestException or JsonException)
         {
             Debug.WriteLine($"Token refresh failed: {ex.Message}");
             await _tokenService.ClearTokensAsync();

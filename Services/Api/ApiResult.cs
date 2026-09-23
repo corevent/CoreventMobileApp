@@ -27,11 +27,6 @@ public static class ApiResult
             Debug.WriteLine($"{context ?? "API call"} failed: no response ({ex.Message})");
             return default;
         }
-        catch (Exception ex)
-        {
-            Debug.WriteLine($"{context ?? "API call"} failed: {ex.Message}");
-            return default;
-        }
     }
 
     public static async Task<bool> TryExecuteAsync(Func<Task> action, string? context = null)
@@ -49,11 +44,6 @@ public static class ApiResult
         catch (HttpRequestException ex)
         {
             Debug.WriteLine($"{context ?? "API call"} failed: no response ({ex.Message})");
-            return false;
-        }
-        catch (Exception ex)
-        {
-            Debug.WriteLine($"{context ?? "API call"} failed: {ex.Message}");
             return false;
         }
     }

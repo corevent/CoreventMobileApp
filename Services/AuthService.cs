@@ -118,15 +118,17 @@ public class AuthService : IAuthService
         }
     }
 
-    public async Task SendVerificationEmailAsync(string email)
+    public async Task<bool> SendVerificationEmailAsync(string email)
     {
         try
         {
             await _authApi.VerifyEmail(new EmailDto(email));
+            return true;
         }
         catch (Exception ex)
         {
             Debug.WriteLine($"SendVerificationEmail failed: {ex.Message}");
+            return false;
         }
     }
 
@@ -152,15 +154,17 @@ public class AuthService : IAuthService
         }
     }
 
-    public async Task SendResetCodeAsync(string email)
+    public async Task<bool> SendResetCodeAsync(string email)
     {
         try
         {
             await _authApi.ForgotPassword(new EmailDto(email));
+            return true;
         }
         catch (Exception ex)
         {
             Debug.WriteLine($"SendResetCode failed: {ex.Message}");
+            return false;
         }
     }
 

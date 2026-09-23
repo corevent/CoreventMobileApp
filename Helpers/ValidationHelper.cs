@@ -94,7 +94,7 @@ public static partial class ValidationHelper
             var addr = new MailAddress(email);
             return addr.Address == email;
         }
-        catch
+        catch (FormatException)
         {
             return false;
         }

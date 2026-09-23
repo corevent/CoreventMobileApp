@@ -106,8 +106,12 @@ public partial class ExploreViewModel : ObservableObject
                 category: selected,
                 stateId: null,
                 cityId: null,
-                status: "opened", cancellationToken: cancellationToken), "Explore search")
-                ?? new EventListPageDto(new List<EventListItemDto>(), new PaginationMetaDto(0, 0, _currentPage, PageSize));
+                status: "opened", cancellationToken: cancellationToken), "Explore search");
+            if (result is null)
+            {
+                await _dialogs.ShowErrorAsync("Não foi possível carregar os eventos.");
+                return;
+            }
 
             var filtered = _authService.CurrentCachedUser?.IsAdult == false
                 ? result.Data.Where(e => !e.IsAdultOnly)
@@ -117,10 +121,6 @@ public partial class ExploreViewModel : ObservableObject
                 Events.Add(item);
 
             _hasMorePages = _currentPage < result.Meta.TotalPages;
-        }
-        catch (Exception ex)
-        {
-            await _dialogs.ShowErrorAsync($"Explore SearchAsync failed: {ex.Message}");
         }
         finally
         {
@@ -145,8 +145,13 @@ public partial class ExploreViewModel : ObservableObject
                 category: selected,
                 stateId: null,
                 cityId: null,
-                status: "opened"), "Explore load more")
-                ?? new EventListPageDto(new List<EventListItemDto>(), new PaginationMetaDto(0, 0, _currentPage, PageSize));
+                status: "opened"), "Explore load more");
+            if (result is null)
+            {
+                _currentPage--;
+                await _dialogs.ShowErrorAsync("Não foi possível carregar mais eventos.");
+                return;
+            }
 
             var filtered = _authService.CurrentCachedUser?.IsAdult == false
                 ? result.Data.Where(e => !e.IsAdultOnly)
@@ -155,11 +160,6 @@ public partial class ExploreViewModel : ObservableObject
                 Events.Add(item);
 
             _hasMorePages = _currentPage < result.Meta.TotalPages;
-        }
-        catch (Exception ex)
-        {
-            await _dialogs.ShowErrorAsync($"Explore LoadMoreAsync failed: {ex.Message}");
-            _currentPage--;
         }
         finally
         {

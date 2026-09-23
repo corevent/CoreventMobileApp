@@ -56,10 +56,12 @@ public partial class CheckInViewModel : ObservableObject
 
     private async Task LoadEventAsync(string eventId)
     {
-        try
-        {
-            var evt = (await ApiResult.TryExecuteAsync(() => _eventsApi.GetByIdAsync(eventId), "Load event"))?.Data;
-            if (evt is null) return;
+            var response = await ApiResult.TryExecuteAsync(() => _eventsApi.GetByIdAsync(eventId), "Load event");
+            if (response?.Data is not { } evt)
+            {
+                await _dialogs.ShowErrorAsync("Não foi possível carregar os dados do evento.");
+                return;
+            }
 
             EventName = evt.Title;
             _eventStatus = evt.Status;
@@ -74,12 +76,6 @@ public partial class CheckInViewModel : ObservableObject
                 IsResultVisible = true;
                 IsResultSuccess = false;
             }
-        }
-        catch (Exception ex)
-        {
-            Debug.WriteLine($"CheckIn LoadEventAsync failed: {ex.Message}");
-            await _dialogs.ShowErrorAsync("Não foi possível carregar os dados do evento.");
-        }
     }
 
     [RelayCommand]

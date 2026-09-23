@@ -84,6 +84,28 @@ public class AuthServiceTests
     }
 
     [Fact]
+    public async Task SendVerificationEmailAsync_ShouldReturnFalse_WhenApiFails()
+    {
+        _authApiMock.Setup(a => a.VerifyEmail(It.IsAny<EmailDto>()))
+            .ThrowsAsync(new HttpRequestException("offline"));
+
+        var sent = await _authService.SendVerificationEmailAsync("lucas@example.com");
+
+        sent.ShouldBeFalse();
+    }
+
+    [Fact]
+    public async Task SendResetCodeAsync_ShouldReturnTrue_WhenApiSucceeds()
+    {
+        _authApiMock.Setup(a => a.ForgotPassword(It.IsAny<EmailDto>()))
+            .ReturnsAsync(new MessageDto("Código enviado"));
+
+        var sent = await _authService.SendResetCodeAsync("lucas@example.com");
+
+        sent.ShouldBeTrue();
+    }
+
+    [Fact]
     public async Task Login_ShouldSerializeBodyLikeManualClient()
     {
         string? capturedBody = null;

@@ -22,43 +22,25 @@ public sealed class DialogService : IDialogService
 
     public async Task ShowAlertAsync(string title, string message, string cancel = "OK")
     {
-        try
-        {
-            var page = Shell.Current?.CurrentPage;
-            if (page is not null)
-                await page.DisplayAlertAsync(title, message, cancel);
-        }
-        catch
-        {
-            // No UI context (e.g. unit tests) — swallow.
-        }
+        var page = Shell.Current?.CurrentPage;
+        if (page is not null)
+            await page.DisplayAlertAsync(title, message, cancel);
     }
 
     public async Task<bool> ConfirmAsync(string title, string message, string accept = "Sim", string cancel = "Cancelar")
     {
-        try
-        {
-            var page = Shell.Current?.CurrentPage;
-            if (page is not null)
-                return await page.DisplayAlertAsync(title, message, accept, cancel);
-        }
-        catch
-        {
-            // No UI context (e.g. unit tests) — swallow.
-        }
+        var page = Shell.Current?.CurrentPage;
+        if (page is not null)
+            return await page.DisplayAlertAsync(title, message, accept, cancel);
 
         return false;
     }
 
     public async Task ShowToastAsync(string message)
     {
-        try
-        {
-            await Snackbar.Make(message).Show();
-        }
-        catch
-        {
-            // No UI context (e.g. unit tests) — swallow.
-        }
+        if (Shell.Current?.CurrentPage is null)
+            return;
+
+        await Snackbar.Make(message).Show();
     }
 }
