@@ -94,7 +94,7 @@ public partial class ExploreViewModel : ObservableObject
         if (IsLoading) return;
         IsLoading = true;
         _currentPage = 1;
-        _hasMorePages = true;
+        _hasMorePages = false;
 
         try
         {
@@ -116,11 +116,10 @@ public partial class ExploreViewModel : ObservableObject
             var filtered = _authService.CurrentCachedUser?.IsAdult == false
                 ? result.Data.Where(e => !e.IsAdultOnly)
                 : result.Data;
+            _hasMorePages = result.Data.Count > 0 && _currentPage < result.Meta.TotalPages;
             Events.Clear();
             foreach (var item in filtered)
                 Events.Add(item);
-
-            _hasMorePages = _currentPage < result.Meta.TotalPages;
         }
         finally
         {
@@ -131,16 +130,16 @@ public partial class ExploreViewModel : ObservableObject
     [RelayCommand]
     private async Task LoadMoreAsync()
     {
-        if (IsLoadingMore || !_hasMorePages) return;
+        if (IsLoading || IsLoadingMore || !_hasMorePages) return;
         IsLoadingMore = true;
 
         try
         {
-            _currentPage++;
+            var nextPage = _currentPage + 1;
             var selected = GetSelectedCategoryApiValue();
 
             var result = await ApiResult.TryExecuteAsync(() => _eventsApi.GetAllAsync(
-                page: _currentPage, limit: PageSize,
+                page: nextPage, limit: PageSize,
                 search: string.IsNullOrWhiteSpace(SearchText) ? null : SearchText,
                 category: selected,
                 stateId: null,
@@ -148,18 +147,17 @@ public partial class ExploreViewModel : ObservableObject
                 status: "opened"), "Explore load more");
             if (result is null)
             {
-                _currentPage--;
                 await _dialogs.ShowErrorAsync("Não foi possível carregar mais eventos.");
                 return;
             }
 
+            _currentPage = nextPage;
+            _hasMorePages = result.Data.Count > 0 && _currentPage < result.Meta.TotalPages;
             var filtered = _authService.CurrentCachedUser?.IsAdult == false
                 ? result.Data.Where(e => !e.IsAdultOnly)
                 : result.Data;
             foreach (var item in filtered)
                 Events.Add(item);
-
-            _hasMorePages = _currentPage < result.Meta.TotalPages;
         }
         finally
         {
