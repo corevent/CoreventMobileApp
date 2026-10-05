@@ -2,10 +2,9 @@
 
 Aplicativo Flutter para descobrir eventos, comprar ingressos e gerenciar compras e atividades da conta. Desenvolvido com foco em mobile e arquitetura Feature-first + MVVM.
 
-## Targets
+## Target
 
 - Android.
-- Web.
 
 ## Stack
 
@@ -18,13 +17,12 @@ Aplicativo Flutter para descobrir eventos, comprar ingressos e gerenciar compras
 - qr_flutter, url_launcher e app_links para ingressos e pagamento.
 - image_picker, crop_your_image e image para a foto de perfil.
 - Plus Jakarta Sans e Remix Icons.
-- flutter_test e mocktail para testes.
+- flutter_test, mocktail e integration_test para testes.
 
 ## Pré-requisitos
 
 - Flutter com Dart compatível com `^3.13.4`.
 - Android SDK e emulador ou dispositivo físico para Android.
-- Chrome para desenvolvimento Web.
 
 ## Como executar
 
@@ -33,12 +31,6 @@ Na raiz do repositório, instale as dependências e gere o código:
 ```sh
 flutter pub get
 dart run build_runner build
-```
-
-Web:
-
-```sh
-flutter run -d chrome
 ```
 
 Android:
@@ -61,14 +53,6 @@ flutter build appbundle --release
 
 Para distribuição, configure a assinatura e o identificador do aplicativo Android.
 
-Web:
-
-```sh
-flutter build web
-```
-
-Os arquivos Web ficam em `build/web/`. Sirva o diretório completo, incluindo os recursos do Drift.
-
 ## Funcionalidades
 
 - Cadastro com verificação de e-mail, login e recuperação de senha.
@@ -89,3 +73,69 @@ flutter test
 ```
 
 Para aplicar a formatação, execute `dart tool/format.dart`.
+
+As metas de cobertura por área estão em [docs/test-coverage.md](docs/test-coverage.md).
+
+### Testes Android
+
+`integration_test/controlled/` usa respostas locais no Dio. Cobre autenticação,
+compras, falhas de rede e outros estados determinísticos sem acessar a API.
+`test/integration_contracts_test.dart` confere os contratos REST.
+
+```sh
+flutter test integration_test/controlled -d ID_DO_DISPOSITIVO --flavor integration
+```
+
+`integration_test/e2e/` usa a API real informada por flags. Execute diretamente
+com o Flutter em Windows, Linux ou macOS, com um Android conectado e autorizado:
+
+```sh
+flutter devices
+flutter test integration_test/e2e/all_test.dart -d ID_DO_DISPOSITIVO --flavor integration --dart-define=COREVENT_API_URL=https://URL_DA_API/ --dart-define=COREVENT_E2E_EMAIL=EMAIL --dart-define=COREVENT_E2E_PASSWORD=SENHA --dart-define=COREVENT_E2E_EVENT_ID=ID_RETORNADO --dart-define="COREVENT_E2E_FREE_TICKET_NAME=NOME_RETORNADO"
+```
+
+Não há arquivo JSON de configuração nem runner PowerShell para os E2E.
+O preparador deve ser executado no projeto da API antes da suíte. Ele garante
+a conta E2E, usa essa conta como organizadora e compradora e cria um evento
+aberto, pesquisável e avaliável, sem favorito ou
+avaliação anteriores da conta, com tipos de ingresso gratuito e pago. Também
+deve criar um pedido pago e um ingresso ativo com QR para a conta. O tipo
+gratuito deve ter nome único no evento e estoque para novas compras.
+
+O preparador retorna um log estruturado com `eventId` e `freeTicketName`.
+Use esses valores nas flags `COREVENT_E2E_EVENT_ID` e
+`COREVENT_E2E_FREE_TICKET_NAME`. O mesmo evento atende a busca, favoritos,
+avaliação e compra; não são necessários IDs separados. A preparação pertence
+à API e ainda não é executada pelo Flutter.
+
+`all_test.dart` é o único arquivo descoberto como teste nessa pasta. Ele reúne
+os dez cenários em um build e uma instalação; os arquivos `*_scenarios.dart`
+mantêm os cenários separados sem serem executados novamente pela descoberta.
+O comando `flutter test integration_test/e2e` também usa esse único entrypoint.
+
+Para executar apenas um grupo, acrescente `--name` ao comando acima:
+
+| Grupo | Comportamento | Filtro |
+| --- | --- | --- |
+| Somente leitura | Login, abas, sessão, busca, pedidos e QR | `--name "Somente leitura"` |
+| Reversíveis | Favorito, avaliação e edição de nome, restaurando o estado | `--name "Reversíveis"` |
+| Persistentes | Compra gratuita e upload de foto | `--name "Persistentes"` |
+
+O filtro também aceita o nome de um cenário específico. Os testes validam a
+configuração antes das requisições. Os E2E podem gravar dados na API sem uma
+flag adicional de autorização. Antes de cada execução completa, o preparador
+restaura os dados da conta E2E, limpa os dados anteriores de teste associados
+e cria um novo evento, tipos de ingresso, pedido e ingresso com QR. Use os identificadores
+retornados nessa execução e uma conta dedicada sem privilégios. As credenciais
+passadas ao compilador podem estar presentes no APK de teste.
+
+Pagamento PagBank, cadastro e recuperação por e-mail e restauração após encerrar
+o processo são verificações manuais com API real. Para a restauração: faça login,
+encerre o app pelo Android, reabra e confirme que a sessão e o perfil retornam;
+depois faça logout, reabra e confirme que a sessão permanece encerrada.
+
+O flavor `integration` instala um aplicativo separado, com sufixo
+`.integration`, e mantém os dados da instalação normal. Os comandos usuais de
+execução e build usam o flavor `production` por padrão.
+
+Os testes limpam apenas as chaves de sessão do aplicativo de integração.

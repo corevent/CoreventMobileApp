@@ -169,17 +169,23 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Text(
-                              '${state.count} ${state.count == 1 ? 'ingresso' : 'ingressos'}',
-                              style: const TextStyle(
-                                color: AppColors.textSecondary,
+                            Expanded(
+                              child: Text(
+                                '${state.count} ${state.count == 1 ? 'ingresso' : 'ingressos'}',
+                                style: const TextStyle(
+                                  color: AppColors.textSecondary,
+                                ),
                               ),
                             ),
-                            Text(
-                              _money.format(state.total),
-                              style: const TextStyle(
-                                fontWeight: FontWeight.w800,
-                                fontSize: 18,
+                            const SizedBox(width: 12),
+                            Flexible(
+                              child: Text(
+                                _money.format(state.total),
+                                textAlign: TextAlign.end,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w800,
+                                  fontSize: 18,
+                                ),
                               ),
                             ),
                           ],

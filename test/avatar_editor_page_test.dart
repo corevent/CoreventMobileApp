@@ -28,6 +28,7 @@ void main() {
       final repository = MockRepository();
       final session = MockSession();
       final upload = Completer<String>();
+      final prepared = Completer<Uint8List>();
       when(() => repository.upload(any(), any()))
           .thenAnswer((_) => upload.future);
       when(() => repository.confirm('key')).thenThrow(Exception('offline'));
@@ -42,7 +43,10 @@ void main() {
           ],
           child: MaterialApp(
             theme: AppTheme.light,
-            home: AvatarEditorPage(image: bytes),
+            home: AvatarEditorPage(
+              image: bytes,
+              prepareImage: (_) => prepared.future,
+            ),
           ),
         ),
       );
@@ -50,11 +54,11 @@ void main() {
       expect(find.text('Ajustar foto'), findsOneWidget);
       verifyNever(() => repository.upload(any(), any()));
       final crop = tester.widget<Crop>(find.byType(Crop));
-      await tester.runAsync(() async {
-        crop.onCropped(CropSuccess(bytes));
-        // O processamento da imagem roda fora do relógio simulado do teste.
-        await Future<void>.delayed(const Duration(milliseconds: 300));
-      });
+      crop.onCropped(CropSuccess(bytes));
+      await tester.pump();
+      expect(find.text('Prévia da foto'), findsNothing);
+      prepared.complete(bytes);
+      await tester.pump();
       await tester.pump();
       expect(find.text('Prévia da foto'), findsOneWidget);
       verifyNever(() => repository.upload(any(), any()));

@@ -109,26 +109,4 @@ void main() {
     expect(result.data.single.locationName, '');
     expect(result.meta.page, 1);
   });
-
-  test('abre os dados completos do evento', () async {
-    final api = MockEventsApi();
-    final date = DateTime.utc(2026, 10, 1);
-    final detail = EventDetail(
-      id: 'evento',
-      title: 'Show',
-      startDate: date,
-      endDate: date.add(const Duration(hours: 2)),
-      category: 'music',
-      isAdultOnly: false,
-      locationName: 'Arena',
-      organizer: const EventOrganizer(name: 'Org'),
-      description: 'Descrição completa',
-    );
-    when(() => api.getEvent('evento'))
-        .thenAnswer((_) async => EventDetailResponse(data: detail));
-    expect(
-      (await EventsRepository(api).detail('evento')).description,
-      'Descrição completa',
-    );
-  });
 }

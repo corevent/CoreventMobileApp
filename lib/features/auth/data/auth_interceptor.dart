@@ -61,7 +61,10 @@ class AuthInterceptor extends Interceptor {
       );
       handler.resolve(await _dio.fetch<dynamic>(retry));
     } on DioException catch (refreshError) {
-      if (_isPermanentRefreshFailure(refreshError)) await _tokens.clear();
+      if (refreshError.requestOptions.extra[_retriedKey] != true &&
+          _isPermanentRefreshFailure(refreshError)) {
+        await _tokens.clear();
+      }
       handler.next(refreshError);
     } catch (refreshError) {
       handler.reject(

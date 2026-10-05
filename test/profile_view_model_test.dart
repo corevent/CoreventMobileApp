@@ -33,11 +33,4 @@ void main() {
     expect(container.read(profileViewModelProvider).busy, false);
     expect(container.read(profileViewModelProvider).error, isNotNull);
   });
-
-  test('logout chama a sessão e libera o estado ocupado', () async {
-    when(() => session.logout()).thenAnswer((_) async {});
-    await container.read(profileViewModelProvider.notifier).logout();
-    verify(() => session.logout()).called(1);
-    expect(container.read(profileViewModelProvider).busy, false);
-  });
 }

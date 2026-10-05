@@ -20,7 +20,7 @@ class AvatarPicker {
   }
 
   Future<bool> recover() async {
-    if (kIsWeb || defaultTargetPlatform != TargetPlatform.android) return false;
+    if (defaultTargetPlatform != TargetPlatform.android) return false;
     final result = await picker.retrieveLostData();
     if (result.files?.isNotEmpty == true) {
       recovered = await _read(result.files!.first);

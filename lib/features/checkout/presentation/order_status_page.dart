@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -116,11 +115,7 @@ class _OrderStatusPageState extends ConsumerState<OrderStatusPage>
   Future<void> _openPayment(Uri url) async {
     setState(() => _opening = true);
     try {
-      final opened = await launchUrl(
-        url,
-        mode: LaunchMode.externalApplication,
-        webOnlyWindowName: '_blank',
-      );
+      final opened = await launchUrl(url, mode: LaunchMode.externalApplication);
       if (!opened && mounted) {
         setState(
           () => _error = 'Não foi possível abrir o pagamento. Tente novamente.',
@@ -284,11 +279,6 @@ class _OrderStatusPageState extends ConsumerState<OrderStatusPage>
                       onPressed: () => _openPayment(payment),
                     ),
                     const SizedBox(height: 8),
-                    if (kIsWeb)
-                      const Text(
-                        'O pagamento abre em outra aba. Volte aqui para acompanhar a confirmação.',
-                        style: TextStyle(color: AppColors.textSecondary),
-                      ),
                   ],
                   if (status == 'pending' && payment == null)
                     const Text(

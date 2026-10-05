@@ -12,7 +12,9 @@ import '../features/profile/data/avatar_picker.dart';
 import 'router.dart';
 
 class CoreventApp extends ConsumerStatefulWidget {
-  const CoreventApp({super.key});
+  const CoreventApp({super.key, this.incomingLinks});
+
+  final Stream<Uri>? incomingLinks;
 
   @override
   ConsumerState<CoreventApp> createState() => _CoreventAppState();
@@ -30,7 +32,9 @@ class _CoreventAppState extends ConsumerState<CoreventApp> {
     _session = ref.read(authSessionProvider);
     _session!.addListener(_resumePendingReturn);
     _session!.addListener(_resumeAvatarRecovery);
-    _links = AppLinks().uriLinkStream.listen(_handleLink);
+    _links = (widget.incomingLinks ?? AppLinks().uriLinkStream).listen(
+      _handleLink,
+    );
     unawaited(_recoverAvatar());
   }
 
@@ -52,6 +56,7 @@ class _CoreventAppState extends ConsumerState<CoreventApp> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) ref.read(routerProvider).go('/profile/details');
     });
+    WidgetsBinding.instance.scheduleFrame();
   }
 
   Future<void> _handleLink(Uri uri) async {

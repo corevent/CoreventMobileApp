@@ -10,7 +10,7 @@ void main(List<String> arguments) {
   }
   final root = File.fromUri(Platform.script).parent.parent;
   final sources = <String>[];
-  for (final folder in ['lib', 'test', 'tool']) {
+  for (final folder in ['lib', 'test', 'integration_test', 'tool']) {
     final directory = Directory('${root.path}/$folder');
     if (!directory.existsSync()) continue;
     for (final entry in directory.listSync(

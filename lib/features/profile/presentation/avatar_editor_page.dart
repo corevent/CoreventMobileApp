@@ -11,8 +11,9 @@ import '../domain/avatar_image.dart';
 import 'avatar_view_model.dart';
 
 class AvatarEditorPage extends ConsumerStatefulWidget {
-  const AvatarEditorPage({super.key, required this.image});
+  const AvatarEditorPage({super.key, required this.image, this.prepareImage});
   final Uint8List image;
+  final Future<Uint8List> Function(Uint8List)? prepareImage;
   @override
   ConsumerState<AvatarEditorPage> createState() => _AvatarEditorPageState();
 }
@@ -29,7 +30,9 @@ class _AvatarEditorPageState extends ConsumerState<AvatarEditorPage> {
     switch (result) {
       case CropSuccess(:final croppedImage):
         try {
-          final bytes = await compute(finishAvatar, croppedImage);
+          final bytes =
+              await (widget.prepareImage?.call(croppedImage) ??
+                  compute(finishAvatar, croppedImage));
           if (mounted) {
             setState(() {
               preview = bytes;
