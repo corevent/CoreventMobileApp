@@ -7,6 +7,7 @@ import 'package:intl/date_symbol_data_local.dart';
 
 import '../support/app_harness.dart';
 import '../support/fixture_backend.dart';
+import '../support/ui_actions.dart';
 
 Future<void> _waitForText(WidgetTester tester, String value) async {
   for (
@@ -32,18 +33,19 @@ void main() {
   testWidgets('login inválido permite corrigir e entrar', (tester) async {
     final backend = FixtureBackend()..failNextLogin = true;
     final container = await openApp(tester, backend);
-    await tester.tap(find.text('Já tenho uma conta'));
+    await tapFixture(tester, find.text('Já tenho uma conta'));
     await tester.pumpAndSettle();
-    await tester.enterText(
+    await enterFixtureText(
+      tester,
       find.byType(TextField).at(0),
       'ana@integration.test',
     );
-    await tester.enterText(find.byType(TextField).at(1), 'Senha1!');
-    await tester.tap(find.text('Entrar'));
+    await enterFixtureText(tester, find.byType(TextField).at(1), 'Senha1!');
+    await tapFixture(tester, find.text('Entrar'));
     await tester.pumpAndSettle();
     expect(find.text('Bem-vindo de volta!'), findsOneWidget);
     expect(await fixtureStorage.read(key: TokenStore.accessKey), isNull);
-    await tester.tap(find.text('Entrar'));
+    await tapFixture(tester, find.text('Entrar'));
     await tester.pumpAndSettle();
     expect(find.text('Festival de integração'), findsWidgets);
     expect(backend.loginCalls, 2);
@@ -54,35 +56,36 @@ void main() {
   testWidgets('recuperação verifica código e redefine senha', (tester) async {
     final backend = FixtureBackend();
     final container = await openApp(tester, backend);
-    await tester.tap(find.text('Já tenho uma conta'));
+    await tapFixture(tester, find.text('Já tenho uma conta'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Esqueceu a senha?'));
+    await tapFixture(tester, find.text('Esqueceu a senha?'));
     await tester.pumpAndSettle();
-    await tester.enterText(
+    await enterFixtureText(
+      tester,
       find.byType(TextField).first,
       'ana@integration.test',
     );
-    await tester.tap(find.text('Enviar código'));
+    await tapFixture(tester, find.text('Enviar código'));
     await tester.pumpAndSettle();
     expect(find.text('Verifique seu e-mail'), findsOneWidget);
     expect(backend.forgotPasswordCalls, 1);
 
-    await tester.tap(find.text('Verificar'));
+    await tapFixture(tester, find.text('Verificar'));
     await tester.pumpAndSettle();
     expect(
       find.text('Insira o código de 6 dígitos enviado por e-mail.'),
       findsOneWidget,
     );
-    await tester.enterText(find.byType(TextField).last, '123456');
-    await tester.tap(find.text('Verificar'));
+    await enterFixtureText(tester, find.byType(TextField).last, '123456');
+    await tapFixture(tester, find.text('Verificar'));
     await tester.pumpAndSettle();
     expect(find.text('Redefinir senha'), findsWidgets);
-    await tester.enterText(find.byType(TextField).at(0), 'NovaSenha1!');
-    await tester.enterText(find.byType(TextField).at(1), 'NovaSenha1!');
+    await enterFixtureText(tester, find.byType(TextField).at(0), 'NovaSenha1!');
+    await enterFixtureText(tester, find.byType(TextField).at(1), 'NovaSenha1!');
     FocusManager.instance.primaryFocus?.unfocus();
     await tester.pumpAndSettle();
     await tester.ensureVisible(find.text('Redefinir senha').last);
-    await tester.tap(find.text('Redefinir senha').last);
+    await tapFixture(tester, find.text('Redefinir senha').last);
     await _waitForText(tester, 'Bem-vindo de volta!');
     expect(backend.resetPasswordCalls, 1);
     expect(await fixtureStorage.read(key: TokenStore.accessKey), isNull);
@@ -95,41 +98,47 @@ void main() {
   ) async {
     final backend = FixtureBackend()..failNextRegister = true;
     final container = await openApp(tester, backend);
-    await tester.tap(find.text('Criar conta'));
+    await tapFixture(tester, find.text('Criar conta'));
     await tester.pumpAndSettle();
-    await tester.enterText(find.byType(TextField).at(0), 'Ana Teste');
-    await tester.enterText(find.byType(TextField).at(1), '01');
-    await tester.enterText(find.byType(TextField).at(2), '01');
-    await tester.enterText(find.byType(TextField).at(3), '2000');
-    await tester.tap(find.text('Próximo'));
-    await tester.pumpAndSettle();
-    expect(find.text('Pessoa ou empresa?'), findsOneWidget);
-    await tester.tap(find.text('Pessoa Física'));
+    await enterFixtureText(tester, find.byType(TextField).at(0), 'Ana Teste');
+    await enterFixtureText(tester, find.byType(TextField).at(1), '01');
+    await enterFixtureText(tester, find.byType(TextField).at(2), '01');
+    await enterFixtureText(tester, find.byType(TextField).at(3), '2000');
+    await tapFixture(tester, find.text('Próximo'));
     await tester.pumpAndSettle();
     expect(find.text('Pessoa ou empresa?'), findsOneWidget);
-    await tester.tap(find.text('Próximo'));
+    await tapFixture(tester, find.text('Pessoa Física'));
+    await tester.pumpAndSettle();
+    expect(find.text('Pessoa ou empresa?'), findsOneWidget);
+    await tapFixture(tester, find.text('Próximo'));
     await tester.pumpAndSettle();
     expect(find.text('Seu documento'), findsOneWidget);
-    await tester.enterText(find.byType(TextField).last, '52998224725');
-    await tester.tap(find.text('Próximo'));
+    await enterFixtureText(
+      tester,
+      find.byType(TextField).last,
+      '52998224725',
+      expectedText: '529.982.247-25',
+    );
+    await tapFixture(tester, find.text('Próximo'));
     await tester.pumpAndSettle();
     expect(find.text('Credenciais de acesso'), findsOneWidget);
-    await tester.enterText(
+    await enterFixtureText(
+      tester,
       find.byType(TextField).at(0),
       'ana@integration.test',
     );
-    await tester.enterText(find.byType(TextField).at(1), 'Senha123!');
-    await tester.enterText(find.byType(TextField).at(2), 'Senha123!');
-    await tester.tap(find.text('Finalizar'));
+    await enterFixtureText(tester, find.byType(TextField).at(1), 'Senha123!');
+    await enterFixtureText(tester, find.byType(TextField).at(2), 'Senha123!');
+    await tapFixture(tester, find.text('Finalizar'));
     await tester.pumpAndSettle();
     expect(find.text('Verifique seu e-mail'), findsOneWidget);
     expect(backend.verifyEmailCalls, 1);
-    await tester.enterText(find.byType(TextField).last, '123456');
-    await tester.tap(find.text('Verificar'));
+    await enterFixtureText(tester, find.byType(TextField).last, '123456');
+    await tapFixture(tester, find.text('Verificar'));
     await tester.pumpAndSettle();
     expect(backend.registerCalls, 1);
     expect(find.text('Verifique seu e-mail'), findsOneWidget);
-    await tester.tap(find.text('Verificar'));
+    await tapFixture(tester, find.text('Verificar'));
     await tester.pumpAndSettle();
     expect(backend.registerCalls, 2);
     expect(backend.loginCalls, 1);

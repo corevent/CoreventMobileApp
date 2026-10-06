@@ -30,6 +30,8 @@ Future<ProviderContainer> openApp(
   WidgetTester tester,
   FixtureBackend backend,
 ) async {
+  // Keep the native IME from overwriting text injected by WidgetTester.
+  tester.testTextInput.register();
   final container = backend.createContainer();
   await tester.pumpWidget(
     UncontrolledProviderScope(container: container, child: const CoreventApp()),
@@ -50,4 +52,5 @@ Future<ProviderContainer> openApp(
 Future<void> closeApp(WidgetTester tester, ProviderContainer container) async {
   await tester.pumpWidget(const SizedBox.shrink());
   container.dispose();
+  tester.testTextInput.unregister();
 }
