@@ -6,19 +6,6 @@ Aplicativo Flutter para descobrir eventos, comprar ingressos e gerenciar compras
 
 - Android.
 
-## Stack
-
-- Flutter e Dart.
-- Riverpod para estado e injeção de dependências.
-- Dio e Retrofit para comunicação com a API.
-- Freezed e json_serializable para modelos e serialização.
-- go_router para navegação.
-- Drift, shared_preferences e flutter_secure_storage para armazenamento.
-- qr_flutter, url_launcher e app_links para ingressos e pagamento.
-- image_picker, crop_your_image e image para a foto de perfil.
-- Plus Jakarta Sans e Remix Icons.
-- flutter_test, mocktail e integration_test para testes.
-
 ## Pré-requisitos
 
 - Flutter com Dart compatível com `^3.13.4`.
@@ -139,3 +126,13 @@ O flavor `integration` instala um aplicativo separado, com sufixo
 execução e build usam o flavor `production` por padrão.
 
 Os testes limpam apenas as chaves de sessão do aplicativo de integração.
+
+### GitHub Actions
+
+O workflow **Tests** verifica formatação, análise, unitários/widgets/contratos e
+integração Android com fixtures em PRs e pushes para `main` e `develop`.
+O workflow **Staging E2E** é manual: executa a preparação no GCP, captura os dados
+dessa execução e roda a suíte no emulador Android.
+
+Configuração do Environment `staging`, autenticação e relatórios:
+[guia de CI](.github/README.md).

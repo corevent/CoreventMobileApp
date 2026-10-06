@@ -32,6 +32,9 @@ migrate_working_dir/
 .pub/
 /build/
 /coverage/
+/reports/
+gha-creds-*.json
+__pycache__/
 
 # Symbolication related
 app.*.symbols
