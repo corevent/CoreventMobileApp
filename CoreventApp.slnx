@@ -1,4 +1,0 @@
-<Solution>
-  <Project Path="CoreventApp.csproj" />
-  <Project Path="tests/CoreventApp.UnitTests/CoreventApp.UnitTests.csproj" />
-</Solution>

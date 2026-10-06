@@ -1,147 +1,138 @@
 # Corevent
 
-Aplicativo mobile de gerenciamento de eventos. Explore eventos, compre ingressos, crie e gerencie seus próprios eventos, e faça check-in via QR Code.
+Aplicativo Flutter para descobrir eventos, comprar ingressos e gerenciar compras e atividades da conta. Desenvolvido com foco em mobile e arquitetura Feature-first + MVVM.
 
-## Stack
+## Target
 
-- **Framework:** .NET MAUI (Android + Windows)
-- **Padrão:** MVVM com `CommunityToolkit.Mvvm` (source generators)
-- **Navegação:** Shell com TabBar + rotas de detalhe
-- **API:** REST — [Corevent API](https://github.com/corevent/api-corevent)
-- **Pagamentos:** PagBank (checkout + webhook)
-- **QR Code:** ZXing.Net.Maui (leitura) + QRCoder (geração)
+- Android.
 
 ## Pré-requisitos
 
-- [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0)
-- Android SDK (API 21+) — para build Android
-- Windows SDK (10.0.17763+) — para build Windows
+- Flutter com Dart compatível com `^3.13.4`.
+- Android SDK e emulador ou dispositivo físico para Android.
 
-## Executar
+## Como executar
 
-```bash
-# Windows
-dotnet run -f net10.0-windows10.0.19041.0
+Na raiz do repositório, instale as dependências e gere o código:
 
-# Android (emulador ou dispositivo)
-dotnet build -t:Run -f net10.0-android
+```sh
+flutter pub get
+dart run build_runner build
 ```
+
+Android:
+
+```sh
+flutter devices
+flutter run -d ID_DO_DISPOSITIVO
+```
+
+Substitua `ID_DO_DISPOSITIVO` pelo identificador listado em `flutter devices`. A API de produção já está configurada no aplicativo.
 
 ## Build
 
-```bash
-dotnet build
+Android:
+
+```sh
+flutter build apk --release
+flutter build appbundle --release
 ```
 
-## Targets
-
-| Plataforma | SDK mínimo |
-|------------|-----------|
-| Android    | API 21    |
-| Windows    | 10.0.17763 |
+Para distribuição, configure a assinatura e o identificador do aplicativo Android.
 
 ## Funcionalidades
 
-### Usuário
-- Cadastro com verificação de email
-- Login / Logout
-- Recuperação de senha
-- Edição de perfil
-- Favoritar eventos
-- Avaliar eventos (1-5 estrelas)
+- Cadastro com verificação de e-mail, login e recuperação de senha.
+- Sessão persistente e logout.
+- Descoberta de eventos, busca, categorias e prévia dos detalhes.
+- Favoritos e avaliações, com edição quando o identificador está disponível.
+- Seleção de ingressos, pagamento externo e acompanhamento de pedidos.
+- Listagem de ingressos e visualização do QR Code.
+- Perfil, edição de dados pessoais, foto e alteração de senha.
+- Interface responsiva, fonte ampliada e animações com respeito a movimento reduzido.
 
-### Explorar
-- Busca textual com debounce
-- Filtro por categoria (Música, Tecnologia, Esportes, etc.)
-- Paginação infinita
-- Destaques na Home (score por proximidade, participantes, tipo)
+## Verificação
 
-### Organizador
-- Criar evento em 3 etapas (informações, data, localização)
-- Editor de evento com PATCH parcial
-- Publicar / Cancelar / Excluir evento
-- Gerenciar tipos de ingresso (preço, quantidade, período)
-- Gerenciar atrações/grade
-- Gerenciar equipe (staff + convites)
-- Check-in via leitura de QR Code
-
-### Ingressos
-- Lista de ingressos (próximos / passados)
-- QR Code do ingresso
-- Checkout com PagBank (redirect + deep link de retorno)
-- Histórico de pedidos com detalhes
-
-### Colaborador
-- Painel de eventos como staff
-- Detalhe do evento colaborador
-- Check-in (se tiver permissão)
-
-## Deep Link
-
-O app registra o esquema `corevent://` para retorno do PagBank:
-
-```
-corevent://orders
+```sh
+dart tool/format.dart --check
+flutter analyze
+flutter test
 ```
 
-Após o pagamento, o usuário é redirecionado automaticamente para a tab **Ingressos**.
+Para aplicar a formatação, execute `dart tool/format.dart`.
 
-## Publicar pacote MSIX (Windows)
+As metas de cobertura por área estão em [docs/test-coverage.md](docs/test-coverage.md).
 
-Para que deep links funcionem no Windows, o app precisa ser **empacotado e instalado** via MSIX (o `dotnet run` não registra o protocolo `corevent://`).
+### Testes Android
 
-### 1. Gerar certificado de assinatura
+`integration_test/controlled/` usa respostas locais no Dio. Cobre autenticação,
+compras, falhas de rede e outros estados determinísticos sem acessar a API.
+`test/integration_contracts_test.dart` confere os contratos REST.
 
-```powershell
-New-SelfSignedCertificate -Type Custom `
-  -Subject "CN=CoreventFatec" `
-  -KeyUsage DigitalSignature `
-  -FriendlyName "Corevent cert" `
-  -CertStoreLocation "Cert:\CurrentUser\My" `
-  -TextExtension @("2.5.29.37={text}1.3.6.1.5.5.7.3.3", "2.5.29.19={text}")
+```sh
+flutter test integration_test/controlled -d ID_DO_DISPOSITIVO --flavor integration
 ```
 
-Copie a **impressão digital** (Thumbprint) do certificado gerado.
+`integration_test/e2e/` usa a API real informada por flags. Execute diretamente
+com o Flutter em Windows, Linux ou macOS, com um Android conectado e autorizado:
 
-### 2. Atualizar a impressão digital no `.csproj`
-
-Em `CoreventApp.csproj`, substitua `PackageCertificateThumbprint` pela sua impressão digital:
-
-```xml
-<PropertyGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows' and '$(Configuration)' == 'Release'">
-  <WindowsPackageType>MSIX</WindowsPackageType>
-  <AppxPackageSigningEnabled>true</AppxPackageSigningEnabled>
-  <PackageCertificateThumbprint>SEU_THUMBPRINT_AQUI</PackageCertificateThumbprint>
-</PropertyGroup>
+```sh
+flutter devices
+flutter test integration_test/e2e/all_test.dart -d ID_DO_DISPOSITIVO --flavor integration --dart-define=COREVENT_API_URL=https://URL_DA_API/ --dart-define=COREVENT_E2E_EMAIL=EMAIL --dart-define=COREVENT_E2E_PASSWORD=SENHA --dart-define=COREVENT_E2E_EVENT_ID=ID_RETORNADO --dart-define="COREVENT_E2E_FREE_TICKET_NAME=NOME_RETORNADO"
 ```
 
-### 3. Publicar
+Não há arquivo JSON de configuração nem runner PowerShell para os E2E.
+O preparador deve ser executado no projeto da API antes da suíte. Ele garante
+a conta E2E, usa essa conta como organizadora e compradora e cria um evento
+aberto, pesquisável e avaliável, sem favorito ou
+avaliação anteriores da conta, com tipos de ingresso gratuito e pago. Também
+deve criar um pedido pago e um ingresso ativo com QR para a conta. O tipo
+gratuito deve ter nome único no evento e estoque para novas compras.
 
-```bash
-dotnet publish -f net10.0-windows10.0.19041.0 -c Release -p:RuntimeIdentifierOverride=win-x64
-```
+O preparador retorna um log estruturado com `eventId` e `freeTicketName`.
+Use esses valores nas flags `COREVENT_E2E_EVENT_ID` e
+`COREVENT_E2E_FREE_TICKET_NAME`. O mesmo evento atende a busca, favoritos,
+avaliação e compra; não são necessários IDs separados. A preparação pertence
+à API e ainda não é executada pelo Flutter.
 
-O `.msix` será gerado em:
-```
-bin\Release\net10.0-windows10.0.19041.0\win-x64\AppPackages\CoreventApp_1.0.0.0_Test\
-```
+`all_test.dart` é o único arquivo descoberto como teste nessa pasta. Ele reúne
+os dez cenários em um build e uma instalação; os arquivos `*_scenarios.dart`
+mantêm os cenários separados sem serem executados novamente pela descoberta.
+O comando `flutter test integration_test/e2e` também usa esse único entrypoint.
 
-### 4. Instalar
+Para executar apenas um grupo, acrescente `--name` ao comando acima:
 
-Antes de instalar, confie no certificado:
+| Grupo | Comportamento | Filtro |
+| --- | --- | --- |
+| Somente leitura | Login, abas, sessão, busca, pedidos e QR | `--name "Somente leitura"` |
+| Reversíveis | Favorito, avaliação e edição de nome, restaurando o estado | `--name "Reversíveis"` |
+| Persistentes | Compra gratuita e upload de foto | `--name "Persistentes"` |
 
-1. Clique com o botão direito no `.msix` → **Propriedades**
-2. Guia **Assinaturas Digitais** → selecione o certificado → **Detalhes**
-3. **Exibir Certificado** → **Instalar Certificado...**
-4. Escolha **Computador Local** → **Avançar**
-5. Selecione **Colocar todos os certificados no repositório a seguir**
-6. **Procurar...** → **Pessoas Confiáveis** → **OK**
-7. **Avançar** → **Concluir**
+O filtro também aceita o nome de um cenário específico. Os testes validam a
+configuração antes das requisições. Os E2E podem gravar dados na API sem uma
+flag adicional de autorização. Antes de cada execução completa, o preparador
+restaura os dados da conta E2E, limpa os dados anteriores de teste associados
+e cria um novo evento, tipos de ingresso, pedido e ingresso com QR. Use os identificadores
+retornados nessa execução e uma conta dedicada sem privilégios. As credenciais
+passadas ao compilador podem estar presentes no APK de teste.
 
-Agora abra o `.msix` e clique em **Instalar**.
+Pagamento PagBank, cadastro e recuperação por e-mail e restauração após encerrar
+o processo são verificações manuais com API real. Para a restauração: faça login,
+encerre o app pelo Android, reabra e confirme que a sessão e o perfil retornam;
+depois faça logout, reabra e confirme que a sessão permanece encerrada.
 
-> **Nota:** Um certificado autoassinado só funciona em máquinas que o trustam. Para distribuição pública, use um certificado de uma AC confiável.
+O flavor `integration` instala um aplicativo separado, com sufixo
+`.integration`, e mantém os dados da instalação normal. Os comandos usuais de
+execução e build usam o flavor `production` por padrão.
 
-## Licença
+Os testes limpam apenas as chaves de sessão do aplicativo de integração.
 
-MIT
+### GitHub Actions
+
+O workflow **Tests** verifica formatação, análise, unitários/widgets/contratos e
+integração Android com fixtures em PRs e pushes para `main` e `develop`.
+O workflow **Staging E2E** é manual: executa a preparação no GCP, captura os dados
+dessa execução e roda a suíte no emulador Android.
+
+Configuração do Environment `staging`, autenticação e relatórios:
+[guia de CI](.github/README.md).
