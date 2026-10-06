@@ -11,6 +11,7 @@ import 'package:intl/date_symbol_data_local.dart';
 
 import '../support/app_harness.dart';
 import '../support/fixture_backend.dart';
+import '../support/ui_actions.dart';
 
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
@@ -28,9 +29,13 @@ void main() {
 
     unawaited(container.read(routerProvider).push('/profile/details'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Editar'));
+    await tapFixture(tester, find.text('Editar'));
     await tester.pumpAndSettle();
-    await tester.enterText(find.byType(TextField).first, 'Ana Integração');
+    await enterFixtureText(
+      tester,
+      find.byType(TextField).first,
+      'Ana Integração',
+    );
     await tester.pumpAndSettle();
     final draft = container.read(detailsViewModelProvider);
     expect(draft.name, 'Ana Integração');
@@ -44,7 +49,7 @@ void main() {
           .onPressed,
       isNotNull,
     );
-    await tester.tap(find.text('Salvar alterações'));
+    await tapFixture(tester, find.text('Salvar alterações'));
     await tester.pumpAndSettle();
     expect(backend.updateProfileCalls, 1);
     expect(backend.profileName, 'Ana Integração');
@@ -54,10 +59,22 @@ void main() {
     await tester.pumpAndSettle();
     unawaited(container.read(routerProvider).push('/profile/security'));
     await tester.pumpAndSettle();
-    await tester.enterText(find.byType(TextField).at(0), 'SenhaAntiga1!');
-    await tester.enterText(find.byType(TextField).at(1), 'NovaSenha123!');
-    await tester.enterText(find.byType(TextField).at(2), 'NovaSenha123!');
-    await tester.tap(find.text('Alterar senha'));
+    await enterFixtureText(
+      tester,
+      find.byType(TextField).at(0),
+      'SenhaAntiga1!',
+    );
+    await enterFixtureText(
+      tester,
+      find.byType(TextField).at(1),
+      'NovaSenha123!',
+    );
+    await enterFixtureText(
+      tester,
+      find.byType(TextField).at(2),
+      'NovaSenha123!',
+    );
+    await tapFixture(tester, find.text('Alterar senha'));
     await tester.pumpAndSettle();
     expect(backend.changePasswordCalls, 1);
     backend.expectOnlySupportedRequests();

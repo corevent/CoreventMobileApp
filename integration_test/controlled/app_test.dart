@@ -10,6 +10,7 @@ import 'package:qr_flutter/qr_flutter.dart';
 
 import '../support/app_harness.dart';
 import '../support/fixture_backend.dart';
+import '../support/ui_actions.dart';
 
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
@@ -26,12 +27,12 @@ void main() {
     var container = await openApp(tester, backend);
     expect(find.text('Já tenho uma conta'), findsOneWidget);
 
-    await tester.tap(find.text('Já tenho uma conta'));
+    await tapFixture(tester, find.text('Já tenho uma conta'));
     await tester.pumpAndSettle();
     final fields = find.byType(TextField);
-    await tester.enterText(fields.at(0), 'ana@integration.test');
-    await tester.enterText(fields.at(1), 'Senha1!');
-    await tester.tap(find.text('Entrar'));
+    await enterFixtureText(tester, fields.at(0), 'ana@integration.test');
+    await enterFixtureText(tester, fields.at(1), 'Senha1!');
+    await tapFixture(tester, find.text('Entrar'));
     await tester.pumpAndSettle();
     expect(find.text('Festival de integração'), findsWidgets);
     expect(
@@ -39,10 +40,10 @@ void main() {
       FixtureBackend.accessToken,
     );
 
-    await tester.tap(find.text('Explorar').last);
+    await tapFixture(tester, find.text('Explorar').last);
     await tester.pumpAndSettle();
     expect(find.text('Festival de integração'), findsWidgets);
-    await tester.tap(find.text('Perfil').last);
+    await tapFixture(tester, find.text('Perfil').last);
     await tester.pumpAndSettle();
     expect(find.text('Ana Teste'), findsOneWidget);
 
@@ -54,12 +55,12 @@ void main() {
       SessionStatus.authenticated,
     );
 
-    await tester.tap(find.text('Perfil').last);
+    await tapFixture(tester, find.text('Perfil').last);
     await tester.pumpAndSettle();
     await tester.ensureVisible(find.text('Sair da conta'));
-    await tester.tap(find.text('Sair da conta'));
+    await tapFixture(tester, find.text('Sair da conta'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Sair').last);
+    await tapFixture(tester, find.text('Sair').last);
     await tester.pumpAndSettle();
     expect(find.text('Já tenho uma conta'), findsOneWidget);
     expect(await fixtureStorage.read(key: TokenStore.accessKey), isNull);
@@ -78,22 +79,22 @@ void main() {
         .read(routerProvider)
         .go('/events/${FixtureBackend.eventId}/checkout');
     await tester.pumpAndSettle();
-    await tester.tap(find.byTooltip('Adicionar Inteira'));
+    await tapFixture(tester, find.byTooltip('Adicionar Inteira'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Continuar'));
+    await tapFixture(tester, find.text('Continuar'));
     await tester.pumpAndSettle();
     expect(backend.createOrderCalls, 1);
     expect(find.text('Aguardando pagamento'), findsOneWidget);
     expect(find.text('Ver meus ingressos'), findsNothing);
 
     backend.orderPaid = true;
-    await tester.tap(find.text('Atualizar status'));
+    await tapFixture(tester, find.text('Atualizar status'));
     await tester.pumpAndSettle();
     expect(find.text('Pedido confirmado'), findsOneWidget);
-    await tester.tap(find.text('Ver meus ingressos'));
+    await tapFixture(tester, find.text('Ver meus ingressos'));
     await tester.pumpAndSettle();
     expect(find.text('Ver QR Code'), findsOneWidget);
-    await tester.tap(find.text('Ver QR Code'));
+    await tapFixture(tester, find.text('Ver QR Code'));
     await tester.pumpAndSettle();
     expect(find.byType(QrImageView), findsOneWidget);
     await closeApp(tester, container);
@@ -104,7 +105,7 @@ void main() {
     final backend = FixtureBackend()..failNextEvents = true;
     final container = await openApp(tester, backend);
     expect(find.text('Eventos indisponíveis'), findsOneWidget);
-    await tester.tap(find.text('Tentar novamente').first);
+    await tapFixture(tester, find.text('Tentar novamente').first);
     await tester.pumpAndSettle();
     expect(find.text('Festival de integração'), findsWidgets);
     await closeApp(tester, container);

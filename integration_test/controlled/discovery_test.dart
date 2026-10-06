@@ -7,6 +7,7 @@ import 'package:intl/date_symbol_data_local.dart';
 
 import '../support/app_harness.dart';
 import '../support/fixture_backend.dart';
+import '../support/ui_actions.dart';
 
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
@@ -22,9 +23,9 @@ void main() {
     await seedSession();
     final backend = FixtureBackend();
     final container = await openApp(tester, backend);
-    await tester.tap(find.text('Explorar').last);
+    await tapFixture(tester, find.text('Explorar').last);
     await tester.pumpAndSettle();
-    await tester.enterText(find.byType(TextField).first, 'Festival');
+    await enterFixtureText(tester, find.byType(TextField).first, 'Festival');
     await tester.testTextInput.receiveAction(TextInputAction.search);
     await tester.pumpAndSettle();
     expect(
@@ -38,9 +39,20 @@ void main() {
 
     backend.failNextEventDetail = true;
     await tester.ensureVisible(find.text('Festival de integração').last);
-    await tester.tap(find.text('Festival de integração').last);
+    await tapFixture(tester, find.text('Festival de integração').last);
     await tester.pumpAndSettle();
     expect(find.text('Prévia do evento'), findsOneWidget);
+    // The description is built lazily below the banner on small displays.
+    await tester.scrollUntilVisible(
+      find.text('Não foi possível carregar a descrição deste evento.'),
+      120,
+      scrollable: find
+          .descendant(
+            of: find.byType(DraggableScrollableSheet),
+            matching: find.byType(Scrollable),
+          )
+          .first,
+    );
     expect(
       find.text('Não foi possível carregar a descrição deste evento.'),
       findsOneWidget,
@@ -50,7 +62,7 @@ void main() {
       160,
       scrollable: find.byType(Scrollable).last,
     );
-    await tester.tap(find.text('Tentar novamente').last);
+    await tapFixture(tester, find.text('Tentar novamente').last);
     await tester.pumpAndSettle();
     expect(find.text('Evento de integração'), findsOneWidget);
     backend.expectOnlySupportedRequests();
@@ -61,16 +73,16 @@ void main() {
     await seedSession();
     final backend = FixtureBackend();
     final container = await openApp(tester, backend);
-    await tester.tap(find.text('Explorar').last);
+    await tapFixture(tester, find.text('Explorar').last);
     await tester.pumpAndSettle();
     await tester.ensureVisible(find.text('Festival de integração').last);
-    await tester.tap(find.text('Festival de integração').last);
+    await tapFixture(tester, find.text('Festival de integração').last);
     await tester.pumpAndSettle();
     await tester.ensureVisible(find.text('Favoritar').last);
-    await tester.tap(find.text('Favoritar').last);
+    await tapFixture(tester, find.text('Favoritar').last);
     await tester.pumpAndSettle();
     expect(backend.favoriteSaved, isTrue);
-    await tester.tap(find.byTooltip('Fechar prévia'));
+    await tapFixture(tester, find.byTooltip('Fechar prévia'));
     await tester.pumpAndSettle();
     container.read(routerProvider).go('/profile/favorites');
     await tester.pumpAndSettle();
