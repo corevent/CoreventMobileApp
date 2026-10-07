@@ -32,6 +32,14 @@ suite is running: GitHub concurrency protects only workflows in this repository.
 
 ## GitHub configuration
 
+Android integration and E2E pin their runner to `ubuntu-24.04` and share
+`scripts/enable-kvm.sh`. The setup keeps the udev rule, waits briefly for udev,
+sets device permissions explicitly and retries availability/permissions up to
+10 times. Image version, kernel, user and KVM permissions are recorded in
+`reports/kvm-setup.log`, included in each workflow's result artifact even when
+setup fails. Pinning the OS version still allows updates to that runner image;
+it does not guarantee virtualization availability on every machine.
+
 In **Settings → Environments → staging**, add:
 
 | Type | Name | Value |
