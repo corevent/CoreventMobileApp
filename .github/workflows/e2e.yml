@@ -1,0 +1,104 @@
+name: Staging E2E
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+# Covers preparation and the entire suite using the shared E2E account.
+concurrency:
+  group: corevent-staging-e2e
+  cancel-in-progress: false
+
+jobs:
+  staging-e2e:
+    name: Prepare staging and run Android E2E
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    environment: staging
+    env:
+      GCP_PROJECT_ID: ${{ vars.GCP_PROJECT_ID }}
+      GCP_REGION: ${{ vars.GCP_REGION }}
+      GCP_PREPARE_JOB: ${{ vars.GCP_PREPARE_JOB }}
+      COREVENT_API_URL: ${{ vars.COREVENT_API_URL }}
+    steps:
+      - uses: actions/checkout@v6
+      - name: Validate configuration
+        env:
+          GCP_WIF_PROVIDER: ${{ vars.GCP_WIF_PROVIDER }}
+          GCP_SERVICE_ACCOUNT: ${{ vars.GCP_SERVICE_ACCOUNT }}
+          COREVENT_E2E_EMAIL: ${{ secrets.COREVENT_E2E_EMAIL }}
+          COREVENT_E2E_PASSWORD: ${{ secrets.COREVENT_E2E_PASSWORD }}
+        run: |
+          for key in GCP_PROJECT_ID GCP_REGION GCP_PREPARE_JOB GCP_WIF_PROVIDER GCP_SERVICE_ACCOUNT COREVENT_API_URL COREVENT_E2E_EMAIL COREVENT_E2E_PASSWORD; do
+            if [[ -z "${!key}" ]]; then
+              echo "::error::Missing staging configuration: $key"
+              exit 1
+            fi
+          done
+          [[ "$COREVENT_API_URL" == https://* ]] || { echo '::error::Staging API must use HTTPS'; exit 1; }
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.47.5'
+          channel: stable
+          cache: true
+      - uses: gradle/actions/setup-gradle@v5
+      - run: flutter pub get
+      - run: dart run build_runner build --delete-conflicting-outputs
+      - uses: google-github-actions/auth@v3
+        with:
+          project_id: ${{ env.GCP_PROJECT_ID }}
+          workload_identity_provider: ${{ vars.GCP_WIF_PROVIDER }}
+          service_account: ${{ vars.GCP_SERVICE_ACCOUNT }}
+      - uses: google-github-actions/setup-gcloud@v3
+      - name: Prepare staging and read this execution's result
+        id: prepare
+        env:
+          COREVENT_E2E_EMAIL: ${{ secrets.COREVENT_E2E_EMAIL }}
+        run: python3 .github/scripts/prepare_e2e.py
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+          test -r /dev/kvm && test -w /dev/kvm
+      - name: Run all E2E scenarios
+        id: tests
+        uses: reactivecircus/android-emulator-runner@v2
+        env:
+          COREVENT_E2E_EMAIL: ${{ secrets.COREVENT_E2E_EMAIL }}
+          COREVENT_E2E_PASSWORD: ${{ secrets.COREVENT_E2E_PASSWORD }}
+          COREVENT_E2E_EVENT_ID: ${{ steps.prepare.outputs.event_id }}
+          COREVENT_E2E_FREE_TICKET_NAME: ${{ steps.prepare.outputs.free_ticket_name }}
+        with:
+          api-level: 33
+          target: google_apis
+          arch: x86_64
+          disable-animations: true
+          script: bash .github/scripts/run-android-tests.sh e2e
+      - name: Summarize run
+        if: always()
+        env:
+          PREPARE_RESULT: ${{ steps.prepare.outcome }}
+          TEST_RESULT: ${{ steps.tests.outcome }}
+        run: |
+          {
+            echo '## Staging E2E'
+            echo "Preparation: $PREPARE_RESULT"
+            echo "Android E2E: $TEST_RESULT"
+            echo 'See the staging-e2e-results artifact for logs and structured results.'
+          } >> "$GITHUB_STEP_SUMMARY"
+      - name: Publish results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: staging-e2e-results
+          path: reports/
+          retention-days: 7
+          if-no-files-found: ignore

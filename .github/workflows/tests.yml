@@ -1,0 +1,95 @@
+name: Tests
+
+on:
+  pull_request:
+  push:
+    branches: [main, develop]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: tests-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  FLUTTER_VERSION: '3.47.5'
+
+jobs:
+  unit-tests:
+    name: Unit, widget and contract tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v6
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - name: Check CI preparation parser
+        run: python3 -m unittest discover -s .github/scripts -p 'test_*.py'
+      - name: Check formatting
+        run: dart tool/format.dart --check
+      - name: Generate code
+        run: dart run build_runner build --delete-conflicting-outputs
+      - run: flutter analyze
+      - name: Run tests with coverage
+        run: |
+          mkdir -p reports
+          set -o pipefail
+          flutter test test --no-pub --coverage --reporter expanded --file-reporter=json:reports/unit.jsonl 2>&1 | tee reports/unit.log
+      - name: Publish results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: unit-results
+          path: |
+            reports/
+            coverage/lcov.info
+          retention-days: 14
+          if-no-files-found: ignore
+
+  android-integration:
+    name: Android integration with fixtures
+    needs: unit-tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+      - uses: gradle/actions/setup-gradle@v5
+      - run: flutter pub get
+      - run: dart run build_runner build --delete-conflicting-outputs
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+          test -r /dev/kvm && test -w /dev/kvm
+      - name: Run Android integration
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 33
+          target: google_apis
+          arch: x86_64
+          disable-animations: true
+          script: bash .github/scripts/run-android-tests.sh controlled
+      - name: Publish results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-integration-results
+          path: reports/
+          retention-days: 14
+          if-no-files-found: ignore
