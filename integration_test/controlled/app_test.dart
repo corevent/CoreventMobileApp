@@ -35,7 +35,7 @@ void main() {
     await enterFixtureText(tester, fields.at(1), 'Senha1!');
     await tapFixture(tester, find.text('Entrar'));
     await tester.pumpAndSettle();
-    expect(find.text('Festival de integração'), findsWidgets);
+    await _waitForText(tester, 'Festival de integração');
     expect(
       await fixtureStorage.read(key: TokenStore.accessKey),
       FixtureBackend.accessToken,
