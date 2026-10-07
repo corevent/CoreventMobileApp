@@ -8,6 +8,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'live_login_pacer.dart';
 import 'live_ui_actions.dart';
 
 export 'live_ui_actions.dart';
@@ -21,6 +22,7 @@ const e2eFreeTicketName = String.fromEnvironment(
 );
 
 const _storage = FlutterSecureStorage();
+final _loginPacer = LiveLoginPacer();
 
 void validateLiveConfiguration({
   bool needsEvent = false,
@@ -117,7 +119,7 @@ Future<void> loginLive(WidgetTester tester, ProviderContainer container) async {
   final fields = find.byType(TextField);
   await enterLiveText(tester, fields.at(0), e2eEmail);
   await enterLiveText(tester, fields.at(1), e2ePassword);
-  await tapLive(tester, find.text('Entrar'));
+  await submitLiveLogin(tester);
   await waitForLiveLogin(tester, container);
 }
 
@@ -126,6 +128,11 @@ Future<void> openLiveLogin(WidgetTester tester) async {
   await waitForLiveControl(tester, find.text('Bem-vindo de volta!'));
   await waitForLiveControl(tester, find.byType(TextField));
   expect(find.byType(TextField), findsNWidgets(2));
+}
+
+Future<void> submitLiveLogin(WidgetTester tester) async {
+  await _loginPacer.beforeSubmit();
+  await tapLive(tester, find.text('Entrar'));
 }
 
 Future<void> pumpUntil(

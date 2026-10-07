@@ -68,7 +68,7 @@ void registerReadOnlyTests() {
         find.byType(TextField).at(1),
         'senha-incorreta-e2e',
       );
-      await tapLive(tester, find.text('Entrar'));
+      await submitLiveLogin(tester);
       await pumpUntil(tester, () {
         final login = container.read(loginViewModelProvider);
         return !login.busy && login.error != null;
@@ -79,7 +79,7 @@ void registerReadOnlyTests() {
         SessionStatus.unauthenticated,
       );
       await enterLiveText(tester, find.byType(TextField).at(1), e2ePassword);
-      await tapLive(tester, find.text('Entrar'));
+      await submitLiveLogin(tester);
       await waitForLiveLogin(tester, container);
     } finally {
       await closeLiveApp(tester, container);

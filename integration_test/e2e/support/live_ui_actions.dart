@@ -19,16 +19,42 @@ class _LiveEdgeFinder extends ChainedFinder {
       : parentCandidates.take(1);
 }
 
-/// Selects the vertical list in a page or panel, excluding horizontal chips.
-Finder liveScrollable(Type scope) => find.descendant(
-  of: find.byType(scope),
-  matching: find.byWidgetPredicate(
-    (widget) =>
-        widget is Scrollable &&
-        (widget.axisDirection == AxisDirection.down ||
-            widget.axisDirection == AxisDirection.up),
+/// Selects the page's list, excluding chips and nested text/field scrollables.
+Finder liveScrollable(Type scope) => _LiveOuterScrollableFinder(
+  find.descendant(
+    of: find.byType(scope),
+    matching: find.byWidgetPredicate(
+      (widget) =>
+          widget is Scrollable &&
+          (widget.axisDirection == AxisDirection.down ||
+              widget.axisDirection == AxisDirection.up),
+    ),
   ),
 );
+
+class _LiveOuterScrollableFinder extends ChainedFinder {
+  _LiveOuterScrollableFinder(super.parent);
+
+  @override
+  String get description =>
+      '${parent.describeMatch(Plurality.many)} (outermost scrollable)';
+
+  @override
+  Iterable<Element> filter(Iterable<Element> parentCandidates) sync* {
+    final candidates = parentCandidates.toSet();
+    for (final element in candidates) {
+      var nested = false;
+      element.visitAncestorElements((ancestor) {
+        if (candidates.contains(ancestor)) {
+          nested = true;
+          return false;
+        }
+        return true;
+      });
+      if (!nested) yield element;
+    }
+  }
+}
 
 Future<void> waitForLiveControl(WidgetTester tester, Finder target) async {
   for (var attempt = 0; attempt < 100; attempt++) {
