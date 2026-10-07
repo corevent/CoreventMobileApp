@@ -136,3 +136,7 @@ dessa execução e roda a suíte no emulador Android.
 
 Configuração do Environment `staging`, autenticação e relatórios:
 [guia de CI](.github/README.md).
+
+O workflow **Development APK** publica um APK debug da `develop`, conectado à
+API staging, em uma pré-release no GitHub. O aplicativo usa o sufixo
+`.development` para ficar separado da instalação de produção.

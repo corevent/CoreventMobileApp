@@ -2,6 +2,18 @@
 
 ## Workflows
 
+- **Development APK** (`workflows/development-apk.yml`): runs on pushes to
+  `develop` and manual dispatch on that branch. Generates code, runs analysis
+  and unit/widget tests, builds a debug APK with the `development` flavor,
+  then publishes a GitHub pre-release with the APK and its SHA-256 checksum.
+  It uses `COREVENT_API_URL` from the `staging` Environment and requires no
+  signing secrets or GCP authentication. The `.development` application ID
+  keeps its installation and session separate from production and integration.
+  Each run creates a `dev-RUN-ATTEMPT` tag; production releases remain unchanged.
+  Download `corevent-development.apk` from **Releases**. Android integration
+  remains in the Tests workflow; this publication does not wait for that workflow.
+  GitHub runners generate debug signing keys, so installing another build can
+  require uninstalling the previous development app, which clears its local data.
 - **Tests** (`workflows/tests.yml`): runs on pull requests, pushes to `main` or
   `develop`, and manual dispatch. Checks formatting, generation, analysis, unit,
   widget and contract tests, then Android integration with fixtures. No API or

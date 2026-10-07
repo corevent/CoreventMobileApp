@@ -35,6 +35,10 @@ android {
         create("production") {
             dimension = "environment"
         }
+        create("development") {
+            dimension = "environment"
+            applicationIdSuffix = ".development"
+        }
         create("integration") {
             dimension = "environment"
             applicationIdSuffix = ".integration"

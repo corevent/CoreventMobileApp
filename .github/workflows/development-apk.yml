@@ -1,0 +1,66 @@
+name: Development APK
+
+on:
+  push:
+    branches: [develop]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: development-apk
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    if: github.ref == 'refs/heads/develop'
+    name: Publish development APK
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    environment: staging
+    env:
+      COREVENT_API_URL: ${{ vars.COREVENT_API_URL }}
+    steps:
+      - uses: actions/checkout@v6
+      - name: Validate staging API
+        run: |
+          [[ "$COREVENT_API_URL" == https://* ]] || { echo '::error::Configure COREVENT_API_URL in the staging Environment'; exit 1; }
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.47.5'
+          channel: stable
+          cache: true
+      - uses: gradle/actions/setup-gradle@v5
+      - run: flutter pub get
+      - run: dart run build_runner build --delete-conflicting-outputs
+      - run: flutter analyze
+      - run: flutter test test --no-pub
+      - name: Build development APK
+        run: |
+          flutter build apk --debug --flavor development --no-pub \
+            --build-number="$GITHUB_RUN_NUMBER" \
+            --dart-define="COREVENT_API_URL=$COREVENT_API_URL"
+      - name: Package APK and checksum
+        run: |
+          mkdir -p dist
+          cp build/app/outputs/flutter-apk/app-development-debug.apk dist/corevent-development.apk
+          cd dist
+          sha256sum corevent-development.apk > corevent-development.apk.sha256
+      - name: Publish development pre-release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          tag="dev-${GITHUB_RUN_NUMBER}-${GITHUB_RUN_ATTEMPT}"
+          printf 'APK de desenvolvimento conectado à API staging.\n\nCommit: %s\nModo: debug\nApplication ID: com.example.corevent_mobile_app.development\n' "$GITHUB_SHA" > "$RUNNER_TEMP/development-notes.md"
+          gh release create "$tag" \
+            dist/corevent-development.apk \
+            dist/corevent-development.apk.sha256 \
+            --target "$GITHUB_SHA" --prerelease --latest=false \
+            --title "Development build ${GITHUB_RUN_NUMBER}.${GITHUB_RUN_ATTEMPT}" \
+            --notes-file "$RUNNER_TEMP/development-notes.md"
