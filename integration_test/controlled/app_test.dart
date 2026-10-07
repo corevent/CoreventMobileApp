@@ -1,6 +1,7 @@
 import 'package:corevent_mobile_app/app/router.dart';
 import 'package:corevent_mobile_app/core/storage/token_store.dart';
 import 'package:corevent_mobile_app/features/auth/presentation/auth_session.dart';
+import 'package:corevent_mobile_app/features/profile/presentation/profile_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -57,9 +58,17 @@ void main() {
 
     await tapFixture(tester, find.text('Perfil').last);
     await tester.pumpAndSettle();
-    await tester.ensureVisible(find.text('Sair da conta'));
+    await tester.scrollUntilVisible(
+      find.text('Sair da conta'),
+      160,
+      scrollable: find.descendant(
+        of: find.byType(ProfilePage),
+        matching: find.byType(Scrollable),
+      ),
+    );
     await tapFixture(tester, find.text('Sair da conta'));
     await tester.pumpAndSettle();
+    expect(find.text('Sair da conta?'), findsOneWidget);
     await tapFixture(tester, find.text('Sair').last);
     await tester.pumpAndSettle();
     expect(find.text('Já tenho uma conta'), findsOneWidget);
