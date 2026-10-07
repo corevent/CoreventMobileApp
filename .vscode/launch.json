@@ -1,0 +1,17 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Corevent Development (Staging)",
+      "type": "dart",
+      "request": "launch",
+      "program": "lib/main.dart",
+      "flutterMode": "debug",
+      "toolArgs": [
+        "--flavor",
+        "development",
+        "--dart-define=COREVENT_API_URL=https://corevent-staging-api-666040325433.us-central1.run.app"
+      ]
+    }
+  ]
+}
