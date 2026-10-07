@@ -1,6 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+/// Native storage and HTTP futures can finish after scheduled frames settle.
+Future<void> waitForFixtureText(WidgetTester tester, String value) async {
+  for (
+    var attempt = 0;
+    attempt < 100 && find.text(value).evaluate().isEmpty;
+    attempt++
+  ) {
+    await tester.pump(const Duration(milliseconds: 100));
+  }
+  expect(
+    find.text(value),
+    findsWidgets,
+    reason: 'A tela deve apresentar "$value" após a operação assíncrona.',
+  );
+}
+
 /// Scrolls mounted controls away from fixed footers before touching them.
 Future<void> tapFixture(WidgetTester tester, Finder target) async {
   FocusManager.instance.primaryFocus?.unfocus();
