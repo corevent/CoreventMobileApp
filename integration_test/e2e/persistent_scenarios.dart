@@ -1,8 +1,12 @@
 import 'package:corevent_mobile_app/app/router.dart';
 import 'package:corevent_mobile_app/features/auth/presentation/auth_session.dart';
+import 'package:corevent_mobile_app/features/checkout/presentation/checkout_page.dart';
 import 'package:corevent_mobile_app/features/checkout/presentation/checkout_view_model.dart';
 import 'package:corevent_mobile_app/features/profile/data/avatar_picker.dart';
+import 'package:corevent_mobile_app/features/profile/presentation/profile_details_page.dart';
 import 'package:corevent_mobile_app/features/tickets/data/tickets_repository.dart';
+import 'package:corevent_mobile_app/features/tickets/presentation/tickets_page.dart';
+import 'package:corevent_mobile_app/features/tickets/presentation/tickets_view_model.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -50,10 +54,14 @@ void registerPersistentTests() {
       expect(freeTypes, hasLength(1));
       final free = freeTypes.single;
       expect(free.availableQuantity, greaterThan(0));
-      await tester.tap(find.byTooltip('Adicionar ${free.name}'));
+      await tapLive(
+        tester,
+        find.byTooltip('Adicionar ${free.name}'),
+        scrollable: liveScrollable(CheckoutPage),
+      );
       await tester.pumpAndSettle();
       expect(container.read(checkoutViewModelProvider).count, 1);
-      await tester.tap(find.text('Continuar'));
+      await tapLive(tester, find.text('Continuar'));
       await pumpUntil(
         tester,
         () =>
@@ -71,9 +79,18 @@ void registerPersistentTests() {
       );
       await tester.pumpAndSettle();
       expect(find.text('Pedido confirmado'), findsOneWidget);
-      await tester.tap(find.text('Ver meus ingressos'));
+      await tapLive(tester, find.text('Ver meus ingressos'));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Ver QR Code').first);
+      await pumpUntil(
+        tester,
+        () => !container.read(ticketsViewModelProvider).loading,
+      );
+      expect(container.read(ticketsViewModelProvider).error, isNull);
+      await tapLive(
+        tester,
+        liveFirst(find.text('Ver QR Code')),
+        scrollable: liveScrollable(TicketsPage),
+      );
       await tester.pumpAndSettle();
       expect(find.byType(QrImageView), findsOneWidget);
     } finally {
@@ -95,17 +112,21 @@ void registerPersistentTests() {
       final before = container.read(authSessionProvider).user?.avatarUrl;
       container.read(routerProvider).go('/profile/details');
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Alterar foto'));
+      await tapLive(
+        tester,
+        find.text('Alterar foto'),
+        scrollable: liveScrollable(ProfileDetailsPage),
+      );
       await pumpUntil(
         tester,
         () => find.text('Continuar').evaluate().isNotEmpty,
       );
-      await tester.tap(find.text('Continuar'));
+      await tapLive(tester, find.text('Continuar'));
       await pumpUntil(
         tester,
         () => find.text('Salvar foto').evaluate().isNotEmpty,
       );
-      await tester.tap(find.text('Salvar foto'));
+      await tapLive(tester, find.text('Salvar foto'));
       await pumpUntil(
         tester,
         () =>

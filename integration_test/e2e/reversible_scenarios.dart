@@ -1,11 +1,14 @@
 import 'package:corevent_mobile_app/app/router.dart';
 import 'package:corevent_mobile_app/features/auth/presentation/auth_session.dart';
 import 'package:corevent_mobile_app/features/events/data/events_repository.dart';
+import 'package:corevent_mobile_app/features/explore/presentation/explore_page.dart';
 import 'package:corevent_mobile_app/features/explore/presentation/explore_view_model.dart';
 import 'package:corevent_mobile_app/features/favorites/data/favorites_repository.dart';
 import 'package:corevent_mobile_app/features/favorites/presentation/event_favorites_view_model.dart';
+import 'package:corevent_mobile_app/features/favorites/presentation/favorites_page.dart';
 import 'package:corevent_mobile_app/features/favorites/presentation/favorites_view_model.dart';
 import 'package:corevent_mobile_app/features/profile/data/profile_repository.dart';
+import 'package:corevent_mobile_app/features/profile/presentation/profile_details_page.dart';
 import 'package:corevent_mobile_app/features/profile/presentation/profile_forms_view_model.dart';
 import 'package:corevent_mobile_app/features/ratings/data/ratings_repository.dart';
 import 'package:corevent_mobile_app/features/ratings/presentation/event_ratings_view_model.dart';
@@ -26,7 +29,7 @@ Future<void> _openPreview(
   final event = await container.read(eventsRepositoryProvider).detail(eventId);
   container.read(routerProvider).go('/explore');
   await tester.pumpAndSettle();
-  await enterLiveText(tester, find.byType(TextField).first, event.title);
+  await enterLiveText(tester, liveFirst(find.byType(TextField)), event.title);
   await tester.testTextInput.receiveAction(TextInputAction.search);
   await pumpUntil(
     tester,
@@ -37,9 +40,8 @@ Future<void> _openPreview(
     isTrue,
     reason: 'O evento de E2E deve estar aberto e pesquisável.',
   );
-  final card = find.text(event.title).last;
-  await tester.ensureVisible(card);
-  await tester.tap(card);
+  final card = liveLast(find.text(event.title));
+  await tapLive(tester, card, scrollable: liveScrollable(ExplorePage));
   await tester.pumpAndSettle();
   expect(find.text('Prévia do evento'), findsOneWidget);
 }
@@ -47,25 +49,12 @@ Future<void> _openPreview(
 Future<void> _tapPreviewAction(WidgetTester tester, String label) async {
   final sheet = find.byType(DraggableScrollableSheet);
   expect(sheet, findsOneWidget);
-  final scrollable = find.descendant(
-    of: sheet,
-    matching: find.byType(Scrollable),
-  );
   final action = find.descendant(of: sheet, matching: find.text(label));
-  for (
-    var attempt = 0;
-    attempt < 30 && action.hitTestable().evaluate().isEmpty;
-    attempt++
-  ) {
-    await tester.drag(scrollable, const Offset(0, -150));
-    await tester.pumpAndSettle();
-  }
-  expect(
-    action.hitTestable(),
-    findsOneWidget,
-    reason: 'A ação deve estar visível e tocável dentro da prévia.',
+  await tapLive(
+    tester,
+    action,
+    scrollable: liveScrollable(DraggableScrollableSheet),
   );
-  await tester.tap(action.hitTestable());
   await tester.pumpAndSettle();
 }
 
@@ -110,9 +99,8 @@ void registerReversibleTests() {
         return state.loaded || state.error != null;
       });
       expect(container.read(eventFavoritesViewModelProvider).error, isNull);
-      await tester.ensureVisible(find.text('Favoritar').last);
       attemptedCreate = true;
-      await tester.tap(find.text('Favoritar').last);
+      await _tapPreviewAction(tester, 'Favoritar');
       await tester.pump();
       await pumpUntil(
         tester,
@@ -126,7 +114,7 @@ void registerReversibleTests() {
       expect(saved, hasLength(1));
       final createdId = saved.single.favoriteId;
       expect(createdId, isNotNull);
-      await tester.tap(find.byTooltip('Fechar prévia'));
+      await tapLive(tester, find.byTooltip('Fechar prévia'));
       await tester.pumpAndSettle();
       container.read(routerProvider).go('/profile/favorites');
       await tester.pumpAndSettle();
@@ -139,10 +127,9 @@ void registerReversibleTests() {
       final remove = find.byTooltip(
         'Remover ${saved.single.title} dos favoritos',
       );
-      await tester.ensureVisible(remove);
-      await tester.tap(remove);
+      await tapLive(tester, remove, scrollable: liveScrollable(FavoritesPage));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Remover').last);
+      await tapLive(tester, liveLast(find.text('Remover')));
       await tester.pump();
       await pumpUntil(
         tester,
@@ -182,17 +169,21 @@ void registerReversibleTests() {
       originalPhone = original.phoneNumber;
       container.read(routerProvider).go('/profile/details');
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Editar'));
+      await tapLive(
+        tester,
+        find.text('Editar'),
+        scrollable: liveScrollable(ProfileDetailsPage),
+      );
       await tester.pumpAndSettle();
       const changed = 'Corevent E2E Temporário';
-      await enterLiveText(tester, find.byType(TextField).first, changed);
+      await enterLiveText(tester, liveFirst(find.byType(TextField)), changed);
       final saveButton = find.widgetWithText(
         ElevatedButton,
         'Salvar alterações',
       );
       expect(tester.widget<ElevatedButton>(saveButton).onPressed, isNotNull);
       attemptedSave = true;
-      await tester.tap(find.text('Salvar alterações'));
+      await tapLive(tester, find.text('Salvar alterações'));
       await pumpUntil(
         tester,
         () =>
@@ -231,10 +222,10 @@ void registerReversibleTests() {
       await _openPreview(tester, container, e2eEventId);
       // The section is built lazily by the panel's ListView.
       await _tapPreviewAction(tester, 'Avaliar evento');
-      await tester.tap(find.byTooltip('Selecionar 4 estrelas'));
+      await tapLive(tester, find.byTooltip('Selecionar 4 estrelas'));
       await tester.pump();
       attemptedCreate = true;
-      await tester.tap(find.text('Salvar avaliação'));
+      await tapLive(tester, find.text('Salvar avaliação'));
       await _waitForRatingWrite(tester, container);
       final created = await ratings.list(1);
       final match = created.data.where((r) => r.eventId == e2eEventId);
@@ -245,9 +236,9 @@ void registerReversibleTests() {
           ?.ratingId;
       expect(createdId, isNotNull);
       await _tapPreviewAction(tester, 'Editar avaliação');
-      await tester.tap(find.byTooltip('Selecionar 5 estrelas'));
+      await tapLive(tester, find.byTooltip('Selecionar 5 estrelas'));
       await tester.pump();
-      await tester.tap(find.text('Salvar avaliação'));
+      await tapLive(tester, find.text('Salvar avaliação'));
       await _waitForRatingWrite(tester, container);
       final edited = await ratings.list(1);
       expect(
@@ -255,9 +246,9 @@ void registerReversibleTests() {
         5,
       );
       await _tapPreviewAction(tester, 'Editar avaliação');
-      await tester.tap(find.text('Remover avaliação'));
+      await tapLive(tester, find.text('Remover avaliação'));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Remover').last);
+      await tapLive(tester, liveLast(find.text('Remover')));
       await _waitForRatingWrite(tester, container);
       final removed = await ratings.list(1);
       expect(removed.data.any((r) => r.eventId == e2eEventId), isFalse);

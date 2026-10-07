@@ -5,8 +5,11 @@ import 'package:corevent_mobile_app/features/auth/presentation/auth_session.dart
 import 'package:corevent_mobile_app/features/auth/presentation/login_view_model.dart';
 import 'package:corevent_mobile_app/features/events/data/events_repository.dart';
 import 'package:corevent_mobile_app/features/events/domain/event_catalog.dart';
+import 'package:corevent_mobile_app/features/explore/presentation/explore_page.dart';
 import 'package:corevent_mobile_app/features/explore/presentation/explore_view_model.dart';
 import 'package:corevent_mobile_app/features/profile/presentation/activity_view_model.dart';
+import 'package:corevent_mobile_app/features/profile/presentation/profile_page.dart';
+import 'package:corevent_mobile_app/features/tickets/presentation/tickets_page.dart';
 import 'package:corevent_mobile_app/features/tickets/presentation/tickets_view_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -31,15 +34,18 @@ void registerReadOnlyTests() {
       await loginLive(tester, container);
       expect(container.read(authSessionProvider).user?.email, e2eEmail);
       for (final tab in ['Explorar', 'Ingressos', 'Perfil', 'Início']) {
-        await tester.tap(find.text(tab).last);
+        await tapLive(tester, liveLast(find.text(tab)));
         await tester.pumpAndSettle();
       }
-      await tester.tap(find.text('Perfil').last);
+      await tapLive(tester, liveLast(find.text('Perfil')));
       await tester.pumpAndSettle();
-      await tester.ensureVisible(find.text('Sair da conta'));
-      await tester.tap(find.text('Sair da conta'));
+      await tapLive(
+        tester,
+        find.text('Sair da conta'),
+        scrollable: liveScrollable(ProfilePage),
+      );
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Sair').last);
+      await tapLive(tester, liveLast(find.text('Sair')));
       await pumpUntil(
         tester,
         () =>
@@ -55,15 +61,14 @@ void registerReadOnlyTests() {
   testWidgets('senha incorreta permite corrigir e entrar', (tester) async {
     final container = await openLiveApp(tester);
     try {
-      await tester.tap(find.text('Já tenho uma conta'));
-      await tester.pumpAndSettle();
+      await openLiveLogin(tester);
       await enterLiveText(tester, find.byType(TextField).at(0), e2eEmail);
       await enterLiveText(
         tester,
         find.byType(TextField).at(1),
         'senha-incorreta-e2e',
       );
-      await tester.tap(find.text('Entrar'));
+      await tapLive(tester, find.text('Entrar'));
       await pumpUntil(tester, () {
         final login = container.read(loginViewModelProvider);
         return !login.busy && login.error != null;
@@ -74,7 +79,7 @@ void registerReadOnlyTests() {
         SessionStatus.unauthenticated,
       );
       await enterLiveText(tester, find.byType(TextField).at(1), e2ePassword);
-      await tester.tap(find.text('Entrar'));
+      await tapLive(tester, find.text('Entrar'));
       await waitForLiveLogin(tester, container);
     } finally {
       await closeLiveApp(tester, container);
@@ -109,14 +114,18 @@ void registerReadOnlyTests() {
       final event = await container
           .read(eventsRepositoryProvider)
           .detail(e2eEventId);
-      await tester.tap(find.text('Explorar').last);
+      await tapLive(tester, liveLast(find.text('Explorar')));
       await tester.pumpAndSettle();
       await pumpUntil(
         tester,
         () => !container.read(exploreViewModelProvider).loading,
       );
       expect(container.read(exploreViewModelProvider).error, isNull);
-      await enterLiveText(tester, find.byType(TextField).first, event.title);
+      await enterLiveText(
+        tester,
+        liveFirst(find.byType(TextField)),
+        event.title,
+      );
       await tester.testTextInput.receiveAction(TextInputAction.search);
       await pumpUntil(
         tester,
@@ -129,14 +138,13 @@ void registerReadOnlyTests() {
         isTrue,
         reason: 'O evento de teste precisa estar aberto e pesquisável.',
       );
-      final card = find.text(event.title).last;
-      await tester.ensureVisible(card);
-      await tester.tap(card);
+      final card = liveLast(find.text(event.title));
+      await tapLive(tester, card, scrollable: liveScrollable(ExplorePage));
       await tester.pumpAndSettle();
       expect(find.text('Prévia do evento'), findsOneWidget);
-      await tester.tap(find.byTooltip('Fechar prévia'));
+      await tapLive(tester, find.byTooltip('Fechar prévia'));
       await tester.pumpAndSettle();
-      await tester.tap(find.byTooltip('Limpar busca'));
+      await tapLive(tester, find.byTooltip('Limpar busca'));
       await pumpUntil(
         tester,
         () => !container.read(exploreViewModelProvider).loading,
@@ -147,14 +155,17 @@ void registerReadOnlyTests() {
         ChoiceChip,
         EventCatalog.categoryLabel(event.category),
       );
-      await tester.ensureVisible(category);
-      await tester.tap(category);
+      await tapLive(tester, category);
       await pumpUntil(
         tester,
         () => !container.read(exploreViewModelProvider).loading,
       );
       expect(container.read(exploreViewModelProvider).category, event.category);
-      await enterLiveText(tester, find.byType(TextField).first, event.title);
+      await enterLiveText(
+        tester,
+        liveFirst(find.byType(TextField)),
+        event.title,
+      );
       await tester.testTextInput.receiveAction(TextInputAction.search);
       await pumpUntil(
         tester,
@@ -167,7 +178,7 @@ void registerReadOnlyTests() {
             .any((item) => item.id == e2eEventId),
         isTrue,
       );
-      await tester.tap(find.text('Limpar filtros').last);
+      await tapLive(tester, liveLast(find.text('Limpar filtros')));
       await pumpUntil(
         tester,
         () => !container.read(exploreViewModelProvider).loading,
@@ -176,7 +187,11 @@ void registerReadOnlyTests() {
 
       final impossible =
           'corevent-e2e-${DateTime.now().microsecondsSinceEpoch}';
-      await enterLiveText(tester, find.byType(TextField).first, impossible);
+      await enterLiveText(
+        tester,
+        liveFirst(find.byType(TextField)),
+        impossible,
+      );
       await tester.testTextInput.receiveAction(TextInputAction.search);
       await pumpUntil(
         tester,
@@ -184,15 +199,18 @@ void registerReadOnlyTests() {
       );
       expect(container.read(exploreViewModelProvider).events, isEmpty);
       expect(find.text('Nenhum evento encontrado'), findsOneWidget);
-      await tester.tap(find.text('Limpar filtros').last);
+      await tapLive(tester, liveLast(find.text('Limpar filtros')));
       await pumpUntil(
         tester,
         () => !container.read(exploreViewModelProvider).loading,
       );
       final pageBefore = container.read(exploreViewModelProvider).page;
       if (container.read(exploreViewModelProvider).hasMore) {
-        await tester.ensureVisible(find.text('Carregar mais eventos'));
-        await tester.tap(find.text('Carregar mais eventos'));
+        await tapLive(
+          tester,
+          find.text('Carregar mais eventos'),
+          scrollable: liveScrollable(ExplorePage),
+        );
         await pumpUntil(
           tester,
           () => !container.read(exploreViewModelProvider).loadingMore,
@@ -211,7 +229,7 @@ void registerReadOnlyTests() {
     final container = await openLiveApp(tester);
     try {
       await loginLive(tester, container);
-      await tester.tap(find.text('Ingressos').last);
+      await tapLive(tester, liveLast(find.text('Ingressos')));
       await pumpUntil(
         tester,
         () => !container.read(ticketsViewModelProvider).loading,
@@ -222,18 +240,20 @@ void registerReadOnlyTests() {
         isNotEmpty,
         reason: 'A conta de E2E precisa ter um ingresso ativo para testar QR.',
       );
-      final qrAction = find.text('Ver QR Code').first;
-      await tester.ensureVisible(qrAction);
-      await tester.tap(qrAction);
+      final qrAction = liveFirst(find.text('Ver QR Code'));
+      await tapLive(tester, qrAction, scrollable: liveScrollable(TicketsPage));
       await tester.pumpAndSettle();
       expect(find.byType(QrImageView), findsOneWidget);
-      await tester.tap(find.byTooltip('Voltar aos ingressos'));
+      await tapLive(tester, find.byTooltip('Voltar aos ingressos'));
       await tester.pumpAndSettle();
       expect(find.byType(QrImageView), findsNothing);
       container.read(routerProvider).go('/profile');
       await tester.pumpAndSettle();
-      await tester.ensureVisible(find.text('Pedidos'));
-      await tester.tap(find.text('Pedidos').hitTestable());
+      await tapLive(
+        tester,
+        find.text('Pedidos'),
+        scrollable: liveScrollable(ProfilePage),
+      );
       await pumpUntil(
         tester,
         () => !container.read(ordersViewModelProvider).loading,
@@ -244,7 +264,7 @@ void registerReadOnlyTests() {
         isNotEmpty,
         reason: 'A conta de E2E precisa ter ao menos um pedido.',
       );
-      await tester.tap(find.byType(ListTile).first);
+      await tapLive(tester, liveFirst(find.byType(ListTile)));
       await tester.pumpAndSettle();
       expect(find.text('Detalhes do pedido'), findsWidgets);
       unawaited(container.read(routerProvider).push('/profile/details'));

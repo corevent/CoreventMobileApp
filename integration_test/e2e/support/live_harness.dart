@@ -8,6 +8,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'live_ui_actions.dart';
+
+export 'live_ui_actions.dart';
+
 const _configuredUrl = String.fromEnvironment('COREVENT_API_URL');
 const e2eEmail = String.fromEnvironment('COREVENT_E2E_EMAIL');
 const e2ePassword = String.fromEnvironment('COREVENT_E2E_PASSWORD');
@@ -80,23 +84,6 @@ Future<void> closeLiveApp(
   tester.testTextInput.unregister();
 }
 
-Future<void> enterLiveText(
-  WidgetTester tester,
-  Finder field,
-  String value,
-) async {
-  await tester.enterText(field, value);
-  await tester.pump();
-  final editable = tester.widget<EditableText>(
-    find.descendant(of: field, matching: find.byType(EditableText)),
-  );
-  expect(
-    editable.controller.text == value,
-    isTrue,
-    reason: 'O campo deve receber o texto antes da próxima ação.',
-  );
-}
-
 Future<void> waitForLiveLogin(
   WidgetTester tester,
   ProviderContainer container,
@@ -126,13 +113,19 @@ Future<void> loginLive(WidgetTester tester, ProviderContainer container) async {
   final session = container.read(authSessionProvider);
   if (session.status == SessionStatus.authenticated) return;
   expect(session.status, SessionStatus.unauthenticated);
-  await tester.tap(find.text('Já tenho uma conta'));
-  await tester.pumpAndSettle();
+  await openLiveLogin(tester);
   final fields = find.byType(TextField);
   await enterLiveText(tester, fields.at(0), e2eEmail);
   await enterLiveText(tester, fields.at(1), e2ePassword);
-  await tester.tap(find.text('Entrar'));
+  await tapLive(tester, find.text('Entrar'));
   await waitForLiveLogin(tester, container);
+}
+
+Future<void> openLiveLogin(WidgetTester tester) async {
+  await tapLive(tester, find.text('Já tenho uma conta'));
+  await waitForLiveControl(tester, find.text('Bem-vindo de volta!'));
+  await waitForLiveControl(tester, find.byType(TextField));
+  expect(find.byType(TextField), findsNWidgets(2));
 }
 
 Future<void> pumpUntil(
