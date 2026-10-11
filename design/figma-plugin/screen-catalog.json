@@ -1,0 +1,307 @@
+[
+  {
+    "name": "01 · Início",
+    "source": "lib/features/home/presentation/home_page.dart",
+    "route": "/home"
+  },
+  {
+    "name": "02 · Explorar",
+    "source": "lib/features/explore/presentation/explore_page.dart",
+    "route": "/explore"
+  },
+  {
+    "name": "03 · Ingressos",
+    "source": "lib/features/tickets/presentation/tickets_page.dart",
+    "route": "/tickets"
+  },
+  {
+    "name": "04 · Perfil",
+    "source": "lib/features/profile/presentation/profile_page.dart",
+    "route": "/profile"
+  },
+  {
+    "name": "Splash",
+    "source": "lib/features/auth/presentation/authenticated_page.dart",
+    "route": "/loading"
+  },
+  {
+    "name": "Welcome",
+    "source": "lib/features/welcome/presentation/welcome_page.dart",
+    "route": "/"
+  },
+  {
+    "name": "Login",
+    "source": "lib/features/auth/presentation/login_page.dart",
+    "route": "/login"
+  },
+  {
+    "name": "Login · erro",
+    "source": "lib/features/auth/presentation/login_page.dart",
+    "route": "/login"
+  },
+  {
+    "name": "Login · enviando",
+    "source": "lib/features/auth/presentation/login_page.dart",
+    "route": "/login"
+  },
+  {
+    "name": "Cadastro · 1/4",
+    "source": "lib/features/auth/presentation/register_page.dart",
+    "route": "/register"
+  },
+  {
+    "name": "Cadastro · 2/4 · PF",
+    "source": "lib/features/auth/presentation/register_page.dart",
+    "route": "/register"
+  },
+  {
+    "name": "Cadastro · 2/4 · PJ",
+    "source": "lib/features/auth/presentation/register_page.dart",
+    "route": "/register"
+  },
+  {
+    "name": "Cadastro · 3/4 · PF",
+    "source": "lib/features/auth/presentation/register_page.dart",
+    "route": "/register"
+  },
+  {
+    "name": "Cadastro · 3/4 · PJ",
+    "source": "lib/features/auth/presentation/register_page.dart",
+    "route": "/register"
+  },
+  {
+    "name": "Cadastro · 4/4",
+    "source": "lib/features/auth/presentation/register_page.dart",
+    "route": "/register"
+  },
+  {
+    "name": "Verificação · cadastro",
+    "source": "lib/features/auth/presentation/verification_page.dart",
+    "route": "/verify/register"
+  },
+  {
+    "name": "Verificação · cadastro · código inválido",
+    "source": "lib/features/auth/presentation/verification_page.dart",
+    "route": "/verify/register"
+  },
+  {
+    "name": "Recuperar senha",
+    "source": "lib/features/auth/presentation/forgot_password_page.dart",
+    "route": "/forgot-password"
+  },
+  {
+    "name": "Verificação · recuperação",
+    "source": "lib/features/auth/presentation/verification_page.dart",
+    "route": "/verify/reset"
+  },
+  {
+    "name": "Redefinir senha",
+    "source": "lib/features/auth/presentation/reset_password_page.dart",
+    "route": "/reset-password"
+  },
+  {
+    "name": "Login · senha redefinida",
+    "source": "lib/features/auth/presentation/login_page.dart",
+    "route": "/login"
+  },
+  {
+    "name": "Sessão · falha de rede",
+    "source": "lib/features/auth/presentation/authenticated_page.dart",
+    "route": "/loading"
+  },
+  {
+    "name": "Prévia do evento",
+    "source": "lib/features/events/presentation/event_preview_sheet.dart",
+    "route": ""
+  },
+  {
+    "name": "Prévia · detalhes indisponíveis",
+    "source": "lib/features/events/presentation/event_preview_sheet.dart",
+    "route": ""
+  },
+  {
+    "name": "Explorar · resultados",
+    "source": "lib/features/explore/presentation/explore_page.dart",
+    "route": "/explore"
+  },
+  {
+    "name": "Escolher ingressos",
+    "source": "lib/features/checkout/presentation/checkout_page.dart",
+    "route": "/events/:id/checkout"
+  },
+  {
+    "name": "Aguardando pagamento",
+    "source": "lib/features/checkout/presentation/order_status_page.dart",
+    "route": "/orders/:id/status"
+  },
+  {
+    "name": "Pedido confirmado",
+    "source": "lib/features/checkout/presentation/order_status_page.dart",
+    "route": "/orders/:id/status"
+  },
+  {
+    "name": "Pedido cancelado",
+    "source": "lib/features/checkout/presentation/order_status_page.dart",
+    "route": "/orders/:id/status"
+  },
+  {
+    "name": "Detalhes do ingresso",
+    "source": "lib/features/tickets/presentation/ticket_detail_sheet.dart",
+    "route": ""
+  },
+  {
+    "name": "QR Code do ingresso",
+    "source": "lib/features/tickets/presentation/ticket_qr_page.dart",
+    "route": ""
+  },
+  {
+    "name": "QR Code · indisponível",
+    "source": "lib/features/tickets/presentation/ticket_qr_page.dart",
+    "route": ""
+  },
+  {
+    "name": "Pedidos",
+    "source": "lib/features/profile/presentation/activity_pages.dart",
+    "route": "/profile/orders"
+  },
+  {
+    "name": "Detalhes do pedido",
+    "source": "lib/features/profile/presentation/activity_pages.dart",
+    "route": "/profile/orders/:id"
+  },
+  {
+    "name": "Favoritos",
+    "source": "lib/features/favorites/presentation/favorites_page.dart",
+    "route": "/profile/favorites"
+  },
+  {
+    "name": "Avaliações",
+    "source": "lib/features/ratings/presentation/ratings_page.dart",
+    "route": "/profile/ratings"
+  },
+  {
+    "name": "Dados pessoais",
+    "source": "lib/features/profile/presentation/profile_details_page.dart",
+    "route": "/profile/details"
+  },
+  {
+    "name": "Dados pessoais · edição",
+    "source": "lib/features/profile/presentation/profile_details_page.dart",
+    "route": "/profile/details"
+  },
+  {
+    "name": "Ajustar foto",
+    "source": "lib/features/profile/presentation/avatar_editor_page.dart",
+    "route": ""
+  },
+  {
+    "name": "Prévia da foto",
+    "source": "lib/features/profile/presentation/avatar_editor_page.dart",
+    "route": ""
+  },
+  {
+    "name": "Foto · enviando",
+    "source": "lib/features/profile/presentation/avatar_editor_page.dart",
+    "route": ""
+  },
+  {
+    "name": "Segurança",
+    "source": "lib/features/profile/presentation/profile_form_pages.dart",
+    "route": "/profile/security"
+  },
+  {
+    "name": "Avaliar evento",
+    "source": "lib/features/ratings/presentation/rating_widgets.dart",
+    "route": ""
+  },
+  {
+    "name": "Editar avaliação",
+    "source": "lib/features/ratings/presentation/rating_widgets.dart",
+    "route": ""
+  },
+  {
+    "name": "Avaliação registrada · somente leitura",
+    "source": "lib/features/ratings/presentation/rating_widgets.dart",
+    "route": ""
+  },
+  {
+    "name": "Sair da conta · confirmação",
+    "source": "lib/features/profile/presentation/profile_page.dart",
+    "route": ""
+  },
+  {
+    "name": "Remover favorito · confirmação",
+    "source": "lib/features/favorites/presentation/favorites_page.dart",
+    "route": ""
+  },
+  {
+    "name": "Remover avaliação · confirmação",
+    "source": "lib/features/ratings/presentation/rating_widgets.dart",
+    "route": ""
+  },
+  {
+    "name": "Descartar edição · confirmação",
+    "source": "lib/features/profile/presentation/profile_details_page.dart",
+    "route": ""
+  },
+  {
+    "name": "Confirmação de idade",
+    "source": "lib/features/checkout/presentation/checkout_page.dart",
+    "route": ""
+  },
+  {
+    "name": "Início · vazio",
+    "source": "lib/features/home/presentation/home_page.dart",
+    "route": "/home"
+  },
+  {
+    "name": "Início · falha inicial",
+    "source": "lib/features/home/presentation/home_page.dart",
+    "route": "/home"
+  },
+  {
+    "name": "Explorar · sem resultados",
+    "source": "lib/features/explore/presentation/explore_page.dart",
+    "route": "/explore"
+  },
+  {
+    "name": "Explorar · falha inicial",
+    "source": "lib/features/explore/presentation/explore_page.dart",
+    "route": "/explore"
+  },
+  {
+    "name": "Ingressos · vazio",
+    "source": "lib/features/tickets/presentation/tickets_page.dart",
+    "route": "/tickets"
+  },
+  {
+    "name": "Ingressos · falha inicial",
+    "source": "lib/features/tickets/presentation/tickets_page.dart",
+    "route": "/tickets"
+  },
+  {
+    "name": "Pedidos · vazio",
+    "source": "lib/features/profile/presentation/activity_pages.dart",
+    "route": "/profile/orders"
+  },
+  {
+    "name": "Favoritos · vazio",
+    "source": "lib/features/favorites/presentation/favorites_page.dart",
+    "route": "/profile/favorites"
+  },
+  {
+    "name": "Avaliações · vazio",
+    "source": "lib/features/ratings/presentation/ratings_page.dart",
+    "route": "/profile/ratings"
+  },
+  {
+    "name": "Login · validação do campo",
+    "source": "lib/features/auth/presentation/login_page.dart",
+    "route": "/login"
+  },
+  {
+    "name": "Início · erro ao atualizar",
+    "source": "lib/features/home/presentation/home_page.dart",
+    "route": "/home"
+  }
+]

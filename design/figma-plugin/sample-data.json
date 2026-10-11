@@ -1,0 +1,21 @@
+{
+  "name": "Lucas Martins",
+  "memberDays": 128,
+  "greeting": "Bom dia",
+  "events": [
+    {
+      "Title": "Festival Horizonte",
+      "Category": "Música",
+      "Date": "Sáb, 17 out · 18:00",
+      "Location": "Parque Ibirapuera · São Paulo, SP",
+      "Rating": "4.8 (1234)"
+    },
+    {
+      "Title": "Noite de arte e música",
+      "Category": "Arte e cultura",
+      "Date": "Dom, 18 out · 16:00",
+      "Location": "Centro Cultural · São Paulo, SP",
+      "Rating": "4.6 (82)"
+    }
+  ]
+}
