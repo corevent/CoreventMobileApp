@@ -1,4 +1,4 @@
-package com.example.corevent_mobile_app
+package com.corevent.coreventapp
 
 import androidx.test.rule.ActivityTestRule
 import dev.flutter.plugins.integration_test.FlutterTestRunner
