@@ -5,6 +5,7 @@ import 'package:corevent_mobile_app/core/storage/token_store.dart';
 import 'package:corevent_mobile_app/features/auth/data/auth_api.dart';
 import 'package:corevent_mobile_app/features/auth/data/auth_dtos.dart';
 import 'package:corevent_mobile_app/features/auth/data/auth_interceptor.dart';
+import 'package:corevent_mobile_app/features/auth/data/auth_refresh.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -43,9 +44,10 @@ class MemoryTokenStore extends TokenStore {
 }
 
 class AuthAdapter implements HttpClientAdapter {
-  AuthAdapter(this.statusFor);
+  AuthAdapter(this.statusFor, {this.beforeResponse});
 
   final int Function(RequestOptions) statusFor;
+  final Future<void> Function(RequestOptions)? beforeResponse;
   final List<RequestOptions> requests = [];
 
   @override
@@ -55,6 +57,7 @@ class AuthAdapter implements HttpClientAdapter {
     Future<void>? cancelFuture,
   ) async {
     requests.add(options);
+    await beforeResponse?.call(options);
     final status = statusFor(options);
     return ResponseBody.fromString(
       '{}',
@@ -186,5 +189,115 @@ void main() {
     expect(tokens.clearCount, 0);
     expect(tokens.access, 'expired');
     expect(tokens.refresh, 'refresh-1');
+  });
+
+  test(
+    '429 preserva sessão, respeita espera e recupera na próxima chamada',
+    () async {
+      var now = DateTime.utc(2026, 10, 12);
+      final refresh = AuthRefresh(api, tokens, now: () => now);
+      dio.interceptors.clear();
+      dio.interceptors.add(AuthInterceptor(dio, api, tokens, refresh: refresh));
+      final options = RequestOptions(path: '/api/auth/refresh');
+      when(() => api.refresh(any())).thenThrow(
+        DioException(
+          requestOptions: options,
+          type: DioExceptionType.badResponse,
+          response: Response<dynamic>(
+            requestOptions: options,
+            statusCode: 429,
+            headers: Headers.fromMap({
+              'retry-after': ['30'],
+            }),
+          ),
+        ),
+      );
+      dio.httpClientAdapter = AuthAdapter(
+        (request) =>
+            request.headers['Authorization'] == 'Bearer renewed' ? 200 : 401,
+      );
+      for (var i = 0; i < 2; i++) {
+        await expectLater(
+          dio.get<dynamic>('/private'),
+          throwsA(
+            isA<DioException>().having(
+              (e) => e.response?.statusCode,
+              'status',
+              429,
+            ),
+          ),
+        );
+      }
+      verify(() => api.refresh(any())).called(1);
+      expect(tokens.clearCount, 0);
+      expect(tokens.access, 'expired');
+      expect(tokens.refresh, 'refresh-1');
+      now = now.add(const Duration(seconds: 30));
+      when(() => api.refresh(any())).thenAnswer(
+        (_) async =>
+            const AuthTokens(accessToken: 'renewed', refreshToken: 'refresh-2'),
+      );
+      expect((await dio.get<dynamic>('/private')).statusCode, 200);
+      verify(() => api.refresh(any())).called(1);
+    },
+  );
+
+  test('403 de uma operação protegida não é rejeição do refresh', () async {
+    dio.httpClientAdapter = AuthAdapter((_) => 403);
+    await expectLater(
+      dio.get<dynamic>('/private'),
+      throwsA(isA<DioException>()),
+    );
+    verifyNever(() => api.refresh(any()));
+    expect(tokens.clearCount, 0);
+  });
+
+  test(
+    '503 na repetição preserva os tokens renovados e não repete de novo',
+    () async {
+      when(() => api.refresh(any())).thenAnswer(
+        (_) async =>
+            const AuthTokens(accessToken: 'renewed', refreshToken: 'refresh-2'),
+      );
+      final adapter = AuthAdapter(
+        (request) =>
+            request.headers['Authorization'] == 'Bearer renewed' ? 503 : 401,
+      );
+      dio.httpClientAdapter = adapter;
+      await expectLater(
+        dio.get<dynamic>('/private'),
+        throwsA(isA<DioException>()),
+      );
+      expect(adapter.requests, hasLength(2));
+      verify(() => api.refresh(any())).called(1);
+      expect(tokens.access, 'renewed');
+      expect(tokens.clearCount, 0);
+    },
+  );
+
+  test('401 atrasado reutiliza token já renovado sem outro refresh', () async {
+    final started = Completer<void>();
+    final release = Completer<void>();
+    when(() => api.refresh(any())).thenAnswer(
+      (_) async =>
+          const AuthTokens(accessToken: 'renewed', refreshToken: 'refresh-2'),
+    );
+    dio.httpClientAdapter = AuthAdapter(
+      (request) =>
+          request.headers['Authorization'] == 'Bearer renewed' ? 200 : 401,
+      beforeResponse: (request) async {
+        if (request.path == '/late' &&
+            request.headers['Authorization'] == 'Bearer expired') {
+          started.complete();
+          await release.future;
+        }
+      },
+    );
+    final late = dio.get<dynamic>('/late');
+    await started.future;
+    expect((await dio.get<dynamic>('/first')).statusCode, 200);
+    release.complete();
+    expect((await late).statusCode, 200);
+    verify(() => api.refresh(any())).called(1);
   });
 }

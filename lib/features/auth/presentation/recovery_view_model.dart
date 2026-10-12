@@ -77,7 +77,7 @@ class RecoveryViewModel extends ChangeNotifier {
   Future<void> resetPassword() async {
     if (busy) return;
     if (!validPassword(password)) {
-      error = 'A senha deve ter 8+ caracteres, maiúscula, minúscula, número e símbolo.';
+      error = passwordRequirementsMessage;
       errorField = RecoveryField.password;
     } else if (password != confirmPassword) {
       error = 'As senhas não conferem.';

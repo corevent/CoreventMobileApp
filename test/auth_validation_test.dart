@@ -23,4 +23,22 @@ void main() {
     expect(validCode('12345'), isFalse);
     expect(validCode('12345a'), isFalse);
   });
+
+  test('símbolos seguem o contrato da API sem proibir outros caracteres', () {
+    for (final symbol in r'!@#$%^&*'.split('')) {
+      expect(validPassword('Forte${symbol}123'), isTrue);
+    }
+    for (final password in [
+      'Forte_123',
+      'Forte 123',
+      'Forte-123',
+      'Forteé123',
+    ]) {
+      expect(validPassword(password), isFalse, reason: password);
+    }
+    expect(validPassword('Forte_123!'), isTrue);
+    expect(validPassword('forte!123'), isFalse);
+    expect(validPassword('Forte!abc'), isFalse);
+    expect(validPassword('Fo!123'), isFalse);
+  });
 }

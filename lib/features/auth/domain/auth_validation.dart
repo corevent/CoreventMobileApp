@@ -3,6 +3,9 @@ String onlyDigits(String value) => value.replaceAll(RegExp(r'\D'), '');
 bool validEmail(String email) =>
     RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$').hasMatch(email.trim());
 
+const passwordRequirementsMessage =
+    r'A senha deve ter 8+ caracteres, maiúscula, minúscula, número e símbolo (!@#$%^&*).';
+
 class PasswordChecks {
   const PasswordChecks(
     this.length,
@@ -25,7 +28,7 @@ PasswordChecks checkPassword(String password) => PasswordChecks(
   RegExp(r'[A-Z]').hasMatch(password),
   RegExp(r'[a-z]').hasMatch(password),
   RegExp(r'[0-9]').hasMatch(password),
-  RegExp(r'[^A-Za-z0-9]').hasMatch(password),
+  RegExp(r'[!@#$%^&*]').hasMatch(password),
 );
 
 bool validPassword(String password) => checkPassword(password).complete;

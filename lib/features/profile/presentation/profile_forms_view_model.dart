@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../auth/data/auth_dtos.dart';
+import '../../auth/domain/auth_validation.dart';
 import '../../auth/presentation/auth_session.dart';
 import '../data/profile_repository.dart';
 import '../domain/profile_formatters.dart';
@@ -142,14 +143,8 @@ class SecurityViewModel extends Notifier<ProfileFormState> {
       state = const ProfileFormState(error: 'Informe a senha atual.');
       return false;
     }
-    if (next.length < 8 ||
-        !RegExp(r'[A-Z]').hasMatch(next) ||
-        !RegExp(r'[a-z]').hasMatch(next) ||
-        !RegExp(r'\d').hasMatch(next) ||
-        !RegExp(r'[^A-Za-z0-9]').hasMatch(next)) {
-      state = const ProfileFormState(
-        error: 'A nova senha precisa de 8 caracteres, maiúscula, minúscula, número e símbolo.',
-      );
+    if (!validPassword(next)) {
+      state = const ProfileFormState(error: passwordRequirementsMessage);
       return false;
     }
     if (next != confirmation) {

@@ -1,18 +1,17 @@
 import 'package:dio/dio.dart';
 
-import '../../../core/network/auth_tokens.dart';
 import '../../../core/storage/token_store.dart';
 import 'auth_api.dart';
-import 'auth_dtos.dart';
+import 'auth_refresh.dart';
 
 class AuthInterceptor extends Interceptor {
-  AuthInterceptor(this._dio, this._api, this._tokens);
+  AuthInterceptor(this._dio, AuthApi api, this._tokens, {AuthRefresh? refresh})
+    : _refresh = refresh ?? AuthRefresh(api, _tokens);
 
   static const _retriedKey = 'auth_retried';
   final Dio _dio;
-  final AuthApi _api;
   final TokenStore _tokens;
-  Future<AuthTokens>? _refreshing;
+  final AuthRefresh _refresh;
 
   @override
   void onRequest(
@@ -50,39 +49,27 @@ class AuthInterceptor extends Interceptor {
     }
 
     try {
-      final tokens = await (_refreshing ??= _refresh(refresh));
+      final currentAccess = await _tokens.readAccess();
+      // A late 401 may belong to a token already renewed by another request.
+      final access =
+          currentAccess != null &&
+              currentAccess.isNotEmpty &&
+              err.requestOptions.headers['Authorization'] !=
+                  'Bearer $currentAccess'
+          ? currentAccess
+          : (await _refresh.refresh(refresh)).accessToken;
       final request = err.requestOptions;
       final retry = request.copyWith(
-        headers: {
-          ...request.headers,
-          'Authorization': 'Bearer ${tokens.accessToken}',
-        },
+        headers: {...request.headers, 'Authorization': 'Bearer $access'},
         extra: {...request.extra, _retriedKey: true},
       );
       handler.resolve(await _dio.fetch<dynamic>(retry));
     } on DioException catch (refreshError) {
-      if (refreshError.requestOptions.extra[_retriedKey] != true &&
-          _isPermanentRefreshFailure(refreshError)) {
-        await _tokens.clear();
-      }
       handler.next(refreshError);
     } catch (refreshError) {
       handler.reject(
         DioException(requestOptions: err.requestOptions, error: refreshError),
       );
-    } finally {
-      _refreshing = null;
     }
-  }
-
-  Future<AuthTokens> _refresh(String refresh) async {
-    final tokens = await _api.refresh(RefreshRequest(refresh));
-    await _tokens.save(tokens.accessToken, tokens.refreshToken);
-    return tokens;
-  }
-
-  static bool _isPermanentRefreshFailure(DioException error) {
-    final code = error.response?.statusCode;
-    return code != null && code >= 400 && code < 500;
   }
 }
