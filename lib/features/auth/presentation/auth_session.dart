@@ -19,9 +19,11 @@ class AuthSession extends ChangeNotifier {
   final TokenStore _tokens;
   SessionStatus status = SessionStatus.loading;
   UserProfile? user;
+  String? recoveryMessage;
 
   Future<void> restore() async {
     status = SessionStatus.loading;
+    recoveryMessage = null;
     notifyListeners();
     try {
       user = await _repository.restore();
@@ -29,10 +31,17 @@ class AuthSession extends ChangeNotifier {
           ? SessionStatus.unauthenticated
           : SessionStatus.authenticated;
     } on DioException catch (error) {
-      final code = error.response?.statusCode;
-      status = code == 400 || code == 401 || code == 403
+      final access = await _tokens.readAccess();
+      final refresh = await _tokens.readRefresh();
+      status =
+          (access == null || access.isEmpty) &&
+              (refresh == null || refresh.isEmpty)
           ? SessionStatus.unauthenticated
           : SessionStatus.networkError;
+      if (error.response?.statusCode == 429) {
+        recoveryMessage =
+            'Muitas tentativas. Aguarde um pouco antes de tentar novamente.';
+      }
     } catch (_) {
       status = SessionStatus.networkError;
     }

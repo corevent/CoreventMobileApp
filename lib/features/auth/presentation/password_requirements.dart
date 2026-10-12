@@ -17,7 +17,7 @@ class PasswordRequirements extends StatelessWidget {
       ('Uma letra maiúscula', checks.uppercase),
       ('Uma letra minúscula', checks.lowercase),
       ('Um número', checks.number),
-      ('Um símbolo', checks.symbol),
+      (r'Um símbolo: ! @ # $ % ^ & *', checks.symbol),
     ];
     return Padding(
       padding: const EdgeInsets.only(bottom: AppSpacing.lg),

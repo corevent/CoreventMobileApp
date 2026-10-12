@@ -21,6 +21,7 @@ class FixtureBackend {
   bool failNextRegister = false;
   bool failNextProfileUnauthorized = false;
   bool failRefresh = false;
+  bool failNextRefreshRateLimited = false;
   bool favoriteSaved = false;
   bool orderCreated = false;
   bool orderPaid = false;
@@ -59,6 +60,7 @@ class FixtureBackend {
             dio,
             ref.read(authApiProvider),
             ref.read(tokenStoreProvider),
+            refresh: ref.read(authRefreshProvider),
           ),
         );
         ref.onDispose(() => dio.close(force: true));
@@ -75,6 +77,18 @@ class FixtureBackend {
 
   Future<ResponseBody> _fetch(RequestOptions options) async {
     requests.add(options);
+    if (options.path == '/api/auth/refresh' && failNextRefreshRateLimited) {
+      failNextRefreshRateLimited = false;
+      refreshCalls++;
+      return ResponseBody.fromString(
+        jsonEncode({'message': 'Too many requests'}),
+        429,
+        headers: {
+          Headers.contentTypeHeader: ['application/json'],
+          'retry-after': ['0'],
+        },
+      );
+    }
     if (options.path == '/api/events' && failNextEvents) {
       failNextEvents = false;
       throw DioException(

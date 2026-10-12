@@ -160,4 +160,44 @@ void main() {
     backend.expectOnlySupportedRequests();
     await closeApp(tester, container);
   });
+
+  testWidgets('refresh limitado mantém sessão e permite restaurar novamente', (
+    tester,
+  ) async {
+    await seedSession();
+    final backend = FixtureBackend()
+      ..failNextProfileUnauthorized = true
+      ..failNextRefreshRateLimited = true;
+    final container = await openApp(tester, backend);
+    expect(
+      container.read(authSessionProvider).status,
+      SessionStatus.networkError,
+    );
+    expect(
+      find.text(
+        'Muitas tentativas. Aguarde um pouco antes de tentar novamente.',
+      ),
+      findsOneWidget,
+    );
+    expect(find.text('Já tenho uma conta'), findsNothing);
+    expect(
+      await fixtureStorage.read(key: TokenStore.accessKey),
+      FixtureBackend.accessToken,
+    );
+    expect(
+      await fixtureStorage.read(key: TokenStore.refreshKey),
+      FixtureBackend.refreshToken,
+    );
+    expect(backend.refreshCalls, 1);
+    backend.failNextProfileUnauthorized = true;
+    await tapFixture(tester, find.text('Tentar novamente'));
+    await waitForFixtureText(tester, 'Festival de integração');
+    expect(
+      container.read(authSessionProvider).status,
+      SessionStatus.authenticated,
+    );
+    expect(backend.refreshCalls, 2);
+    backend.expectOnlySupportedRequests();
+    await closeApp(tester, container);
+  });
 }
