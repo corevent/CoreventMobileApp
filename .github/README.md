@@ -98,6 +98,15 @@ The helper escapes passwords for Java Properties, rejects missing secrets or
 invalid Base64, and writes private files. Only APK/checksum/public metadata files
 are uploaded; never upload `android/key.properties` or the keystore.
 
+Before compiling the APK, keytool generates a temporary certificate request to
+verify that the configured alias is a private key and both passwords can recover
+it. This request is removed with the signing files and is never uploaded. If the
+alias is missing, update `ANDROID_KEY_ALIAS` from the local `keyAlias` and encode
+the exact keystore referenced by local `storeFile` again. All four secrets must
+describe the same key; files created under different names can contain different
+aliases. The preflight uses password environment variables and suppresses keytool
+output so credentials are not included in logs.
+
 ## Google Cloud configuration
 
 Configure [Workload Identity Federation](https://github.com/google-github-actions/auth)
