@@ -64,7 +64,25 @@ jobs:
           ANDROID_STORE_PASSWORD: ${{ secrets.ANDROID_STORE_PASSWORD }}
           ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
           ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
-        run: python3 .github/scripts/prepare_android_signing.py
+        run: |
+          python3 .github/scripts/prepare_android_signing.py
+          signing_options=(-keystore "$RUNNER_TEMP/android-release-keystore.jks" -storepass:env ANDROID_STORE_PASSWORD)
+          if ! keytool -list "${signing_options[@]}" > /dev/null 2>&1; then
+            echo '::error::Cannot open the release keystore. Check ANDROID_KEYSTORE_BASE64 and ANDROID_STORE_PASSWORD in production.'
+            exit 1
+          fi
+          if ! keytool -list "${signing_options[@]}" -alias "$ANDROID_KEY_ALIAS" > /dev/null 2>&1; then
+            echo '::error::ANDROID_KEY_ALIAS does not exist in the uploaded keystore. Use the alias from the same local keystore encoded in ANDROID_KEYSTORE_BASE64.'
+            exit 1
+          fi
+          if ! keytool -certreq -alias "$ANDROID_KEY_ALIAS" \
+            "${signing_options[@]}" \
+            -keypass:env ANDROID_KEY_PASSWORD \
+            -file "$RUNNER_TEMP/android-release-signing-check.csr" \
+            > /dev/null 2>&1; then
+            echo '::error::Release private key could not be recovered. Check ANDROID_KEY_PASSWORD and that the alias identifies a private key.'
+            exit 1
+          fi
       - name: Build release APK
         run: |
           flutter build apk --release --flavor production \
@@ -96,7 +114,10 @@ jobs:
       - name: Remove signing files
         if: always()
         shell: bash
-        run: rm -f android/key.properties "$RUNNER_TEMP/android-release-keystore.jks"
+        run: |
+          rm -f android/key.properties \
+            "$RUNNER_TEMP/android-release-keystore.jks" \
+            "$RUNNER_TEMP/android-release-signing-check.csr"
       - name: Upload signed APK
         uses: actions/upload-artifact@v4
         with:
