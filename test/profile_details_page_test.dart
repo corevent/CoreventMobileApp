@@ -12,6 +12,8 @@ import 'package:intl/date_symbol_data_local.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:remixicon/remixicon.dart';
 
+import '../integration_test/e2e/support/live_ui_actions.dart';
+
 class MockSession extends Mock implements AuthSession {}
 
 class MockRepository extends Mock implements ProfileRepository {}
@@ -61,6 +63,28 @@ void main() {
     );
     await tester.pumpAndSettle();
   }
+
+  testWidgets('E2E seleciona lista principal e ignora rolagens dos textos', (
+    tester,
+  ) async {
+    await open(tester, scale: 1.5);
+    final allScrollables = find.descendant(
+      of: find.byType(ProfileDetailsPage),
+      matching: find.byType(Scrollable),
+    );
+    expect(allScrollables.evaluate().length, greaterThan(1));
+    final list = liveScrollable(ProfileDetailsPage);
+    expect(list, findsOneWidget);
+    await revealLiveControl(
+      tester,
+      find.text('Alterar foto'),
+      scrollable: list,
+    );
+    await tapLive(tester, find.text('Editar'), scrollable: list);
+    await tester.pumpAndSettle();
+    expect(find.byType(TextField), findsNWidgets(2));
+    expect(list, findsOneWidget);
+  });
 
   for (final scale in [1.5, 2.0]) {
     testWidgets('dados e edição acessíveis com fonte $scale e teclado', (

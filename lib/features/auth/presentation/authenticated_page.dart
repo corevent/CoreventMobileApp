@@ -12,7 +12,10 @@ class SessionLoadingPage extends ConsumerWidget {
     return ListenableBuilder(
       listenable: session,
       builder: (context, _) => session.status == SessionStatus.networkError
-          ? _SessionRecovery(onRetry: session.restore)
+          ? _SessionRecovery(
+              onRetry: session.restore,
+              message: session.recoveryMessage,
+            )
           : const _SessionSplash(),
     );
   }
@@ -34,8 +37,9 @@ class _SessionSplash extends StatelessWidget {
 }
 
 class _SessionRecovery extends StatelessWidget {
-  const _SessionRecovery({required this.onRetry});
+  const _SessionRecovery({required this.onRetry, this.message});
   final VoidCallback onRetry;
+  final String? message;
 
   @override
   Widget build(BuildContext context) => Scaffold(
@@ -52,8 +56,8 @@ class _SessionRecovery extends StatelessWidget {
                 semanticLabel: 'Corevent',
               ),
               const SizedBox(height: 40),
-              const Text(
-                'Não foi possível restaurar sua sessão.',
+              Text(
+                message ?? 'Não foi possível restaurar sua sessão.',
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 16),

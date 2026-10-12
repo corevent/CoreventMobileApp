@@ -6,6 +6,12 @@ Aplicativo Flutter para descobrir eventos, comprar ingressos e gerenciar compras
 
 - Android.
 
+Identificadores Android por flavor:
+
+- Produção: `com.corevent.coreventapp`.
+- Desenvolvimento: `com.corevent.coreventapp.development`.
+- Integração: `com.corevent.coreventapp.integration`.
+
 ## Pré-requisitos
 
 - Flutter com Dart compatível com `^3.13.4`.
@@ -38,7 +44,7 @@ flutter build apk --release
 flutter build appbundle --release
 ```
 
-Para distribuição, configure a assinatura e o identificador do aplicativo Android.
+Para distribuição, configure a assinatura de release do aplicativo Android.
 
 ## Funcionalidades
 
@@ -136,3 +142,12 @@ dessa execução e roda a suíte no emulador Android.
 
 Configuração do Environment `staging`, autenticação e relatórios:
 [guia de CI](.github/README.md).
+
+O workflow **Development APK** publica um APK debug da `develop`, conectado à
+API staging, em uma pré-release no GitHub. O aplicativo usa o sufixo
+`.development` para ficar separado da instalação de produção.
+
+O workflow **Release APK** é manual e executa na `main`, usando os quatro secrets
+de assinatura do Environment `production`. Informe `build_number` com um código
+de versão maior que o anterior. O APK assinado e seu checksum ficam nos
+**Artifacts** da execução por 30 dias. A versão exibida vem de `pubspec.yaml`.

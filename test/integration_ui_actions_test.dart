@@ -4,6 +4,30 @@ import 'package:flutter_test/flutter_test.dart';
 import '../integration_test/support/ui_actions.dart';
 
 void main() {
+  testWidgets('waits for async UI updates after scheduled frames settle', (
+    tester,
+  ) async {
+    var complete = false;
+    await tester.pumpWidget(
+      MaterialApp(
+        home: StatefulBuilder(
+          builder: (_, setState) => GestureDetector(
+            onTap: () async {
+              await Future<void>.delayed(const Duration(milliseconds: 800));
+              setState(() => complete = true);
+            },
+            child: Text(complete ? 'Destino' : 'Entrar'),
+          ),
+        ),
+      ),
+    );
+    await tester.tap(find.text('Entrar'));
+    await tester.pumpAndSettle();
+    expect(find.text('Destino'), findsNothing);
+    await waitForFixtureText(tester, 'Destino');
+    expect(find.text('Destino'), findsOneWidget);
+  });
+
   testWidgets('scrolls to a logout action not yet built by a lazy list', (
     tester,
   ) async {

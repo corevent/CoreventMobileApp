@@ -5,13 +5,20 @@ import '../../../core/storage/token_store.dart';
 import 'auth_api.dart';
 import 'auth_dtos.dart';
 import 'auth_providers.dart';
+import 'auth_refresh.dart';
 
 class AuthRepository {
-  AuthRepository(this._api, this._profileApi, this._tokens);
+  AuthRepository(
+    this._api,
+    this._profileApi,
+    this._tokens, {
+    AuthRefresh? refresh,
+  }) : _refresh = refresh ?? AuthRefresh(_api, _tokens);
 
   final AuthApi _api;
   final ProfileApi _profileApi;
   final TokenStore _tokens;
+  final AuthRefresh _refresh;
 
   Future<UserProfile> login(String email, String password) async {
     final tokens = await _api.login(LoginRequest(email.trim(), password));
@@ -29,13 +36,7 @@ class AuthRepository {
     if ((access == null || access.isEmpty) &&
         refresh != null &&
         refresh.isNotEmpty) {
-      try {
-        final tokens = await _api.refresh(RefreshRequest(refresh));
-        await _tokens.save(tokens.accessToken, tokens.refreshToken);
-      } on DioException catch (error) {
-        if (_permanent(error)) await _tokens.clear();
-        rethrow;
-      }
+      await _refresh.refresh(refresh);
     }
     try {
       return (await _profileApi.me()).data;
@@ -70,11 +71,6 @@ class AuthRepository {
       await _tokens.clear();
     }
   }
-
-  static bool _permanent(DioException error) {
-    final code = error.response?.statusCode;
-    return code != null && code >= 400 && code < 500;
-  }
 }
 
 final authRepositoryProvider = Provider<AuthRepository>(
@@ -82,5 +78,6 @@ final authRepositoryProvider = Provider<AuthRepository>(
     ref.watch(authApiProvider),
     ref.watch(profileApiProvider),
     ref.watch(tokenStoreProvider),
+    refresh: ref.watch(authRefreshProvider),
   ),
 );

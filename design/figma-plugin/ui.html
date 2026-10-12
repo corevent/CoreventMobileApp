@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="pt-BR">
+  <meta charset="utf-8" />
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      margin: 0;
+      padding: 20px;
+      background: #fff;
+      color: #18181a;
+      font:
+        13px/1.5 system-ui,
+        sans-serif;
+    }
+    h1 {
+      margin: 0 0 6px;
+      font-size: 19px;
+    }
+    p {
+      color: #6b6b70;
+      margin: 0 0 16px;
+    }
+    label {
+      display: block;
+      margin: 12px 0 5px;
+      font-weight: 600;
+    }
+    input,
+    select,
+    button {
+      font: inherit;
+      width: 100%;
+      border-radius: 10px;
+      padding: 10px 12px;
+    }
+    input,
+    select {
+      border: 1px solid #ececef;
+      background: #f5f5f6;
+      color: #18181a;
+    }
+    button {
+      cursor: pointer;
+      min-height: 42px;
+      font-weight: 700;
+      border: 1px solid #ececef;
+      background: #fff;
+      color: #e94b29;
+      margin-top: 8px;
+    }
+    button.primary {
+      background: #ff5a36;
+      border-color: #ff5a36;
+      color: white;
+      margin-top: 18px;
+    }
+    button:disabled {
+      opacity: 0.55;
+      cursor: default;
+    }
+    :focus-visible {
+      outline: 2px solid #ff5a36;
+      outline-offset: 2px;
+    }
+    #status {
+      margin-top: 12px;
+      font-size: 12px;
+    }
+    #status.error {
+      color: #df3f3f;
+    }
+    #status.success {
+      color: #20a464;
+    }
+    .note {
+      font-size: 11px;
+      margin-top: 10px;
+    }
+  </style>
+  <h1>Corevent Mockups</h1>
+  <p>
+    Todas as telas do app: autenticação, descoberta, compra, ingressos e conta.
+    Inclui painéis, diálogos e estados, com camadas editáveis.
+  </p>
+  <form id="form">
+    <fieldset id="fields" style="border: 0; padding: 0; margin: 0">
+      <label for="name">Nome ilustrativo</label>
+      <input id="name" maxlength="40" required />
+      <label for="days">Membro há quantos dias?</label>
+      <input id="days" type="number" min="0" max="99999" step="1" required />
+      <label for="greeting">Saudação na Home</label>
+      <select id="greeting">
+        <option>Bom dia</option>
+        <option>Boa tarde</option>
+        <option>Boa noite</option>
+      </select>
+      <button class="primary" type="submit">Gerar / atualizar mockups</button>
+      <button id="copy" type="button">Criar uma cópia separada</button>
+    </fieldset>
+  </form>
+  <div id="status" role="status" aria-live="polite">
+    Pronto para gerar na página aberta.
+  </div>
+  <p class="note">
+    Atualizar substitui os blocos gerados pelo plugin nesta página, incluindo
+    edições manuais nesses blocos. Para preservar uma versão, crie uma cópia
+    separada.
+  </p>
+  <script>
+    const fields = document.getElementById("fields");
+    const status = document.getElementById("status");
+    const send = (copy) => {
+      if (!document.getElementById("form").reportValidity()) return;
+      fields.disabled = true;
+      status.className = "";
+      status.textContent = "Gerando telas e componentes…";
+      parent.postMessage(
+        {
+          pluginMessage: {
+            type: "generate",
+            copy,
+            name: document.getElementById("name").value,
+            memberDays: document.getElementById("days").value,
+            greeting: document.getElementById("greeting").value,
+          },
+        },
+        "*",
+      );
+    };
+    document.getElementById("form").onsubmit = (event) => {
+      event.preventDefault();
+      send(false);
+    };
+    document.getElementById("copy").onclick = () => send(true);
+    window.onmessage = (event) => {
+      const message = event.data.pluginMessage;
+      if (!message) return;
+      if (message.type === "defaults") {
+        document.getElementById("name").value = message.name;
+        document.getElementById("days").value = message.memberDays;
+        document.getElementById("greeting").value = message.greeting;
+      } else if (message.type === "success" || message.type === "error") {
+        fields.disabled = false;
+        status.className = message.type;
+        status.textContent = message.detail;
+      }
+    };
+    parent.postMessage({ pluginMessage: { type: "ready" } }, "*");
+  </script>
+</html>

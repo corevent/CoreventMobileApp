@@ -1,4 +1,6 @@
 import 'package:corevent_mobile_app/core/storage/token_store.dart';
+import 'package:corevent_mobile_app/features/auth/presentation/auth_session.dart';
+import 'package:corevent_mobile_app/features/auth/presentation/login_view_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -8,17 +10,6 @@ import 'package:intl/date_symbol_data_local.dart';
 import '../support/app_harness.dart';
 import '../support/fixture_backend.dart';
 import '../support/ui_actions.dart';
-
-Future<void> _waitForText(WidgetTester tester, String value) async {
-  for (
-    var attempt = 0;
-    attempt < 50 && find.text(value).evaluate().isEmpty;
-    attempt++
-  ) {
-    await tester.pump(const Duration(milliseconds: 100));
-  }
-  expect(find.text(value), findsWidgets);
-}
 
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
@@ -42,12 +33,23 @@ void main() {
     );
     await enterFixtureText(tester, find.byType(TextField).at(1), 'Senha1!');
     await tapFixture(tester, find.text('Entrar'));
-    await tester.pumpAndSettle();
+    await waitForFixtureText(tester, 'E-mail ou senha incorretos.');
     expect(find.text('Bem-vindo de volta!'), findsOneWidget);
+    expect(backend.loginCalls, 1);
+    expect(container.read(loginViewModelProvider).busy, isFalse);
+    expect(
+      tester
+          .widget<ElevatedButton>(find.widgetWithText(ElevatedButton, 'Entrar'))
+          .onPressed,
+      isNotNull,
+    );
     expect(await fixtureStorage.read(key: TokenStore.accessKey), isNull);
     await tapFixture(tester, find.text('Entrar'));
-    await tester.pumpAndSettle();
-    expect(find.text('Festival de integração'), findsWidgets);
+    await waitForFixtureText(tester, 'Festival de integração');
+    expect(
+      container.read(authSessionProvider).status,
+      SessionStatus.authenticated,
+    );
     expect(backend.loginCalls, 2);
     backend.expectOnlySupportedRequests();
     await closeApp(tester, container);
@@ -86,7 +88,7 @@ void main() {
     await tester.pumpAndSettle();
     await tester.ensureVisible(find.text('Redefinir senha').last);
     await tapFixture(tester, find.text('Redefinir senha').last);
-    await _waitForText(tester, 'Bem-vindo de volta!');
+    await waitForFixtureText(tester, 'Bem-vindo de volta!');
     expect(backend.resetPasswordCalls, 1);
     expect(await fixtureStorage.read(key: TokenStore.accessKey), isNull);
     backend.expectOnlySupportedRequests();
@@ -150,7 +152,7 @@ void main() {
     expect(registration['document'], '52998224725');
     expect(registration['birthDate'], '2000-01-01');
     expect(registration['verifyEmailCode'], '123456');
-    await _waitForText(tester, 'Festival de integração');
+    await waitForFixtureText(tester, 'Festival de integração');
     backend.expectOnlySupportedRequests();
     await closeApp(tester, container);
   });

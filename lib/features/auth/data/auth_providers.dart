@@ -5,9 +5,15 @@ import '../../../core/network/network_providers.dart';
 import '../../../core/storage/token_store.dart';
 import 'auth_api.dart';
 import 'auth_interceptor.dart';
+import 'auth_refresh.dart';
 
 final authApiProvider = Provider<AuthApi>(
   (ref) => AuthApi(ref.watch(publicDioProvider)),
+);
+
+final authRefreshProvider = Provider<AuthRefresh>(
+  (ref) =>
+      AuthRefresh(ref.watch(authApiProvider), ref.watch(tokenStoreProvider)),
 );
 
 final authorizedDioProvider = Provider<Dio>((ref) {
@@ -17,6 +23,7 @@ final authorizedDioProvider = Provider<Dio>((ref) {
       dio,
       ref.watch(authApiProvider),
       ref.watch(tokenStoreProvider),
+      refresh: ref.watch(authRefreshProvider),
     ),
   );
   ref.onDispose(() => dio.close(force: true));

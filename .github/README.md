@@ -1,7 +1,27 @@
-# Test automation
+# GitHub Actions
 
 ## Workflows
 
+- **Development APK** (`workflows/development-apk.yml`): runs on pushes to
+  `develop` and manual dispatch on that branch. Generates code, runs analysis
+  and unit/widget tests, builds a debug APK with the `development` flavor,
+  then publishes a GitHub pre-release with the APK and its SHA-256 checksum.
+  It uses `COREVENT_API_URL` from the `staging` Environment and requires no
+  signing secrets or GCP authentication. The `.development` application ID
+  keeps its installation and session separate from production and integration.
+  Each run creates a `dev-RUN-ATTEMPT` tag; production releases remain unchanged.
+  Download `corevent-development.apk` from **Releases**. Android integration
+  remains in the Tests workflow; this publication does not wait for that workflow.
+  GitHub runners generate debug signing keys, so installing another build can
+  require uninstalling the previous development app, which clears its local data.
+- **Release APK** (`workflows/release-apk.yml`): manual dispatch on `main`, using
+  the `production` Environment. Checks formatting, generated code, analysis,
+  unit/widget/contract tests and CI helpers. Builds a universal production APK
+  with the configured release key and the supplied Android versionCode.
+  Verifies the signature, application ID, versionCode and INTERNET permission,
+  then uploads the APK, SHA-256 checksum and public signature/build metadata
+  as an Actions artifact for 30 days. No emulator, GCP or API preparation is used.
+  Signing files are temporary and removed even on failure.
 - **Tests** (`workflows/tests.yml`): runs on pull requests, pushes to `main` or
   `develop`, and manual dispatch. Checks formatting, generation, analysis, unit,
   widget and contract tests, then Android integration with fixtures. No API or
@@ -20,6 +40,14 @@ suite is running: GitHub concurrency protects only workflows in this repository.
 
 ## GitHub configuration
 
+Android integration and E2E pin their runner to `ubuntu-24.04` and share
+`scripts/enable-kvm.sh`. The setup keeps the udev rule, waits briefly for udev,
+sets device permissions explicitly and retries availability/permissions up to
+10 times. Image version, kernel, user and KVM permissions are recorded in
+`reports/kvm-setup.log`, included in each workflow's result artifact even when
+setup fails. Pinning the OS version still allows updates to that runner image;
+it does not guarantee virtualization availability on every machine.
+
 In **Settings → Environments → staging**, add:
 
 | Type | Name | Value |
@@ -37,6 +65,38 @@ In **Settings → Environments → staging**, add:
 The generated `reports/preparation.json` is an output artifact, not an E2E input
 configuration file. No API keys, database passwords or QR secrets are stored in
 GitHub by these workflows.
+
+## Production release configuration
+
+Add these **secrets** in **Settings → Environments → production**:
+
+| Name | Value |
+| --- | --- |
+| `ANDROID_KEYSTORE_BASE64` | Base64-encoded release keystore contents |
+| `ANDROID_STORE_PASSWORD` | Keystore password |
+| `ANDROID_KEY_ALIAS` | Key alias in that keystore |
+| `ANDROID_KEY_PASSWORD` | Password for that key |
+
+Allow the `main` branch in that Environment. Merge the workflow into the default
+branch before looking for its **Run workflow** button. Select **Release APK →
+Run workflow → main**, then enter `build_number`: a positive Android versionCode
+greater than the previous released version, up to 2100000000. The versionName
+comes from `pubspec.yaml`. The workflow validates the range, but does not query
+Google Play or previous artifacts to determine the next versionCode.
+
+Alternatively:
+
+```sh
+gh workflow run release-apk.yml --ref main -f build_number=2
+```
+
+Download `production-apk-BUILD_NUMBER` from the run's **Artifacts**. This workflow
+builds a signed APK; it does not publish to Google Play or create a GitHub Release.
+The production API URL already configured in the app is used.
+
+The helper escapes passwords for Java Properties, rejects missing secrets or
+invalid Base64, and writes private files. Only APK/checksum/public metadata files
+are uploaded; never upload `android/key.properties` or the keystore.
 
 ## Google Cloud configuration
 

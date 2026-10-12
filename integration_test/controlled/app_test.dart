@@ -34,23 +34,26 @@ void main() {
     await enterFixtureText(tester, fields.at(0), 'ana@integration.test');
     await enterFixtureText(tester, fields.at(1), 'Senha1!');
     await tapFixture(tester, find.text('Entrar'));
-    await tester.pumpAndSettle();
-    expect(find.text('Festival de integração'), findsWidgets);
+    await waitForFixtureText(tester, 'Festival de integração');
+    expect(backend.loginCalls, 1);
+    expect(
+      container.read(authSessionProvider).status,
+      SessionStatus.authenticated,
+    );
     expect(
       await fixtureStorage.read(key: TokenStore.accessKey),
       FixtureBackend.accessToken,
     );
 
     await tapFixture(tester, find.text('Explorar').last);
-    await tester.pumpAndSettle();
-    expect(find.text('Festival de integração'), findsWidgets);
+    await waitForFixtureText(tester, 'Festival de integração');
     await tapFixture(tester, find.text('Perfil').last);
     await tester.pumpAndSettle();
     expect(find.text('Ana Teste'), findsOneWidget);
 
     await closeApp(tester, container);
     container = await openApp(tester, backend);
-    expect(find.text('Festival de integração'), findsWidgets);
+    await waitForFixtureText(tester, 'Festival de integração');
     expect(
       container.read(authSessionProvider).status,
       SessionStatus.authenticated,
@@ -70,7 +73,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Sair da conta?'), findsOneWidget);
     await tapFixture(tester, find.text('Sair').last);
-    await tester.pumpAndSettle();
+    await waitForFixtureText(tester, 'Já tenho uma conta');
     expect(find.text('Já tenho uma conta'), findsOneWidget);
     expect(await fixtureStorage.read(key: TokenStore.accessKey), isNull);
     expect(await fixtureStorage.read(key: TokenStore.refreshKey), isNull);
@@ -154,6 +157,46 @@ void main() {
     expect(backend.refreshCalls, 1);
     expect(await fixtureStorage.read(key: TokenStore.accessKey), isNull);
     expect(await fixtureStorage.read(key: TokenStore.refreshKey), isNull);
+    backend.expectOnlySupportedRequests();
+    await closeApp(tester, container);
+  });
+
+  testWidgets('refresh limitado mantém sessão e permite restaurar novamente', (
+    tester,
+  ) async {
+    await seedSession();
+    final backend = FixtureBackend()
+      ..failNextProfileUnauthorized = true
+      ..failNextRefreshRateLimited = true;
+    final container = await openApp(tester, backend);
+    expect(
+      container.read(authSessionProvider).status,
+      SessionStatus.networkError,
+    );
+    expect(
+      find.text(
+        'Muitas tentativas. Aguarde um pouco antes de tentar novamente.',
+      ),
+      findsOneWidget,
+    );
+    expect(find.text('Já tenho uma conta'), findsNothing);
+    expect(
+      await fixtureStorage.read(key: TokenStore.accessKey),
+      FixtureBackend.accessToken,
+    );
+    expect(
+      await fixtureStorage.read(key: TokenStore.refreshKey),
+      FixtureBackend.refreshToken,
+    );
+    expect(backend.refreshCalls, 1);
+    backend.failNextProfileUnauthorized = true;
+    await tapFixture(tester, find.text('Tentar novamente'));
+    await waitForFixtureText(tester, 'Festival de integração');
+    expect(
+      container.read(authSessionProvider).status,
+      SessionStatus.authenticated,
+    );
+    expect(backend.refreshCalls, 2);
     backend.expectOnlySupportedRequests();
     await closeApp(tester, container);
   });

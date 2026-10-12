@@ -1,11 +1,28 @@
 import json
+from contextlib import redirect_stderr
+from io import StringIO
+import subprocess
 import unittest
+from unittest.mock import patch
 from uuid import uuid4
 
-from prepare_e2e import extract_preparation
+from prepare_e2e import extract_preparation, gcloud_json
 
 
 class PreparationParserTest(unittest.TestCase):
+    def test_failed_gcloud_reports_cause_without_printing_json_output(self):
+        error = subprocess.CalledProcessError(
+            1, ["gcloud"], output='{"private": "not-for-logs"}',
+            stderr="ERROR: Permission denied\nrun.jobs.run is required",
+        )
+        logs = StringIO()
+        with patch('prepare_e2e.subprocess.run', side_effect=error), redirect_stderr(logs):
+            with self.assertRaises(subprocess.CalledProcessError):
+                gcloud_json('run', 'jobs', 'execute', 'preparation')
+        self.assertIn('gcloud: ERROR: Permission denied', logs.getvalue())
+        self.assertIn('gcloud: run.jobs.run is required', logs.getvalue())
+        self.assertNotIn('not-for-logs', logs.getvalue())
+
     def setUp(self):
         self.data = {
             key: str(uuid4()) for key in (

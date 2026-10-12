@@ -40,10 +40,16 @@ def extract_preparation(entries, expected_email):
 
 
 def gcloud_json(*arguments):
-    result = subprocess.run(
-        ["gcloud", *arguments, "--format=json", "--quiet"],
-        check=True, capture_output=True, text=True, timeout=660,
-    )
+    try:
+        result = subprocess.run(
+            ["gcloud", *arguments, "--format=json", "--quiet"],
+            check=True, capture_output=True, text=True, timeout=660,
+        )
+    except subprocess.CalledProcessError as error:
+        # Report CLI diagnostics, never the JSON output or credential file.
+        for line in (error.stderr or "gcloud returned no error details").splitlines():
+            print(f"gcloud: {line}", file=sys.stderr)
+        raise
     return json.loads(result.stdout)
 
 

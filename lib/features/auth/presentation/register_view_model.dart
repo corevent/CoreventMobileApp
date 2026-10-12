@@ -124,7 +124,7 @@ class RegisterViewModel extends ChangeNotifier {
         ),
         4 when !validPassword(draft.password) => (
           field: RegisterField.password,
-          message: 'A senha deve ter 8+ caracteres, maiúscula, minúscula, número e símbolo.',
+          message: passwordRequirementsMessage,
         ),
         4 when draft.password != draft.confirmPassword => (
           field: RegisterField.confirmPassword,

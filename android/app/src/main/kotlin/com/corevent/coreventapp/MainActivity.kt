@@ -1,4 +1,4 @@
-package com.example.corevent_mobile_app
+package com.corevent.coreventapp
 
 import io.flutter.embedding.android.FlutterActivity
 
