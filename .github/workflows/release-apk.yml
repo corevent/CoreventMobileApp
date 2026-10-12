@@ -1,0 +1,111 @@
+name: Release APK
+run-name: Release APK · build ${{ inputs.build_number }}
+
+on:
+  workflow_dispatch:
+    inputs:
+      build_number:
+        description: Android versionCode (positive integer, higher than the previous release)
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-apk-production
+  cancel-in-progress: false
+
+jobs:
+  build:
+    if: github.ref == 'refs/heads/main'
+    name: Build signed production APK
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    environment: production
+    env:
+      RELEASE_BUILD_NUMBER: ${{ inputs.build_number }}
+      ANDROID_BUILD_TOOLS: '36.0.0'
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - name: Validate build number
+        shell: bash
+        run: |
+          if [[ ! "$RELEASE_BUILD_NUMBER" =~ ^[1-9][0-9]{0,9}$ ]] || (( RELEASE_BUILD_NUMBER > 2100000000 )); then
+            echo '::error::build_number must be an integer between 1 and 2100000000'
+            exit 1
+          fi
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.47.5'
+          channel: stable
+          cache: true
+      - uses: gradle/actions/setup-gradle@v5
+      - name: Ensure Android verification tools
+        run: '"$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "build-tools;$ANDROID_BUILD_TOOLS"'
+      - run: flutter pub get
+      - name: Check CI helpers
+        run: python3 -m unittest discover -s .github/scripts -p 'test_*.py'
+      - name: Check formatting
+        run: dart tool/format.dart --check
+      - name: Generate code
+        run: dart run build_runner build --delete-conflicting-outputs
+      - run: flutter analyze
+      - run: flutter test test --no-pub
+      - name: Prepare release signing
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_STORE_PASSWORD: ${{ secrets.ANDROID_STORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: python3 .github/scripts/prepare_android_signing.py
+      - name: Build release APK
+        run: |
+          flutter build apk --release --flavor production \
+            --build-number="$RELEASE_BUILD_NUMBER"
+      - name: Verify and package APK
+        shell: bash
+        run: |
+          set -euo pipefail
+          apk=build/app/outputs/flutter-apk/app-production-release.apk
+          tools="$ANDROID_HOME/build-tools/$ANDROID_BUILD_TOOLS"
+          mkdir -p dist
+          "$tools/apksigner" verify --verbose --print-certs "$apk" > dist/signature.txt
+          if grep -Fq 'CN=Android Debug' dist/signature.txt; then
+            echo '::error::Production APK uses the Android debug certificate'
+            exit 1
+          fi
+          badging="$("$tools/aapt" dump badging "$apk")"
+          package="$(printf '%s\n' "$badging" | sed -n '1p')"
+          [[ "$package" == *"name='com.corevent.coreventapp'"* ]] || { echo '::error::Unexpected application ID'; exit 1; }
+          [[ "$package" == *"versionCode='$RELEASE_BUILD_NUMBER'"* ]] || { echo '::error::Unexpected versionCode'; exit 1; }
+          "$tools/aapt" dump permissions "$apk" | grep -F "name='android.permission.INTERNET'" > /dev/null
+          cp "$apk" "dist/corevent-production-${RELEASE_BUILD_NUMBER}.apk"
+          (
+            cd dist
+            sha256sum "corevent-production-${RELEASE_BUILD_NUMBER}.apk" > "corevent-production-${RELEASE_BUILD_NUMBER}.apk.sha256"
+          )
+          printf 'Commit: %s\nBuild number: %s\nPackage: com.corevent.coreventapp\n' \
+            "$GITHUB_SHA" "$RELEASE_BUILD_NUMBER" > dist/release.txt
+      - name: Remove signing files
+        if: always()
+        shell: bash
+        run: rm -f android/key.properties "$RUNNER_TEMP/android-release-keystore.jks"
+      - name: Upload signed APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: production-apk-${{ inputs.build_number }}
+          path: |
+            dist/*.apk
+            dist/*.sha256
+            dist/signature.txt
+            dist/release.txt
+          retention-days: 30
+          if-no-files-found: error
+

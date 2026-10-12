@@ -57,7 +57,7 @@ jobs:
           GH_REPO: ${{ github.repository }}
         run: |
           tag="dev-${GITHUB_RUN_NUMBER}-${GITHUB_RUN_ATTEMPT}"
-          printf 'APK de desenvolvimento conectado à API staging.\n\nCommit: %s\nModo: debug\nApplication ID: com.example.corevent_mobile_app.development\n' "$GITHUB_SHA" > "$RUNNER_TEMP/development-notes.md"
+          printf 'APK de desenvolvimento conectado à API staging.\n\nCommit: %s\nModo: debug\nApplication ID: com.corevent.coreventapp.development\n' "$GITHUB_SHA" > "$RUNNER_TEMP/development-notes.md"
           gh release create "$tag" \
             dist/corevent-development.apk \
             dist/corevent-development.apk.sha256 \
