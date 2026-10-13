@@ -146,7 +146,10 @@ starting another preparation.
 
 The photo scenario remains enabled and can fail until its initial avatar URL is
 fixed. External payment, email and process-restart scenarios remain manual.
-Coverage is reported but there is no automated coverage threshold gate yet.
+Coverage thresholds are enforced by `dart tool/check_coverage.dart` in Tests and
+Release APK. Both workflows publish an automatic Markdown/JSON report and LCOV
+artifact. See [coverage policy](../docs/test-coverage.md); generated metrics are
+not committed to Git.
 
 After the first successful CI run, require the **Unit, widget and contract tests**
 and **Android integration with fixtures** checks in branch protection. The

@@ -37,10 +37,20 @@ jobs:
         run: dart run build_runner build --delete-conflicting-outputs
       - run: flutter analyze
       - name: Run tests with coverage
+        id: coverage-tests
         run: |
           mkdir -p reports
           set -o pipefail
           flutter test test --no-pub --coverage --reporter expanded --file-reporter=json:reports/unit.jsonl 2>&1 | tee reports/unit.log
+      - name: Validate coverage thresholds
+        if: ${{ !cancelled() && steps.coverage-tests.outcome != 'skipped' }}
+        run: dart tool/check_coverage.dart
+      - name: Publish coverage summary
+        if: always()
+        run: |
+          if [[ -f reports/coverage-summary.md ]]; then
+            cat reports/coverage-summary.md >> "$GITHUB_STEP_SUMMARY"
+          fi
       - name: Publish results
         if: always()
         uses: actions/upload-artifact@v4
