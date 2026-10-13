@@ -1,0 +1,20 @@
+{
+  "excludeSuffixes": [".g.dart", ".freezed.dart"],
+  "groups": [
+    {"name": "Overall", "pattern": "^lib/", "minimum": 77.5},
+    {"name": "Auth", "pattern": "^lib/features/auth/", "minimum": 82.5},
+    {"name": "Checkout", "pattern": "^lib/features/checkout/", "minimum": 72.5},
+    {"name": "Tickets", "pattern": "^lib/features/tickets/", "minimum": 82.5},
+    {"name": "Profile", "pattern": "^lib/features/profile/", "minimum": 72.5},
+    {"name": "Home", "pattern": "^lib/features/home/", "minimum": 87.5},
+    {"name": "Explore", "pattern": "^lib/features/explore/", "minimum": 72.5},
+    {"name": "Events", "pattern": "^lib/features/events/", "minimum": 87.5},
+    {"name": "Favorites", "pattern": "^lib/features/favorites/", "minimum": 87.5},
+    {"name": "Ratings", "pattern": "^lib/features/ratings/", "minimum": 77.5},
+    {"name": "Welcome", "pattern": "^lib/features/welcome/", "minimum": 92.5},
+    {"name": "Core/app", "pattern": "^lib/(?!features/)", "minimum": 77.5},
+    {"name": "Domain", "pattern": "^lib/features/[^/]+/domain/", "minimum": 92.5},
+    {"name": "Presentation", "pattern": "^lib/features/[^/]+/presentation/", "minimum": 82.5},
+    {"name": "Data", "pattern": "^lib/features/[^/]+/data/", "minimum": 57.5}
+  ]
+}

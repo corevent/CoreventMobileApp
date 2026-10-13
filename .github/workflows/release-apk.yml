@@ -57,7 +57,26 @@ jobs:
       - name: Generate code
         run: dart run build_runner build --delete-conflicting-outputs
       - run: flutter analyze
-      - run: flutter test test --no-pub
+      - run: flutter test test --no-pub --coverage
+      - name: Validate coverage thresholds
+        run: dart tool/check_coverage.dart
+      - name: Publish coverage summary
+        if: always()
+        run: |
+          if [[ -f reports/coverage-summary.md ]]; then
+            cat reports/coverage-summary.md >> "$GITHUB_STEP_SUMMARY"
+          fi
+      - name: Upload coverage results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-coverage
+          path: |
+            reports/coverage-summary.md
+            reports/coverage-summary.json
+            coverage/lcov.info
+          retention-days: 14
+          if-no-files-found: ignore
       - name: Prepare release signing
         env:
           ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
