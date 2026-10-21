@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/theme/app_colors.dart';
 import 'auth_session.dart';
 
 class SessionLoadingPage extends ConsumerWidget {
@@ -26,6 +27,7 @@ class _SessionSplash extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Scaffold(
+    backgroundColor: AppColors.surface,
     body: Center(
       child: Image.asset(
         'assets/images/logo_corevent_full.png',
@@ -43,6 +45,7 @@ class _SessionRecovery extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Scaffold(
+    backgroundColor: AppColors.surface,
     body: SafeArea(
       child: Center(
         child: Padding(

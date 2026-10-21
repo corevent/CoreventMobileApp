@@ -5,6 +5,7 @@ import '../../../core/design_system/corevent_button.dart';
 import '../../../core/design_system/corevent_field.dart';
 import '../../../core/design_system/corevent_notice.dart';
 import '../../../core/design_system/corevent_page_header.dart';
+import '../../../core/theme/app_colors.dart';
 
 class AuthPageShell extends StatelessWidget {
   const AuthPageShell({
@@ -28,6 +29,7 @@ class AuthPageShell extends StatelessWidget {
       if (!didPop && !busy) onBack?.call();
     },
     child: Scaffold(
+      backgroundColor: AppColors.surface,
       body: AbsorbPointer(
         absorbing: busy,
         child: SafeArea(
