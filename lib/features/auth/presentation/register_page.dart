@@ -104,6 +104,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage>
           if (!didPop && !model.busy && !_transitioning) model.back();
         },
         child: Scaffold(
+          backgroundColor: AppColors.surface,
           resizeToAvoidBottomInset: true,
           body: SafeArea(
             child: AbsorbPointer(
@@ -357,7 +358,7 @@ class _RegisterFooter extends StatelessWidget {
   Widget build(BuildContext context) => Container(
     width: double.infinity,
     decoration: const BoxDecoration(
-      color: AppColors.background,
+      color: AppColors.surface,
       border: Border(top: BorderSide(color: AppColors.backgroundSecondary)),
     ),
     padding: const EdgeInsets.fromLTRB(

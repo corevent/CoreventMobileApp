@@ -13,6 +13,7 @@ class WelcomePage extends ConsumerWidget {
     final viewModel = ref.watch(welcomeViewModelProvider);
 
     return Scaffold(
+      backgroundColor: AppColors.surface,
       body: SafeArea(
         child: LayoutBuilder(
           builder: (context, constraints) {
