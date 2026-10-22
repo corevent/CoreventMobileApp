@@ -165,7 +165,8 @@ class _OrderStatusPageState extends ConsumerState<OrderStatusPage>
         title: const Text('Seu pedido'),
         leading: IconButton(
           tooltip: 'Voltar aos pedidos',
-          onPressed: () => context.go('/profile/orders'),
+          onPressed: () =>
+              context.canPop() ? context.pop() : context.go('/profile/orders'),
           icon: const Icon(RemixIcons.arrow_left_line),
         ),
       ),

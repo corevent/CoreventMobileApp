@@ -61,10 +61,22 @@ void main() {
     WidgetTester tester, {
     CreatedOrder? created,
     bool settle = true,
+    String initialLocation = '/orders/o1/status',
   }) async {
     router = GoRouter(
-      initialLocation: '/orders/o1/status',
+      initialLocation: initialLocation,
       routes: [
+        GoRoute(
+          path: '/profile/orders/o1',
+          builder: (context, _) => Scaffold(
+            body: Center(
+              child: TextButton(
+                onPressed: () => context.push('/orders/o1/status'),
+                child: const Text('Abrir status'),
+              ),
+            ),
+          ),
+        ),
         GoRoute(
           path: '/orders/:id/status',
           builder: (_, _) => OrderStatusPage(orderId: 'o1', created: created),
@@ -145,5 +157,19 @@ void main() {
     response.complete(order('pending'));
     await tester.pumpAndSettle();
     expect(find.text('Aguardando pagamento'), findsOneWidget);
+  });
+
+  testWidgets('voltar preserva tela anterior quando houver histórico', (
+    tester,
+  ) async {
+    when(() => activity.order('o1'))
+        .thenAnswer((_) async => order('pending', payment: true));
+    await show(tester, initialLocation: '/profile/orders/o1');
+    await tester.tap(find.text('Abrir status'));
+    await tester.pumpAndSettle();
+    expect(find.text('Seu pedido'), findsOneWidget);
+    await tester.tap(find.byTooltip('Voltar aos pedidos'));
+    await tester.pumpAndSettle();
+    expect(find.text('Abrir status'), findsOneWidget);
   });
 }
